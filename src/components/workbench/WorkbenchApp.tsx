@@ -127,29 +127,6 @@ export function WorkbenchApp() {
             年度
             <input className="w-[80px]" value={inputs.year} onChange={(e) => set("year", e.target.value)} />
           </label>
-          <label className="flex items-center gap-2">
-            冷媒
-            <select
-              className="h-[26px] border border-[#8aa0b4] bg-white px-1"
-              value={inputs.refrigerantCode}
-              onChange={(e) => set("refrigerantCode", e.target.value)}
-            >
-              {REFRIGERANTS.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-[12px]">
-            <input
-              type="checkbox"
-              checked={inputs.useActivityForGhg}
-              onChange={(e) => set("useActivityForGhg", e.target.checked)}
-            />
-            Scope 1／2 採活動數據×係數
-          </label>
-          <span className="text-[#333]">藍字輸入　黃底運算</span>
         </div>
       </div>
 
@@ -170,6 +147,49 @@ export function WorkbenchApp() {
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="border-r border-[#bbb] bg-white p-3">
+          {sheet === "par" && (
+            <div className="mb-4">
+              <p className="mb-1 text-[12px] font-bold">
+                <span className="wb-tag">輸入</span>冷媒
+              </p>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                    <th className="border border-[#888] px-2 py-1">項目</th>
+                    <th className="w-[120px] border border-[#888] px-2 py-1">數值</th>
+                    <th className="w-[220px] border border-[#888] px-2 py-1">檢查最新</th>
+                    <th className="w-[90px] border border-[#888] px-2 py-1">單位</th>
+                    <th className="border border-[#888] px-2 py-1">說明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">冷媒種類</td>
+                    <td className="border border-[#c8c8c8] px-1 py-1">
+                      <select
+                        className="h-[26px] w-full border border-[#8aa0b4] bg-white px-1"
+                        value={inputs.refrigerantCode}
+                        onChange={(e) => set("refrigerantCode", e.target.value)}
+                      >
+                        {REFRIGERANTS.map((r) => (
+                          <option key={r} value={r}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border border-[#c8c8c8] px-2 py-1" />
+                    <td className="border border-[#c8c8c8] px-2 py-1 text-[12px]">—</td>
+                    <td className="border border-[#c8c8c8] px-2 py-1 text-[12px] text-[#444]">
+                      來源：設備冷媒。帶入下列 GWP。
+                      <div className="text-[11px] text-[#777]">IPCC；盤查作業指引</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )}
+
           {["pre", "fin", "env", "hr", "gov", "kpi", "par"].includes(sheet) &&
             Object.entries(grouped).map(([section, rows]) => (
               <div key={section} className="mb-4">

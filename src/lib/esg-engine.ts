@@ -477,8 +477,8 @@ export function compute(raw: Inputs) {
   const s1Ref = (n(i.refrigerantKg) * n(i.gwpRefrigerant)) / 1000;
   const scope1Act = s1Fuel + s1Ref;
   const scope2Act = (n(i.electricityKwh) * n(i.efElectricity)) / 1000;
-  const scope1 = i.useActivityForGhg ? scope1Act : n(i.scope1Manual);
-  const scope2 = i.useActivityForGhg ? scope2Act : n(i.scope2Manual);
+  const scope1 = scope1Act;
+  const scope2 = scope2Act;
   const ghg12 = scope1 + scope2;
   const ghg123 = ghg12 + n(i.scope3);
   const intensity = n(i.revenueMillion) === 0 ? NaN : ghg12 / n(i.revenueMillion);
