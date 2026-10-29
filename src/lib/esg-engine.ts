@@ -101,8 +101,6 @@ export type Inputs = {
   fineOther: number;
   donateCharity: number;
   donateCommunity: number;
-  trainInternal: number;
-  trainExternal: number;
 };
 
 export const defaultInputs: Inputs = {
@@ -206,8 +204,6 @@ export const defaultInputs: Inputs = {
   fineOther: 0,
   donateCharity: 0.08,
   donateCommunity: 0.04,
-  trainInternal: 22100,
-  trainExternal: 13292,
 };
 
 export type FieldDef = {
@@ -244,8 +240,6 @@ export const fieldCatalog: FieldDef[] = [
   { key: "fineOther", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "其他重大裁罰（公平交易等）", unit: "萬元", why: "公平會、金管會、其他主管機關。沒有填 0。", gri: "GRI 2-27 底稿" },
   { key: "donateCharity", sheet: "pre", section: "底稿：社區／公益支出（捐贈明細要加總）", label: "捐贈支出", unit: "億元", why: "財報捐贈費加總，排除政治獻金若報告書不計入。", gri: "GRI 203-1 底稿" },
   { key: "donateCommunity", sheet: "pre", section: "底稿：社區／公益支出（捐贈明細要加總）", label: "社區實質投入", unit: "億元", why: "志工、在地採購溢價、社區工程等，帳上不一定叫捐贈。", gri: "GRI 203-1 底稿" },
-  { key: "trainInternal", sheet: "pre", section: "底稿：總訓練時數（課程紀錄要加總）", label: "內部訓練時數", unit: "小時", why: "年報常見只寫人均時數。總時數要從教育訓練紀錄加總內訓。", gri: "GRI 404-1 底稿" },
-  { key: "trainExternal", sheet: "pre", section: "底稿：總訓練時數（課程紀錄要加總）", label: "外部訓練時數", unit: "小時", why: "外訓、證照課時數。內＋外＝總訓練時數，再除平均人數才是人均。", gri: "GRI 404-1 底稿" },
   { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "金管會要求排放／用水密集度分母與合併財報營收一致，否則報告書與簽證財報對不上。可直接抄合併綜合損益表。", gri: "金管會作業辦法；GRI 305-4" },
   { key: "rdExpense", sheet: "fin", section: "財務分母", label: "研發費用", unit: "億元", why: "對到創新與綠色產品投入，年報附註可勾稽。可直接抄綜合損益表。", gri: "綜合損益表／GRI 201" },
   { key: "energyExpense", sheet: "fin", section: "財務分母", label: "能源相關費用", unit: "億元", why: "不能直接抄一格：請先在前置底稿把電費＋燃料＋蒸汽加總。用來和盤查用量勾稽。", gri: "財報附註", fromPre: true },
@@ -280,7 +274,7 @@ export const fieldCatalog: FieldDef[] = [
   { key: "contractors", sheet: "hr", section: "人力結構", label: "非員工工作者", unit: "人", why: "承攬商人數，GRI 2-8。", gri: "GRI 2-8" },
   { key: "newHires", sheet: "hr", section: "人力結構", label: "新進人數", unit: "人", why: "新進率分子。", gri: "GRI 401-1" },
   { key: "leavers", sheet: "hr", section: "人力結構", label: "離職人數", unit: "人", why: "流動率分子。", gri: "GRI 401-1" },
-  { key: "trainingHours", sheet: "hr", section: "訓練與職安", label: "總訓練時數", unit: "小時", why: "年報常只給人均。請先在前置底稿加總內訓＋外訓，系統再除平均人數。", gri: "GRI 404-1", fromPre: true },
+  { key: "trainingHours", sheet: "hr", section: "訓練與職安", label: "總訓練時數", unit: "小時", why: "直接填客戶人資給的年度總訓練時數，不用拆內訓／外訓。系統再除平均人數得人均。", gri: "GRI 404-1" },
   { key: "trainingFemaleHours", sheet: "hr", section: "訓練與職安", label: "女性訓練時數", unit: "小時", why: "拆性別人均訓練，報告書常要。", gri: "GRI 404-1" },
   { key: "trainingHoursTarget", sheet: "hr", section: "訓練與職安", label: "人均訓練目標", unit: "小時", why: "判斷訓練是否達標。", gri: "內部目標" },
   { key: "workHours", sheet: "hr", section: "訓練與職安", label: "總經歷工時", unit: "小時", why: "FR／SR／可記錄傷害率的分母。", gri: "GRI 403-9" },
@@ -406,12 +400,6 @@ export const preRules: PreRule[] = [
     formula: "捐贈支出＋社區實質投入",
     sources: ["donateCharity", "donateCommunity"],
   },
-  {
-    target: "trainingHours",
-    combine: "sum",
-    formula: "內部訓練時數＋外部訓練時數",
-    sources: ["trainInternal", "trainExternal"],
-  },
 ];
 
 export function isLockedKey(key: keyof Inputs) {
@@ -510,7 +498,6 @@ export function derived(i: Inputs): Inputs {
   out.energyExpense = n(i.expElectricity) + n(i.expFuel) + n(i.expSteam);
   out.legalFines = n(i.fineEnv) + n(i.fineOsh) + n(i.fineOther);
   out.communitySpend = n(i.donateCharity) + n(i.donateCommunity);
-  out.trainingHours = n(i.trainInternal) + n(i.trainExternal);
   const o = officialValues(i.year, i.refrigerantCode);
   out.efElectricity = o.efElectricity;
   out.efDiesel = o.efDiesel;
@@ -530,7 +517,7 @@ export function preResults(i: Inputs) {
     const emptyRatio = rule.combine === "ratio" && execTotal === 0;
     return {
       name: fieldCatalog.find((f) => f.key === rule.target)?.label ?? String(rule.target),
-      value: emptyRatio || !Number.isFinite(num) ? "—" : `${fmt(num, rule.target === "trainingHours" ? 0 : 2)} ${unit(rule.target)}`,
+      value: emptyRatio || !Number.isFinite(num) ? "—" : `${fmt(num, 2)} ${unit(rule.target)}`,
       formula: rule.formula,
       missing: preMissing(i, rule),
     };
