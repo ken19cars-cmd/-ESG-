@@ -82,25 +82,10 @@ export type Inputs = {
   execFinPoints: number;
   execEsgPoints: number;
   execOtherPoints: number;
-  kpiRevWeight: number;
-  kpiProfitWeight: number;
-  kpiRoeWeight: number;
-  kpiCarbonWeight: number;
-  kpiOshWeight: number;
-  kpiOtherEsgWeight: number;
-  kpiPersonalWeight: number;
   capexEnergySave: number;
   capexRenewable: number;
   capexPollution: number;
   capexOtherGreen: number;
-  expElectricity: number;
-  expFuel: number;
-  expSteam: number;
-  fineEnv: number;
-  fineOsh: number;
-  fineOther: number;
-  donateCharity: number;
-  donateCommunity: number;
 };
 
 export const defaultInputs: Inputs = {
@@ -185,25 +170,10 @@ export const defaultInputs: Inputs = {
   execFinPoints: 70,
   execEsgPoints: 15,
   execOtherPoints: 15,
-  kpiRevWeight: 25,
-  kpiProfitWeight: 25,
-  kpiRoeWeight: 20,
-  kpiCarbonWeight: 8,
-  kpiOshWeight: 4,
-  kpiOtherEsgWeight: 3,
-  kpiPersonalWeight: 15,
   capexEnergySave: 0.8,
   capexRenewable: 0.5,
   capexPollution: 0.2,
   capexOtherGreen: 0.1,
-  expElectricity: 1.45,
-  expFuel: 0.55,
-  expSteam: 0.1,
-  fineEnv: 0,
-  fineOsh: 0,
-  fineOther: 0,
-  donateCharity: 0.08,
-  donateCommunity: 0.04,
 };
 
 export type FieldDef = {
@@ -218,34 +188,17 @@ export type FieldDef = {
 };
 
 export const fieldCatalog: FieldDef[] = [
-  { key: "kpiRevWeight", sheet: "pre", section: "底稿：高階考核表－財務KPI權重（這才是源頭）", label: "考核表：營收／業績達成權重", unit: "%", why: "向人資／薪酬委員會調「總經理及副總績效考核表」或「變動薪酬績效指標權重表」。這一列抄表上營收或業績KPI的權重％，不是自己編的。", gri: "高階考核表；GRI 2-19" },
-  { key: "kpiProfitWeight", sheet: "pre", section: "底稿：高階考核表－財務KPI權重（這才是源頭）", label: "考核表：獲利／EPS權重", unit: "%", why: "同一張考核表上稅前淨利、EPS、稅後純益那一列的權重％。", gri: "高階考核表；GRI 2-19" },
-  { key: "kpiRoeWeight", sheet: "pre", section: "底稿：高階考核表－財務KPI權重（這才是源頭）", label: "考核表：ROE／其他財務權重", unit: "%", why: "ROE、成本率、現金、其他財務指標權重。三列加總＝財務配分。年報薪酬政策若只寫「經營績效」，仍要回到考核表才有拆開的％。", gri: "高階考核表；GRI 2-19" },
-  { key: "kpiCarbonWeight", sheet: "pre", section: "底稿：高階考核表－ESG KPI權重（這才是源頭）", label: "考核表：減碳／密集度權重", unit: "%", why: "考核表上排放、密集度、綠電等環境KPI的權重％。沒有此指標填 0。", gri: "高階考核表；GRI 2-19" },
-  { key: "kpiOshWeight", sheet: "pre", section: "底稿：高階考核表－ESG KPI權重（這才是源頭）", label: "考核表：職安權重", unit: "%", why: "重大職災、FR、工安目標那一列的權重％。", gri: "高階考核表；GRI 2-19" },
-  { key: "kpiOtherEsgWeight", sheet: "pre", section: "底稿：高階考核表－ESG KPI權重（這才是源頭）", label: "考核表：其他永續權重", unit: "%", why: "供應商評鑑、訓練、誠信等其餘永續KPI權重。三列加總＝ESG配分。", gri: "高階考核表；GRI 2-19" },
-  { key: "kpiPersonalWeight", sheet: "pre", section: "底稿：高階考核表－其他權重", label: "考核表：個人職能／專案權重", unit: "%", why: "非財務也非ESG的個人職能、專案權重。沒有就填 0。", gri: "高階考核表；GRI 2-19" },
-  { key: "execFinPoints", sheet: "pre", section: "系統加總：不要手填70或15", label: "財務／營運績效配分（加總）", unit: "分", why: "＝營收權重＋獲利權重＋其他財務權重。示範 25+25+20＝70。這格不是源頭。", gri: "由考核表加總", fromPre: true },
-  { key: "execEsgPoints", sheet: "pre", section: "系統加總：不要手填70或15", label: "ESG／永續績效配分（加總）", unit: "分", why: "＝減碳權重＋職安權重＋其他永續權重。示範 8+4+3＝15。這格不是源頭。", gri: "由考核表加總", fromPre: true },
-  { key: "execOtherPoints", sheet: "pre", section: "系統加總：不要手填70或15", label: "其他配分（加總）", unit: "分", why: "＝個人職能／專案權重。示範 15。", gri: "由考核表加總", fromPre: true },
-  { key: "capexEnergySave", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "節能設備資本支出", unit: "億元", why: "現金流量表只有「購置不動產廠房設備」總額。綠色占比要會計師從固定資產增加明細把節能設備挑出來加總。", gri: "資產明細；投資揭露底稿" },
-  { key: "capexRenewable", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "再生能源設備資本支出", unit: "億元", why: "太陽能、儲能、綠電相關設備，年報通常不單獨等於「綠色Capex」。", gri: "資產明細" },
-  { key: "capexPollution", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "污染防治設備資本支出", unit: "億元", why: "廢水、廢氣、廢棄物處理設備。", gri: "資產明細" },
-  { key: "capexOtherGreen", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "其他綠色資本支出", unit: "億元", why: "水資源、循環再利用等未列入上三項者。沒有就填 0。", gri: "資產明細" },
-  { key: "expElectricity", sheet: "pre", section: "底稿：能源相關費用（費用科目要加總）", label: "電費", unit: "億元", why: "綜合損益沒有「能源費用」一科目，要從製造費用／水電瓦斯費挑電費。", gri: "費用明細底稿" },
-  { key: "expFuel", sheet: "pre", section: "底稿：能源相關費用（費用科目要加總）", label: "燃料費（油氣）", unit: "億元", why: "柴油、汽油、天然氣帳載金額，與盤查公升數勾稽。", gri: "費用明細底稿" },
-  { key: "expSteam", sheet: "pre", section: "底稿：能源相關費用（費用科目要加總）", label: "蒸汽／熱能費用", unit: "億元", why: "有外購蒸汽才填；沒有填 0。", gri: "費用明細底稿" },
-  { key: "fineEnv", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "環保重大裁罰", unit: "萬元", why: "年報或然負債／重大裁罰可能只寫「無」或列幾筆。要核環保署裁罰公告後加總。確定無裁罰填 0。", gri: "GRI 2-27 底稿" },
-  { key: "fineOsh", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "職安重大裁罰", unit: "萬元", why: "勞動檢查裁罰，與職災數字分開看。", gri: "GRI 2-27 底稿" },
-  { key: "fineOther", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "其他重大裁罰（公平交易等）", unit: "萬元", why: "公平會、金管會、其他主管機關。沒有填 0。", gri: "GRI 2-27 底稿" },
-  { key: "donateCharity", sheet: "pre", section: "底稿：社區／公益支出（捐贈明細要加總）", label: "捐贈支出", unit: "億元", why: "財報捐贈費加總，排除政治獻金若報告書不計入。", gri: "GRI 203-1 底稿" },
-  { key: "donateCommunity", sheet: "pre", section: "底稿：社區／公益支出（捐贈明細要加總）", label: "社區實質投入", unit: "億元", why: "志工、在地採購溢價、社區工程等，帳上不一定叫捐贈。", gri: "GRI 203-1 底稿" },
-  { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "金管會要求排放／用水密集度分母與合併財報營收一致，否則報告書與簽證財報對不上。可直接抄合併綜合損益表。", gri: "金管會作業辦法；GRI 305-4" },
-  { key: "rdExpense", sheet: "fin", section: "財務分母", label: "研發費用", unit: "億元", why: "對到創新與綠色產品投入，年報附註可勾稽。可直接抄綜合損益表。", gri: "綜合損益表／GRI 201" },
-  { key: "energyExpense", sheet: "fin", section: "財務分母", label: "能源相關費用", unit: "億元", why: "不能直接抄一格：請先在前置底稿把電費＋燃料＋蒸汽加總。用來和盤查用量勾稽。", gri: "財報附註", fromPre: true },
-  { key: "totalCapex", sheet: "fin", section: "財務分母", label: "總資本支出", unit: "億元", why: "綠色投資占比的分母，可直接抄現金流量表「購置不動產廠房及設備」。", gri: "現金流量表" },
-  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "綠色資本支出", unit: "億元", why: "年報沒有現成「綠色Capex」。請先在前置底稿依資產增加明細分類加總。", gri: "EU／實務揭露", fromPre: true },
-  { key: "communitySpend", sheet: "fin", section: "財務分母", label: "社區／公益支出", unit: "億元", why: "請先在前置底稿把捐贈＋社區實質投入加總，不要只抄單一科目。", gri: "GRI 203-1", fromPre: true },
+  { key: "execFinPoints", sheet: "pre", section: "底稿：高階考核表三大類配分（抄表，不要再拆KPI）", label: "考核表：財務／營運績效配分", unit: "%", why: "從高階主管績效考核表或薪酬辦法抄「財務／經營績效」那一大類的權重。客戶給 70 就填 70，不必再拆營收、EPS。", gri: "高階考核表；GRI 2-19" },
+  { key: "execEsgPoints", sheet: "pre", section: "底稿：高階考核表三大類配分（抄表，不要再拆KPI）", label: "考核表：ESG／永續績效配分", unit: "%", why: "同一張表「永續／ESG」大類權重。客戶給 15 就填 15。沒有永續權重填 0。", gri: "高階考核表；GRI 2-19" },
+  { key: "execOtherPoints", sheet: "pre", section: "底稿：高階考核表三大類配分（抄表，不要再拆KPI）", label: "考核表：其他配分", unit: "%", why: "個人職能、專案等其餘大類。三格加總通常為 100，高階ESG權重＝ESG配分÷合計。", gri: "高階考核表；GRI 2-19" },
+  { key: "capexEnergySave", sheet: "pre", section: "底稿：綠色資本支出（年報沒有現成一格）", label: "節能設備資本支出", unit: "億元", why: "現金流量表只有購置固定資產總額。綠色占比要從資產增加明細把節能設備挑出來。", gri: "資產明細" },
+  { key: "capexRenewable", sheet: "pre", section: "底稿：綠色資本支出（年報沒有現成一格）", label: "再生能源設備資本支出", unit: "億元", why: "太陽能、儲能等。沒有填 0。", gri: "資產明細" },
+  { key: "capexPollution", sheet: "pre", section: "底稿：綠色資本支出（年報沒有現成一格）", label: "污染防治設備資本支出", unit: "億元", why: "廢水、廢氣、廢棄物處理設備。沒有填 0。", gri: "資產明細" },
+  { key: "capexOtherGreen", sheet: "pre", section: "底稿：綠色資本支出（年報沒有現成一格）", label: "其他綠色資本支出", unit: "億元", why: "未列入上三項的綠色資產。沒有填 0。", gri: "資產明細" },
+  { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "金管會要求排放／用水密集度分母與合併財報營收一致。直接抄合併綜合損益表。", gri: "金管會作業辦法；GRI 305-4" },
+  { key: "totalCapex", sheet: "fin", section: "財務分母", label: "總資本支出", unit: "億元", why: "綠色投資占比的分母。直接抄現金流量表「購置不動產廠房及設備」。", gri: "現金流量表" },
+  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "綠色資本支出", unit: "億元", why: "年報沒有現成「綠色Capex」，由前置底稿四類加總帶入，不可手改。", gri: "投資揭露", fromPre: true },
+  { key: "communitySpend", sheet: "fin", section: "財務分母", label: "社區／公益支出", unit: "億元", why: "直接填客戶CSR／帳上公益支出合計，不必再拆捐贈與社區投入。", gri: "GRI 203-1" },
   { key: "electricityKwh", sheet: "env", section: "能源與排放", label: "外購電力", unit: "kWh", why: "Scope 2 最主要活動數據。", gri: "GRI 302-1、305-2" },
   { key: "renewableKwh", sheet: "env", section: "能源與排放", label: "再生能源電力", unit: "kWh", why: "再生能源占比＝再生 ÷ 總用電，金管會／客戶常問。", gri: "GRI 302-1" },
   { key: "dieselLiter", sheet: "env", section: "能源與排放", label: "柴油用量", unit: "L", why: "鍋爐、發電機、車輛，Scope 1。", gri: "GRI 305-1" },
@@ -296,13 +249,13 @@ export const fieldCatalog: FieldDef[] = [
   { key: "boardAttend", sheet: "gov", section: "治理", label: "董事出席人次合計", unit: "人次", why: "年報沒有現成「出席人次」。要從各次董事會議事錄把出席人數加總，再除以（席次×開會次數）才是出席率。", gri: "議事錄" },
   { key: "antiCorruptDue", sheet: "gov", section: "治理", label: "應受反貪腐訓練人數", unit: "人", why: "訓練覆蓋分母。", gri: "GRI 205-2" },
   { key: "antiCorruptDone", sheet: "gov", section: "治理", label: "已完成反貪腐訓練", unit: "人", why: "訓練覆蓋分子。", gri: "GRI 205-2" },
-  { key: "legalFines", sheet: "gov", section: "治理", label: "重大裁罰金額", unit: "萬元", why: "請先在前置底稿加總環保＋職安＋其他裁罰。確定都沒有就各填 0。", gri: "GRI 2-27", fromPre: true },
+  { key: "legalFines", sheet: "gov", section: "治理", label: "重大裁罰金額", unit: "萬元", why: "直接填年報重大裁罰合計或法務提供的清單總額。確定沒有填 0。不必拆環保／職安。", gri: "GRI 2-27" },
   { key: "isoCert", sheet: "gov", section: "治理", label: "管理系統證書數", unit: "張", why: "ISO 14001／45001／27001 張數，質性佐證。", gri: "管理系統" },
   { key: "infoSecIncidents", sheet: "gov", section: "治理", label: "資安重大事件", unit: "件", why: "資安治理揭露。", gri: "GRI 418" },
   { key: "dueReview", sheet: "kpi", section: "績效薪酬", label: "應考核人數", unit: "人", why: "考核覆蓋率分母。", gri: "GRI 404-3" },
   { key: "doneReview", sheet: "kpi", section: "績效薪酬", label: "已考核人數", unit: "人", why: "考核覆蓋率分子。", gri: "GRI 404-3" },
   { key: "withEsgKpi", sheet: "kpi", section: "績效薪酬", label: "KPI含ESG指標人數", unit: "人", why: "永續是否寫進考核，不是業務達成率。", gri: "實務守則 §9" },
-  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "源頭是高階考核表各列權重，不是年報也不是自己填70、15。ESG配分÷考核表權重合計。", gri: "GRI 2-19", fromPre: true },
+  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "由考核表三大類配分算出：ESG配分÷（財務＋ESG＋其他）。不可手改。", gri: "GRI 2-19", fromPre: true },
   { key: "businessTarget", sheet: "kpi", section: "績效薪酬", label: "業務目標", unit: "億元", why: "財務KPI，不計入社會面分數。", gri: "內部績效" },
   { key: "businessActual", sheet: "kpi", section: "績效薪酬", label: "業務實際", unit: "億元", why: "與目標相除得業務達成率。", gri: "內部績效" },
   { key: "esgTargetScore", sheet: "kpi", section: "績效薪酬", label: "ESG KPI目標", unit: "分", why: "減碳／職安等永續目標分數。", gri: "GRI 2-19" },
@@ -327,17 +280,9 @@ const ALLOW_ZERO = new Set<keyof Inputs>([
   "communitySpend",
   "execEsgPoints",
   "execOtherPoints",
-  "kpiRoeWeight",
-  "kpiCarbonWeight",
-  "kpiOshWeight",
-  "kpiOtherEsgWeight",
-  "kpiPersonalWeight",
   "capexOtherGreen",
-  "expSteam",
-  "fineEnv",
-  "fineOsh",
-  "fineOther",
-  "donateCommunity",
+  "capexRenewable",
+  "capexPollution",
 ]);
 
 type PreRule = {
@@ -350,55 +295,16 @@ type PreRule = {
 
 export const preRules: PreRule[] = [
   {
-    target: "execFinPoints",
-    combine: "sum",
-    formula: "考核表營收權重＋獲利權重＋其他財務權重",
-    sources: ["kpiRevWeight", "kpiProfitWeight", "kpiRoeWeight"],
-  },
-  {
-    target: "execEsgPoints",
-    combine: "sum",
-    allowAllZero: true,
-    formula: "考核表減碳權重＋職安權重＋其他永續權重",
-    sources: ["kpiCarbonWeight", "kpiOshWeight", "kpiOtherEsgWeight"],
-  },
-  {
-    target: "execOtherPoints",
-    combine: "sum",
-    allowAllZero: true,
-    formula: "考核表個人職能／專案權重",
-    sources: ["kpiPersonalWeight"],
-  },
-  {
     target: "esgWeight",
     combine: "ratio",
-    formula: "ESG配分 ÷ 考核表權重合計 ×100%",
-    sources: ["kpiRevWeight", "kpiProfitWeight", "kpiRoeWeight", "kpiCarbonWeight", "kpiOshWeight", "kpiOtherEsgWeight", "kpiPersonalWeight"],
+    formula: "ESG配分 ÷（財務配分＋ESG配分＋其他配分）×100%",
+    sources: ["execFinPoints", "execEsgPoints", "execOtherPoints"],
   },
   {
     target: "greenCapex",
     combine: "sum",
     formula: "節能＋再生能源＋污染防治＋其他綠色資本支出",
     sources: ["capexEnergySave", "capexRenewable", "capexPollution", "capexOtherGreen"],
-  },
-  {
-    target: "energyExpense",
-    combine: "sum",
-    formula: "電費＋燃料費＋蒸汽／熱能費用",
-    sources: ["expElectricity", "expFuel", "expSteam"],
-  },
-  {
-    target: "legalFines",
-    combine: "sum",
-    allowAllZero: true,
-    formula: "環保裁罰＋職安裁罰＋其他裁罰",
-    sources: ["fineEnv", "fineOsh", "fineOther"],
-  },
-  {
-    target: "communitySpend",
-    combine: "sum",
-    formula: "捐贈支出＋社區實質投入",
-    sources: ["donateCharity", "donateCommunity"],
   },
 ];
 
@@ -454,13 +360,10 @@ export function labelOf(key: keyof Inputs) {
 
 function preMissing(i: Inputs, rule: PreRule): string[] {
   if (rule.combine === "ratio") {
-    const finKeys: (keyof Inputs)[] = ["kpiRevWeight", "kpiProfitWeight", "kpiRoeWeight"];
     const msgs: string[] = [];
-    if (finKeys.every((k) => n(i[k]) === 0)) {
-      msgs.push(...finKeys.filter((k) => blank(i, k)).map((k) => `${labelOf(k)}尚未輸入`));
-    }
-    const total = rule.sources.reduce((s, k) => s + n(i[k]), 0);
-    if (total === 0) msgs.push("高階考核表權重合計尚未輸入");
+    if (blank(i, "execFinPoints")) msgs.push(`${labelOf("execFinPoints")}尚未輸入`);
+    const total = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
+    if (total === 0) msgs.push("高階考核表配分合計尚未輸入");
     return msgs;
   }
   const allZero = rule.sources.every((k) => n(i[k]) === 0);
@@ -486,18 +389,9 @@ export function missingOnRow(i: Inputs, key: keyof Inputs): string[] {
 
 export function derived(i: Inputs): Inputs {
   const out: Inputs = { ...i };
-  const fin = n(i.kpiRevWeight) + n(i.kpiProfitWeight) + n(i.kpiRoeWeight);
-  const esg = n(i.kpiCarbonWeight) + n(i.kpiOshWeight) + n(i.kpiOtherEsgWeight);
-  const other = n(i.kpiPersonalWeight);
-  out.execFinPoints = fin;
-  out.execEsgPoints = esg;
-  out.execOtherPoints = other;
-  const execTotal = fin + esg + other;
-  out.esgWeight = execTotal > 0 ? (esg / execTotal) * 100 : 0;
+  const execTotal = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
+  out.esgWeight = execTotal > 0 ? (n(i.execEsgPoints) / execTotal) * 100 : 0;
   out.greenCapex = n(i.capexEnergySave) + n(i.capexRenewable) + n(i.capexPollution) + n(i.capexOtherGreen);
-  out.energyExpense = n(i.expElectricity) + n(i.expFuel) + n(i.expSteam);
-  out.legalFines = n(i.fineEnv) + n(i.fineOsh) + n(i.fineOther);
-  out.communitySpend = n(i.donateCharity) + n(i.donateCommunity);
   const o = officialValues(i.year, i.refrigerantCode);
   out.efElectricity = o.efElectricity;
   out.efDiesel = o.efDiesel;

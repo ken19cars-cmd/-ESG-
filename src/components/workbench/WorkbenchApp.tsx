@@ -321,9 +321,8 @@ export function WorkbenchApp() {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                70、15 不是年報科目，也不是自己編的配分。源頭是人資／薪酬委員會的
-                <b>高階主管績效考核表</b>（或變動薪酬績效指標權重表）：表上每一列 KPI 的權重％抄進來，系統才加總成財務配分、ESG配分，再算出高階ESG權重。
-                缺一項會紅字。
+                前置底稿只留兩件事：考核表<b>三大類配分</b>（財務／ESG／其他，客戶給多少抄多少，不必再拆 KPI），以及年報沒有的<b>綠色資本支出分類</b>。
+                訓練時數、裁罰、公益、能源費用都直接填客戶數字。缺底稿會紅字。
               </p>
               <table className="w-full border-collapse">
                 <thead>
