@@ -48,6 +48,7 @@ export function WorkbenchApp() {
   const [factorAudit, setFactorAudit] = useState<FactorAudit | null>(null);
   const [factorBusy, setFactorBusy] = useState(false);
   const [factorTick, setFactorTick] = useState(0);
+  const [factorFocus, setFactorFocus] = useState<string | null>(null);
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
 
@@ -175,6 +176,7 @@ export function WorkbenchApp() {
                     <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
                       <th className="border border-[#888] px-2 py-1">項目</th>
                       <th className="w-[120px] border border-[#888] px-2 py-1">數值</th>
+                      {sheet === "par" && <th className="w-[220px] border border-[#888] px-2 py-1">檢查最新</th>}
                       <th className="w-[90px] border border-[#888] px-2 py-1">單位</th>
                       <th className="border border-[#888] px-2 py-1">為什麼要這個參數</th>
                     </tr>
@@ -184,16 +186,15 @@ export function WorkbenchApp() {
                       const locked = isLockedKey(f.key);
                       const miss = missingOnRow(inputs, f.key);
                       const shown = locked ? d[f.key] : inputs[f.key];
+                      const isOfficial = OFFICIAL_FACTOR_KEYS.includes(f.key as (typeof OFFICIAL_FACTOR_KEYS)[number]);
                       const factorCheck = factorAudit?.checks.find((c) => c.key === f.key);
                       return (
-                      <tr key={String(f.key)}>
+                      <tr key={String(f.key)} className={factorFocus === f.key ? "outline outline-1 outline-[#1f4a7a]" : ""}>
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
                           {f.label}
                           {locked && (
                             <div className="text-[11px] text-[#666]">
-                              {OFFICIAL_FACTOR_KEYS.includes(f.key as (typeof OFFICIAL_FACTOR_KEYS)[number])
-                                ? "系統依官方公告帶入，不可改"
-                                : "系統依前置底稿帶入，不可改"}
+                              {isOfficial ? "系統依官方公告帶入，不可改" : "系統依前置底稿帶入，不可改"}
                             </div>
                           )}
                         </td>
@@ -208,25 +209,53 @@ export function WorkbenchApp() {
                               onChange={(e) => set(f.key, num(e) as never)}
                             />
                           )}
-                          {factorCheck && (
-                            <div
-                              className={`text-[11px] font-bold ${
-                                factorCheck.level === "異常"
-                                  ? "text-[#c00000]"
-                                  : factorCheck.level === "注意"
-                                    ? "text-[#8a6d00]"
-                                    : "text-[#2d6a2d]"
-                              }`}
-                            >
-                              [{factorCheck.level}] 抓取 {String(factorCheck.crawled)}
-                            </div>
-                          )}
                           {miss.length > 0 && (
                             <div className="text-[11px] font-bold text-[#c00000]">
                               {miss.join("、")}
                             </div>
                           )}
                         </td>
+                        {sheet === "par" && (
+                          <td className="border border-[#c8c8c8] px-1 py-1 align-top">
+                            {isOfficial && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="wb-check-btn"
+                                  disabled={factorBusy}
+                                  onClick={() => {
+                                    setFactorFocus(String(f.key));
+                                    setFactorTick((n) => n + 1);
+                                  }}
+                                >
+                                  {factorBusy && factorFocus === f.key ? "連線公告中…" : "檢查最新"}
+                                </button>
+                                {factorCheck && (
+                                  <div
+                                    className={`mt-1 text-[11px] leading-4 ${
+                                      factorCheck.level === "異常"
+                                        ? "font-bold text-[#c00000]"
+                                        : factorCheck.level === "注意"
+                                          ? "font-bold text-[#8a6d00]"
+                                          : "font-bold text-[#2d6a2d]"
+                                    }`}
+                                  >
+                                    [{factorCheck.level}] 公告抓取 {String(factorCheck.crawled)}
+                                    <div className="font-normal text-[#333]">{factorCheck.detail}</div>
+                                    <a
+                                      className="font-normal text-[#003399] underline"
+                                      href={factorCheck.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                    >
+                                      打開官方來源
+                                    </a>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </td>
+                        )}
                         <td className="border border-[#c8c8c8] px-2 py-1 text-[12px]">{f.unit}</td>
                         <td className="border border-[#c8c8c8] px-2 py-1 text-[12px] text-[#444]">
                           {f.why}

@@ -206,3 +206,24 @@ body:has(.wb-root) {
   margin-right: 6px;
   background: #fff;
 }
+
+.wb-check-btn {
+  display: inline-block;
+  border: 1px solid #1f4a7a;
+  background: #e8eef5;
+  color: #123;
+  font-size: 11px;
+  padding: 2px 7px;
+  line-height: 16px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wb-check-btn:hover:not(:disabled) {
+  background: #d4e2f0;
+}
+
+.wb-check-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
