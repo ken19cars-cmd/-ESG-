@@ -246,15 +246,19 @@ export function WorkbenchApp() {
                                           : "font-bold text-[#2d6a2d]"
                                     }`}
                                   >
-                                    [{factorCheck.level}] 公告抓取 {String(factorCheck.crawled)}
-                                    <div className="font-normal text-[#333]">{factorCheck.detail}</div>
+                                    [{factorCheck.level}]
+                                    {factorCheck.crawled != null ? ` 網頁抓取 ${String(factorCheck.crawled)}` : " 網頁無此數字"}
+                                    <div className="font-normal text-[#111]">
+                                      來源文件：{factorCheck.sourceDoc}
+                                    </div>
+                                    <div className="font-normal text-[#333]">{factorCheck.crawlNote}</div>
                                     <a
                                       className="font-normal text-[#003399] underline"
                                       href={factorCheck.url}
                                       target="_blank"
                                       rel="noreferrer"
                                     >
-                                      打開官方來源
+                                      打開來源文件
                                     </a>
                                   </div>
                                 )}
@@ -278,9 +282,9 @@ export function WorkbenchApp() {
           {sheet === "par" && (
             <div className="mb-3 text-[12px]">
               <p className="mb-2 leading-6">
-                係數<b>不是會計師手查手填</b>。電力係數依案件年度抓能源署公告頁，再與內建庫比對；燃油係數官方多半是
-                PDF 管理表，沒有穩定 HTML 可爬到 2.606 這種體積係數，因此釘選環境部 6.0.4 並用 PDF
-                關鍵字＋合理區間驗證。抓到的值和庫不一致就紅字，<b>不會覆蓋</b>。
+                係數<b>不是會計師手查手填</b>。電力可以從能源署公告網頁抓數字；柴油／汽油／天然氣體積係數寫在環境部
+                <b>《溫室氣體排放係數管理表》6.0.4版</b>Excel，不在網頁 HTML，所以不是抓失敗，是文件裡才有。
+                列上會標來源文件名稱。網頁抓到的值和文件不一致才紅字，<b>不會覆蓋</b>。
                 {factorBusy ? "　正在連線公告頁…" : factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
               </p>
               <button
@@ -295,8 +299,8 @@ export function WorkbenchApp() {
                   <thead>
                     <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
                       <th className="border border-[#888] px-2 py-1">項目</th>
-                      <th className="border border-[#888] px-2 py-1">內建／帶入</th>
-                      <th className="border border-[#888] px-2 py-1">抓取結果</th>
+                      <th className="border border-[#888] px-2 py-1">帶入值</th>
+                      <th className="border border-[#888] px-2 py-1">來源文件</th>
                       <th className="border border-[#888] px-2 py-1">驗證</th>
                     </tr>
                   </thead>
@@ -305,13 +309,13 @@ export function WorkbenchApp() {
                       <tr key={c.key}>
                         <td className="border border-[#c8c8c8] px-2 py-1">{c.title}</td>
                         <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{c.expected ?? "—"}</td>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{String(c.crawled)}</td>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{c.sourceDoc}</td>
                         <td
                           className={`border border-[#c8c8c8] px-2 py-1 ${
                             c.level === "異常" ? "bg-[#fde8e8]" : c.level === "注意" ? "bg-[#fff4cc]" : "bg-[#e7f5e7]"
                           }`}
                         >
-                          <b>[{c.level}]</b> {c.detail}{" "}
+                          <b>[{c.level}]</b> {c.crawlNote} {c.detail}{" "}
                           <a className="text-[#003399] underline" href={c.url} target="_blank" rel="noreferrer">
                             來源
                           </a>

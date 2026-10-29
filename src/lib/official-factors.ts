@@ -9,13 +9,15 @@ export const OFFICIAL_FACTOR_KEYS = [
 export type OfficialFactorKey = (typeof OFFICIAL_FACTOR_KEYS)[number];
 
 export type FactorCheck = {
-  key: OfficialFactorKey | "fuelTableLive";
+  key: OfficialFactorKey;
   title: string;
   expected: number | null;
   crawled: number | string | null;
   level: "通過" | "注意" | "異常";
   detail: string;
   url: string;
+  sourceDoc: string;
+  crawlNote: string;
 };
 
 export type FactorAudit = {
@@ -68,9 +70,12 @@ const FUEL = {
   efDiesel: 2.606,
   efGasoline: 2.263,
   efLng: 2.18,
-  table: "溫室氣體排放係數管理表 6.0.4（移動／燃燒常用體積係數）",
+  sourceDoc: "《溫室氣體排放係數管理表》6.0.4版（環境部國家溫室氣體登錄平台／資訊下載）",
   url: "https://ghgregistry.moenv.gov.tw/DPC.aspx?kind=2",
   pdf: "https://ghgregistry.moenv.gov.tw/upload/Tools/%E6%BA%AB%E5%AE%A4%E6%B0%A3%E9%AB%94%E6%8E%92%E6%94%BE%E4%BF%82%E6%95%B8%E7%B8%BD%E8%AA%AA%E6%98%8E%E5%8F%8A%E9%80%90%E9%A0%85%E8%AA%AA%E6%98%8E.pdf",
+  pdfName: "《溫室氣體排放係數總說明及逐項說明》PDF",
+  crawlNote:
+    "抓不到網頁數字：2.606／2.263／2.18 是管理表 Excel 工作表的體積係數，沒有寫在能源署新聞稿 HTML。爬蟲只能讀網頁文字，讀不到試算表儲存格。",
 };
 
 const GWP: Record<string, { AR4: number; AR5: number }> = {
@@ -172,6 +177,7 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
   const pack = officialValues(year, refrigerant);
   const checks: FactorCheck[] = [];
 
+  const elecDoc = `經濟部能源署${pack.electricityMeta.label}`;
   const page = await fetchText(pack.electricityMeta.url);
   const crawledElec = page.ok ? parseElectricity(page.text, pack.electricityMeta.parse) : null;
   if (crawledElec == null) {
@@ -179,29 +185,25 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
       key: "efElectricity",
       title: "電力排放係數",
       expected: pack.efElectricity,
-      crawled: page.ok ? "頁面讀到但無法解析數字" : "未能連到公告頁",
+      crawled: null,
       level: "注意",
-      detail: `改用內建庫 ${pack.efElectricity}（${pack.electricityMeta.label}）。請點來源人工複核。`,
+      sourceDoc: elecDoc,
+      crawlNote: page.ok
+        ? "已連到公告頁，但頁面沒有解析到 0.xxx 公斤CO2e/度。"
+        : "未能連到能源署公告頁（逾時或網站阻擋）。",
+      detail: `網頁沒抓到數字，改用文件釘選值 ${pack.efElectricity}。請打開來源文件人工複核。`,
       url: pack.electricityMeta.url,
     });
-  } else if (!near(crawledElec, pack.efElectricity)) {
+  } else if (!near(crawledElec, pack.efElectricity) || !inRange("efElectricity", crawledElec)) {
     checks.push({
       key: "efElectricity",
       title: "電力排放係數",
       expected: pack.efElectricity,
       crawled: crawledElec,
       level: "異常",
-      detail: `公告頁解析為 ${crawledElec}，內建庫為 ${pack.efElectricity}。系統不覆蓋，請會計師核對後再決定。`,
-      url: pack.electricityMeta.url,
-    });
-  } else if (!inRange("efElectricity", crawledElec)) {
-    checks.push({
-      key: "efElectricity",
-      title: "電力排放係數",
-      expected: pack.efElectricity,
-      crawled: crawledElec,
-      level: "異常",
-      detail: `抓到 ${crawledElec} 超出合理區間 0.40–0.55，疑似解析錯頁，不代入。`,
+      sourceDoc: elecDoc,
+      crawlNote: `公告頁解析為 ${crawledElec}，與文件釘選值 ${pack.efElectricity} 不一致。系統不覆蓋。`,
+      detail: "請打開能源署該年度電力排碳係數文件核對後再決定。",
       url: pack.electricityMeta.url,
     });
   } else {
@@ -211,24 +213,12 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
       expected: pack.efElectricity,
       crawled: crawledElec,
       level: "通過",
+      sourceDoc: elecDoc,
+      crawlNote: "已從公告網頁抓到數字，並與文件釘選值一致。",
       detail: `與${pack.electricityMeta.label}一致。`,
       url: pack.electricityMeta.url,
     });
   }
-
-  const pdf = await fetchText(FUEL.pdf);
-  const liveFuel = pdf.ok && (pdf.text.includes("74100") || pdf.text.includes("74,100") || pdf.text.includes("69,300"));
-  checks.push({
-    key: "fuelTableLive",
-    title: "燃油係數表是否仍為現行",
-    expected: null,
-    crawled: liveFuel ? "PDF 含柴油／汽油 IPCC 係數 74,100／69,300" : pdf.ok ? "PDF 連到但關鍵字不符" : "未能下載係數總說明 PDF",
-    level: liveFuel ? "通過" : "注意",
-    detail: liveFuel
-      ? "環境部係數總說明仍看得到柴油 74,100、汽油 69,300 kgCO2/TJ，體積係數沿用管理表釘選值。"
-      : "燃油沒有穩定 HTML 可爬到 2.606 這種體積係數。系統用管理表 6.0.4 釘選值，並做區間勾稽。",
-    url: FUEL.url,
-  });
 
   (["efDiesel", "efGasoline", "efLng"] as const).forEach((key) => {
     const v = pack[key];
@@ -237,10 +227,12 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
       key,
       title: key === "efDiesel" ? "柴油係數" : key === "efGasoline" ? "汽油係數" : "天然氣係數",
       expected: v,
-      crawled: liveFuel ? "總說明 PDF 可連線；體積係數取管理表釘選" : "未自 HTML 抓到體積係數",
-      level: ok ? (liveFuel ? "通過" : "注意") : "異常",
+      crawled: null,
+      level: ok ? "通過" : "異常",
+      sourceDoc: FUEL.sourceDoc,
+      crawlNote: FUEL.crawlNote,
       detail: ok
-        ? `${FUEL.table}：${v}。來源無法像電力係數一樣從新聞稿直接解析到小數，故釘選＋區間 ${RANGE[key][0]}–${RANGE[key][1]} 驗證。`
+        ? `採用 ${FUEL.sourceDoc} 釘選值 ${v}（合理區間 ${RANGE[key][0]}–${RANGE[key][1]}）。`
         : `${v} 超出區間，拒絕帶入。`,
       url: FUEL.url,
     });
@@ -253,7 +245,9 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
     expected: pack.gwpRefrigerant,
     crawled: `${pack.gwpSet} ${pack.refrigerant}`,
     level: gwpOk ? "通過" : "異常",
-    detail: `依盤查年度採用 IPCC ${pack.gwpSet}（臺灣 113 年起盤查改 AR5）。${pack.refrigerant}＝${pack.gwpRefrigerant}。不是手填 1430。`,
+    sourceDoc: `IPCC ${pack.gwpSet}；環境部《溫室氣體排放量盤查作業指引》（113年起改採 AR5）`,
+    crawlNote: "GWP 不在能源署電力公告頁，而在 IPCC 評估報告與環境部盤查指引。",
+    detail: `${pack.refrigerant} 依 ${pack.gwpSet}＝${pack.gwpRefrigerant}。`,
     url: "https://ghgregistry.moenv.gov.tw/",
   });
 
