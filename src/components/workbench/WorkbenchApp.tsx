@@ -7,6 +7,7 @@ import {
   defaultInputs,
   derived,
   fieldCatalog,
+  isLockedKey,
   missingOnRow,
   preResults,
   regulationCatalog,
@@ -43,6 +44,7 @@ export function WorkbenchApp() {
   const result = useMemo(() => compute(inputs), [inputs]);
 
   function set<K extends keyof Inputs>(key: K, value: Inputs[K]) {
+    if (isLockedKey(key)) return;
     setInputs((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -123,36 +125,40 @@ export function WorkbenchApp() {
             Object.entries(grouped).map(([section, rows]) => (
               <div key={section} className="mb-4">
                 <p className="mb-1 text-[12px] font-bold">
-                  <span className="wb-tag">寫入</span>
+                  <span className="wb-tag">{rows.every((r) => isLockedKey(r.key)) ? "系統運算" : "寫入"}</span>
                   {section}
                 </p>
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
                       <th className="border border-[#888] px-2 py-1">項目</th>
-                      <th className="w-[120px] border border-[#888] px-2 py-1">寫入</th>
+                      <th className="w-[120px] border border-[#888] px-2 py-1">數值</th>
                       <th className="w-[90px] border border-[#888] px-2 py-1">單位</th>
                       <th className="border border-[#888] px-2 py-1">為什麼要這個參數</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((f) => {
+                      const locked = isLockedKey(f.key);
                       const miss = missingOnRow(inputs, f.key);
-                      const shown = f.fromPre ? d[f.key] : inputs[f.key];
+                      const shown = locked ? d[f.key] : inputs[f.key];
                       return (
                       <tr key={String(f.key)}>
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
                           {f.label}
-                          {f.fromPre && <div className="text-[11px] text-[#666]">由前置底稿帶入</div>}
+                          {locked && <div className="text-[11px] text-[#666]">系統依前置底稿帶入，不可改</div>}
                         </td>
-                        <td className={`border border-[#c8c8c8] px-1 py-1 ${f.fromPre ? "wb-calc" : ""}`}>
-                          <input
-                            type="number"
-                            step="any"
-                            readOnly={!!f.fromPre}
-                            value={Number(shown)}
-                            onChange={(e) => set(f.key, num(e) as never)}
-                          />
+                        <td className={`border border-[#c8c8c8] px-1 py-1 ${locked ? "wb-calc" : ""}`}>
+                          {locked ? (
+                            <div className="px-1 py-0.5 text-[13px]">{Number(shown)}</div>
+                          ) : (
+                            <input
+                              type="number"
+                              step="any"
+                              value={Number(shown)}
+                              onChange={(e) => set(f.key, num(e) as never)}
+                            />
+                          )}
                           {miss.length > 0 && (
                             <div className="text-[11px] font-bold text-[#c00000]">
                               {miss.join("、")}

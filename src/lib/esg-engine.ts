@@ -410,6 +410,10 @@ export const preRules: PreRule[] = [
   },
 ];
 
+export function isLockedKey(key: keyof Inputs) {
+  return preRules.some((r) => r.target === key);
+}
+
 const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
   electricityKwh: ["efElectricity"],
   renewableKwh: ["electricityKwh"],
@@ -493,21 +497,16 @@ export function derived(i: Inputs): Inputs {
   const fin = n(i.kpiRevWeight) + n(i.kpiProfitWeight) + n(i.kpiRoeWeight);
   const esg = n(i.kpiCarbonWeight) + n(i.kpiOshWeight) + n(i.kpiOtherEsgWeight);
   const other = n(i.kpiPersonalWeight);
-  if (fin > 0) out.execFinPoints = fin;
-  if (esg > 0) out.execEsgPoints = esg;
-  if (other > 0) out.execOtherPoints = other;
-  const execTotal = n(out.execFinPoints) + n(out.execEsgPoints) + n(out.execOtherPoints);
-  if (execTotal > 0) out.esgWeight = (n(out.execEsgPoints) / execTotal) * 100;
-  const green = n(i.capexEnergySave) + n(i.capexRenewable) + n(i.capexPollution) + n(i.capexOtherGreen);
-  if (green > 0) out.greenCapex = green;
-  const energy = n(i.expElectricity) + n(i.expFuel) + n(i.expSteam);
-  if (energy > 0) out.energyExpense = energy;
-  const fines = n(i.fineEnv) + n(i.fineOsh) + n(i.fineOther);
-  if (fines > 0) out.legalFines = fines;
-  const community = n(i.donateCharity) + n(i.donateCommunity);
-  if (community > 0) out.communitySpend = community;
-  const train = n(i.trainInternal) + n(i.trainExternal);
-  if (train > 0) out.trainingHours = train;
+  out.execFinPoints = fin;
+  out.execEsgPoints = esg;
+  out.execOtherPoints = other;
+  const execTotal = fin + esg + other;
+  out.esgWeight = execTotal > 0 ? (esg / execTotal) * 100 : 0;
+  out.greenCapex = n(i.capexEnergySave) + n(i.capexRenewable) + n(i.capexPollution) + n(i.capexOtherGreen);
+  out.energyExpense = n(i.expElectricity) + n(i.expFuel) + n(i.expSteam);
+  out.legalFines = n(i.fineEnv) + n(i.fineOsh) + n(i.fineOther);
+  out.communitySpend = n(i.donateCharity) + n(i.donateCommunity);
+  out.trainingHours = n(i.trainInternal) + n(i.trainExternal);
   return out;
 }
 

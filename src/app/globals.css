@@ -189,6 +189,14 @@ body:has(.wb-root) {
   color: #111;
 }
 
+.wb-root .wb-calc input,
+.wb-root input:disabled {
+  background: #fff8c4;
+  color: #111;
+  pointer-events: none;
+  caret-color: transparent;
+}
+
 .wb-tag {
   display: inline-block;
   font-size: 11px;
