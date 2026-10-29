@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   compute,
   defaultInputs,
@@ -14,6 +14,11 @@ import {
   type Inputs,
   type Metric,
 } from "@/lib/esg-engine";
+import {
+  OFFICIAL_FACTOR_KEYS,
+  REFRIGERANTS,
+  type FactorAudit,
+} from "@/lib/official-factors";
 
 type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg";
 
@@ -40,8 +45,31 @@ export function WorkbenchApp() {
   const [sheet, setSheet] = useState<Sheet>("pre");
   const [inputs, setInputs] = useState<Inputs>(defaultInputs);
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
+  const [factorAudit, setFactorAudit] = useState<FactorAudit | null>(null);
+  const [factorBusy, setFactorBusy] = useState(false);
+  const [factorTick, setFactorTick] = useState(0);
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    setFactorBusy(true);
+    fetch(
+      `/api/factors?year=${encodeURIComponent(inputs.year)}&refrigerant=${encodeURIComponent(inputs.refrigerantCode)}`,
+      { signal: ac.signal, cache: "no-store" },
+    )
+      .then((r) => r.json())
+      .then((data: FactorAudit) => {
+        if (!ac.signal.aborted) setFactorAudit(data);
+      })
+      .catch(() => {
+        if (!ac.signal.aborted) setFactorAudit(null);
+      })
+      .finally(() => {
+        if (!ac.signal.aborted) setFactorBusy(false);
+      });
+    return () => ac.abort();
+  }, [inputs.year, inputs.refrigerantCode, factorTick]);
 
   function set<K extends keyof Inputs>(key: K, value: Inputs[K]) {
     if (isLockedKey(key)) return;
@@ -91,6 +119,20 @@ export function WorkbenchApp() {
           <label className="flex items-center gap-2">
             年度
             <input className="w-[80px]" value={inputs.year} onChange={(e) => set("year", e.target.value)} />
+          </label>
+          <label className="flex items-center gap-2">
+            冷媒
+            <select
+              className="h-[26px] border border-[#8aa0b4] bg-white px-1"
+              value={inputs.refrigerantCode}
+              onChange={(e) => set("refrigerantCode", e.target.value)}
+            >
+              {REFRIGERANTS.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex items-center gap-2 text-[12px]">
             <input
@@ -142,11 +184,18 @@ export function WorkbenchApp() {
                       const locked = isLockedKey(f.key);
                       const miss = missingOnRow(inputs, f.key);
                       const shown = locked ? d[f.key] : inputs[f.key];
+                      const factorCheck = factorAudit?.checks.find((c) => c.key === f.key);
                       return (
                       <tr key={String(f.key)}>
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
                           {f.label}
-                          {locked && <div className="text-[11px] text-[#666]">系統依前置底稿帶入，不可改</div>}
+                          {locked && (
+                            <div className="text-[11px] text-[#666]">
+                              {OFFICIAL_FACTOR_KEYS.includes(f.key as (typeof OFFICIAL_FACTOR_KEYS)[number])
+                                ? "系統依官方公告帶入，不可改"
+                                : "系統依前置底稿帶入，不可改"}
+                            </div>
+                          )}
                         </td>
                         <td className={`border border-[#c8c8c8] px-1 py-1 ${locked ? "wb-calc" : ""}`}>
                           {locked ? (
@@ -158,6 +207,19 @@ export function WorkbenchApp() {
                               value={Number(shown)}
                               onChange={(e) => set(f.key, num(e) as never)}
                             />
+                          )}
+                          {factorCheck && (
+                            <div
+                              className={`text-[11px] font-bold ${
+                                factorCheck.level === "異常"
+                                  ? "text-[#c00000]"
+                                  : factorCheck.level === "注意"
+                                    ? "text-[#8a6d00]"
+                                    : "text-[#2d6a2d]"
+                              }`}
+                            >
+                              [{factorCheck.level}] 抓取 {String(factorCheck.crawled)}
+                            </div>
                           )}
                           {miss.length > 0 && (
                             <div className="text-[11px] font-bold text-[#c00000]">
@@ -177,6 +239,55 @@ export function WorkbenchApp() {
                 </table>
               </div>
             ))}
+
+          {sheet === "par" && (
+            <div className="mb-3 text-[12px]">
+              <p className="mb-2 leading-6">
+                係數<b>不是會計師手查手填</b>。電力係數依案件年度抓能源署公告頁，再與內建庫比對；燃油係數官方多半是
+                PDF 管理表，沒有穩定 HTML 可爬到 2.606 這種體積係數，因此釘選環境部 6.0.4 並用 PDF
+                關鍵字＋合理區間驗證。抓到的值和庫不一致就紅字，<b>不會覆蓋</b>。
+                {factorBusy ? "　正在連線公告頁…" : factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
+              </p>
+              <button
+                type="button"
+                className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
+                onClick={() => setFactorTick((n) => n + 1)}
+              >
+                重新向公告頁核對
+              </button>
+              {factorAudit && (
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                      <th className="border border-[#888] px-2 py-1">項目</th>
+                      <th className="border border-[#888] px-2 py-1">內建／帶入</th>
+                      <th className="border border-[#888] px-2 py-1">抓取結果</th>
+                      <th className="border border-[#888] px-2 py-1">驗證</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {factorAudit.checks.map((c) => (
+                      <tr key={c.key}>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{c.title}</td>
+                        <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{c.expected ?? "—"}</td>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{String(c.crawled)}</td>
+                        <td
+                          className={`border border-[#c8c8c8] px-2 py-1 ${
+                            c.level === "異常" ? "bg-[#fde8e8]" : c.level === "注意" ? "bg-[#fff4cc]" : "bg-[#e7f5e7]"
+                          }`}
+                        >
+                          <b>[{c.level}]</b> {c.detail}{" "}
+                          <a className="text-[#003399] underline" href={c.url} target="_blank" rel="noreferrer">
+                            來源
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
 
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">

@@ -1,6 +1,9 @@
+import { OFFICIAL_FACTOR_KEYS, officialValues } from "@/lib/official-factors";
+
 export type Inputs = {
   client: string;
   year: string;
+  refrigerantCode: string;
   revenueMillion: number;
   rdExpense: number;
   energyExpense: number;
@@ -105,6 +108,7 @@ export type Inputs = {
 export const defaultInputs: Inputs = {
   client: "綠能精密股份有限公司（示範）",
   year: "2025",
+  refrigerantCode: "R-134a",
   revenueMillion: 12840,
   rdExpense: 4.8,
   energyExpense: 2.1,
@@ -264,11 +268,11 @@ export const fieldCatalog: FieldDef[] = [
   { key: "wasteHazardT", sheet: "env", section: "水與廢棄物", label: "有害廢棄物", unit: "噸", why: "有害占比是報告書必列。", gri: "GRI 306" },
   { key: "noxT", sheet: "env", section: "水與廢棄物", label: "NOx 排放", unit: "噸", why: "空氣污染物，GRI 305-7。", gri: "GRI 305-7" },
   { key: "soxT", sheet: "env", section: "水與廢棄物", label: "SOx 排放", unit: "噸", why: "空氣污染物，GRI 305-7。", gri: "GRI 305-7" },
-  { key: "efElectricity", sheet: "par", section: "係數參數", label: "電力排放係數", unit: "kgCO2e/kWh", why: "把度數換成噸CO2e；每年隨電網公告變。不填對的係數，整份盤查錯。", gri: "環境部／能源署公告" },
-  { key: "efDiesel", sheet: "par", section: "係數參數", label: "柴油係數", unit: "kgCO2e/L", why: "柴油活動數據轉換參數。", gri: "排放係數表" },
-  { key: "efGasoline", sheet: "par", section: "係數參數", label: "汽油係數", unit: "kgCO2e/L", why: "汽油活動數據轉換參數。", gri: "排放係數表" },
-  { key: "efLng", sheet: "par", section: "係數參數", label: "天然氣係數", unit: "kgCO2e/m³", why: "天然氣活動數據轉換參數。", gri: "排放係數表" },
-  { key: "gwpRefrigerant", sheet: "par", section: "係數參數", label: "冷媒 GWP", unit: "倍", why: "kg 冷媒 × GWP ÷ 1000＝tCO2e。R-134a 約 1430。", gri: "IPCC GWP" },
+  { key: "efElectricity", sheet: "par", section: "係數參數（公告帶入，不可手改）", label: "電力排放係數", unit: "kgCO2e/kWh", why: "依案件年度向經濟部能源署電力排碳係數公告抓取並與內建庫比對。產業用戶用「產業盤查」係數。抓到的值與庫不一致就不覆蓋。", gri: "能源署電力排碳係數公告" },
+  { key: "efDiesel", sheet: "par", section: "係數參數（公告帶入，不可手改）", label: "柴油係數", unit: "kgCO2e/L", why: "環境部係數管理表常用體積係數。官方頁多為 PDF，無法像電力新聞稿直接爬到 2.606；系統釘選 6.0.4 並做區間／PDF 關鍵字驗證。", gri: "環境部排放係數管理表" },
+  { key: "efGasoline", sheet: "par", section: "係數參數（公告帶入，不可手改）", label: "汽油係數", unit: "kgCO2e/L", why: "同上，車用汽油體積係數。", gri: "環境部排放係數管理表" },
+  { key: "efLng", sheet: "par", section: "係數參數（公告帶入，不可手改）", label: "天然氣係數", unit: "kgCO2e/m³", why: "同上，天然氣體積係數。", gri: "環境部排放係數管理表" },
+  { key: "gwpRefrigerant", sheet: "par", section: "係數參數（公告帶入，不可手改）", label: "冷媒 GWP", unit: "倍", why: "由冷媒代碼＋盤查年度對 IPCC。2024 年起臺灣盤查用 AR5（R-134a＝1300），不是舊的 AR4 1430。", gri: "IPCC AR4／AR5；環境部盤查指引" },
   { key: "headcountEnd", sheet: "hr", section: "人力結構", label: "期末人數", unit: "人", why: "時點人數；多元占比常用期末。", gri: "GRI 2-7" },
   { key: "headcountAvg", sheet: "hr", section: "人力結構", label: "年平均人數", unit: "人", why: "流動率、人均訓練必須用平均人數，不能用期末。", gri: "GRI 401-1、404-1" },
   { key: "headcountFemale", sheet: "hr", section: "人力結構", label: "女性人數", unit: "人", why: "性別占比、薪酬比分母之一。", gri: "GRI 405-1" },
@@ -411,7 +415,7 @@ export const preRules: PreRule[] = [
 ];
 
 export function isLockedKey(key: keyof Inputs) {
-  return preRules.some((r) => r.target === key);
+  return preRules.some((r) => r.target === key) || OFFICIAL_FACTOR_KEYS.includes(key as (typeof OFFICIAL_FACTOR_KEYS)[number]);
 }
 
 const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
@@ -507,6 +511,12 @@ export function derived(i: Inputs): Inputs {
   out.legalFines = n(i.fineEnv) + n(i.fineOsh) + n(i.fineOther);
   out.communitySpend = n(i.donateCharity) + n(i.donateCommunity);
   out.trainingHours = n(i.trainInternal) + n(i.trainExternal);
+  const o = officialValues(i.year, i.refrigerantCode);
+  out.efElectricity = o.efElectricity;
+  out.efDiesel = o.efDiesel;
+  out.efGasoline = o.efGasoline;
+  out.efLng = o.efLng;
+  out.gwpRefrigerant = o.gwpRefrigerant;
   return out;
 }
 
