@@ -74,8 +74,7 @@ const FUEL = {
   url: "https://ghgregistry.moenv.gov.tw/DPC.aspx?kind=2",
   pdf: "https://ghgregistry.moenv.gov.tw/upload/Tools/%E6%BA%AB%E5%AE%A4%E6%B0%A3%E9%AB%94%E6%8E%92%E6%94%BE%E4%BF%82%E6%95%B8%E7%B8%BD%E8%AA%AA%E6%98%8E%E5%8F%8A%E9%80%90%E9%A0%85%E8%AA%AA%E6%98%8E.pdf",
   pdfName: "《溫室氣體排放係數總說明及逐項說明》PDF",
-  crawlNote:
-    "抓不到網頁數字：2.606／2.263／2.18 是管理表 Excel 工作表的體積係數，沒有寫在能源署新聞稿 HTML。爬蟲只能讀網頁文字，讀不到試算表儲存格。",
+  crawlNote: "體積係數取自該表，非能源署網頁。",
 };
 
 const GWP: Record<string, { AR4: number; AR5: number }> = {
@@ -191,7 +190,7 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
       crawlNote: page.ok
         ? "已連到公告頁，但頁面沒有解析到 0.xxx 公斤CO2e/度。"
         : "未能連到能源署公告頁（逾時或網站阻擋）。",
-      detail: `網頁沒抓到數字，改用文件釘選值 ${pack.efElectricity}。請打開來源文件人工複核。`,
+      detail: `改用文件值 ${pack.efElectricity}。`,
       url: pack.electricityMeta.url,
     });
   } else if (!near(crawledElec, pack.efElectricity) || !inRange("efElectricity", crawledElec)) {
@@ -203,7 +202,7 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
       level: "異常",
       sourceDoc: elecDoc,
       crawlNote: `公告頁解析為 ${crawledElec}，與文件釘選值 ${pack.efElectricity} 不一致。系統不覆蓋。`,
-      detail: "請打開能源署該年度電力排碳係數文件核對後再決定。",
+      detail: "公告頁數值與文件值不一致，未覆蓋。",
       url: pack.electricityMeta.url,
     });
   } else {
@@ -214,7 +213,7 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
       crawled: crawledElec,
       level: "通過",
       sourceDoc: elecDoc,
-      crawlNote: "已從公告網頁抓到數字，並與文件釘選值一致。",
+      crawlNote: "與公告頁一致。",
       detail: `與${pack.electricityMeta.label}一致。`,
       url: pack.electricityMeta.url,
     });
@@ -246,7 +245,7 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
     crawled: `${pack.gwpSet} ${pack.refrigerant}`,
     level: gwpOk ? "通過" : "異常",
     sourceDoc: `IPCC ${pack.gwpSet}；環境部《溫室氣體排放量盤查作業指引》（113年起改採 AR5）`,
-    crawlNote: "GWP 不在能源署電力公告頁，而在 IPCC 評估報告與環境部盤查指引。",
+    crawlNote: "",
     detail: `${pack.refrigerant} 依 ${pack.gwpSet}＝${pack.gwpRefrigerant}。`,
     url: "https://ghgregistry.moenv.gov.tw/",
   });

@@ -31,7 +31,7 @@ const sheets: { id: Sheet; label: string }[] = [
   { id: "kpi", label: "5.績效薪酬" },
   { id: "par", label: "6.係數參數" },
   { id: "chart", label: "7.指標圖預覽" },
-  { id: "why", label: "8.參數說明" },
+  { id: "why", label: "8.欄位對照" },
   { id: "reg", label: "9.法規庫" },
 ];
 
@@ -105,7 +105,7 @@ export function WorkbenchApp() {
       <div className="flex items-center justify-between border-b border-[#8a8a8a] bg-[#2c3b4e] px-3 py-1.5 text-[13px] text-white">
         <div className="flex items-center gap-4">
           <b>翰欣科技 ESG 計算系統</b>
-          <span className="opacity-80">寫入活動數據 → 係數／公式運算 → 勾稽 → 圖表預覽</span>
+          <span className="opacity-80">活動數據　係數　運算　勾稽</span>
         </div>
         <div className="flex items-center gap-3">
           <span>
@@ -147,9 +147,9 @@ export function WorkbenchApp() {
               checked={inputs.useActivityForGhg}
               onChange={(e) => set("useActivityForGhg", e.target.checked)}
             />
-            Scope1/2 用活動數據×係數（建議）
+            Scope 1／2 採活動數據×係數
           </label>
-          <span className="text-[#333]">藍字＝寫入　黃底＝系統運算　業務達成率不計入社會面分數</span>
+          <span className="text-[#333]">藍字輸入　黃底運算</span>
         </div>
       </div>
 
@@ -174,7 +174,7 @@ export function WorkbenchApp() {
             Object.entries(grouped).map(([section, rows]) => (
               <div key={section} className="mb-4">
                 <p className="mb-1 text-[12px] font-bold">
-                  <span className="wb-tag">{rows.every((r) => isLockedKey(r.key)) ? "系統運算" : "寫入"}</span>
+                  <span className="wb-tag">{rows.every((r) => isLockedKey(r.key)) ? "運算" : "輸入"}</span>
                   {section}
                 </p>
                 <table className="w-full border-collapse">
@@ -184,7 +184,7 @@ export function WorkbenchApp() {
                       <th className="w-[120px] border border-[#888] px-2 py-1">數值</th>
                       {sheet === "par" && <th className="w-[220px] border border-[#888] px-2 py-1">檢查最新</th>}
                       <th className="w-[90px] border border-[#888] px-2 py-1">單位</th>
-                      <th className="border border-[#888] px-2 py-1">為什麼要這個參數</th>
+                      <th className="border border-[#888] px-2 py-1">說明</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -200,7 +200,7 @@ export function WorkbenchApp() {
                           {f.label}
                           {locked && (
                             <div className="text-[11px] text-[#666]">
-                              {isOfficial ? "系統依官方公告帶入，不可改" : "系統依前置底稿帶入，不可改"}
+                              {isOfficial ? "依公告帶入" : "依底稿帶入"}
                             </div>
                           )}
                         </td>
@@ -247,11 +247,11 @@ export function WorkbenchApp() {
                                     }`}
                                   >
                                     [{factorCheck.level}]
-                                    {factorCheck.crawled != null ? ` 網頁抓取 ${String(factorCheck.crawled)}` : " 網頁無此數字"}
-                                    <div className="font-normal text-[#111]">
-                                      來源文件：{factorCheck.sourceDoc}
-                                    </div>
-                                    <div className="font-normal text-[#333]">{factorCheck.crawlNote}</div>
+                                    {factorCheck.crawled != null ? ` ${String(factorCheck.crawled)}` : ""}
+                                    <div className="font-normal text-[#111]">來源文件：{factorCheck.sourceDoc}</div>
+                                    {factorCheck.level !== "通過" && (
+                                      <div className="font-normal text-[#333]">{factorCheck.detail}</div>
+                                    )}
                                     <a
                                       className="font-normal text-[#003399] underline"
                                       href={factorCheck.url}
@@ -282,9 +282,7 @@ export function WorkbenchApp() {
           {sheet === "par" && (
             <div className="mb-3 text-[12px]">
               <p className="mb-2 leading-6">
-                係數<b>不是會計師手查手填</b>。電力可以從能源署公告網頁抓數字；柴油／汽油／天然氣體積係數寫在環境部
-                <b>《溫室氣體排放係數管理表》6.0.4版</b>Excel，不在網頁 HTML，所以不是抓失敗，是文件裡才有。
-                列上會標來源文件名稱。網頁抓到的值和文件不一致才紅字，<b>不會覆蓋</b>。
+                係數依案件年度對應公告文件帶入並鎖定。核對結果與來源文件見各列。
                 {factorBusy ? "　正在連線公告頁…" : factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
               </p>
               <button
@@ -331,15 +329,14 @@ export function WorkbenchApp() {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                前置底稿只留兩件事：考核表<b>三大類配分</b>（財務／ESG／其他，客戶給多少抄多少，不必再拆 KPI），以及年報沒有的<b>綠色資本支出分類</b>。
-                訓練時數、裁罰、公益、能源費用都直接填客戶數字。缺底稿會紅字。
+                高階ESG權重、綠色資本支出由本頁運算後帶入主表。
               </p>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
                     <th className="border border-[#888] px-2 py-1">主表欄位（系統帶入）</th>
                     <th className="border border-[#888] px-2 py-1">運算結果</th>
-                    <th className="border border-[#888] px-2 py-1">會計師怎麼算</th>
+                    <th className="border border-[#888] px-2 py-1">算式</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -364,18 +361,12 @@ export function WorkbenchApp() {
 
           {sheet === "why" && (
             <div>
-              <p className="mb-2 text-[13px] leading-6">
-                先前只有績效KPI＋少數環境人力欄。永續報告書還要 <b>E 能源／排放／水／廢棄物／空氣污染物</b>、
-                <b>S 性別／身障／育嬰／職災死亡／TRIR／供應商／人權訓練</b>、
-                <b>G 獨董／出席／反貪腐／裁罰／資安</b>，以及把度數變成噸CO2e 的
-                <b>係數與 GWP</b>。下列是全部寫入參數與用途。
-              </p>
               <table className="w-full border-collapse text-[12px]">
                 <thead>
                   <tr className="bg-[#2c3b4e] text-white">
                     <th className="border border-[#888] px-2 py-1 text-left">分頁</th>
                     <th className="border border-[#888] px-2 py-1 text-left">參數</th>
-                    <th className="border border-[#888] px-2 py-1 text-left">為什麼需要</th>
+                    <th className="border border-[#888] px-2 py-1 text-left">說明</th>
                     <th className="border border-[#888] px-2 py-1 text-left">對應</th>
                   </tr>
                 </thead>
@@ -514,8 +505,7 @@ function ChartPreview({ metrics }: { metrics: Metric[] }) {
   return (
     <div className="text-[13px]">
       <p className="mb-2">
-        <span className="wb-tag">預覽</span>
-        依目前寫入即時重算，含環境／社會／治理／薪酬運算結果。
+        依目前輸入重算。
       </p>
       <BarChart title="全部比率指標（%）" rows={pct} />
       <BarChart
