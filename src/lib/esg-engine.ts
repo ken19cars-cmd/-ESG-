@@ -79,6 +79,13 @@ export type Inputs = {
   execFinPoints: number;
   execEsgPoints: number;
   execOtherPoints: number;
+  kpiRevWeight: number;
+  kpiProfitWeight: number;
+  kpiRoeWeight: number;
+  kpiCarbonWeight: number;
+  kpiOshWeight: number;
+  kpiOtherEsgWeight: number;
+  kpiPersonalWeight: number;
   capexEnergySave: number;
   capexRenewable: number;
   capexPollution: number;
@@ -176,6 +183,13 @@ export const defaultInputs: Inputs = {
   execFinPoints: 70,
   execEsgPoints: 15,
   execOtherPoints: 15,
+  kpiRevWeight: 25,
+  kpiProfitWeight: 25,
+  kpiRoeWeight: 20,
+  kpiCarbonWeight: 8,
+  kpiOshWeight: 4,
+  kpiOtherEsgWeight: 3,
+  kpiPersonalWeight: 15,
   capexEnergySave: 0.8,
   capexRenewable: 0.5,
   capexPollution: 0.2,
@@ -204,9 +218,16 @@ export type FieldDef = {
 };
 
 export const fieldCatalog: FieldDef[] = [
-  { key: "execFinPoints", sheet: "pre", section: "底稿：高階ESG權重（年報沒有現成一格）", label: "高階變動薪酬－財務／營運績效配分", unit: "分", why: "從薪酬委員會辦法、年報薪酬政策拆。變動薪酬通常分成財務KPI、永續KPI、其他。這格抄財務／營運那一塊的配分。", gri: "薪酬辦法；GRI 2-19 底稿" },
-  { key: "execEsgPoints", sheet: "pre", section: "底稿：高階ESG權重（年報沒有現成一格）", label: "高階變動薪酬－ESG／永續績效配分", unit: "分", why: "同一份辦法裡「減碳／職安／永續」那一塊的配分。沒有這格，高階ESG權重無法自己算出來。若辦法寫沒有永續權重，填 0。", gri: "薪酬辦法；GRI 2-19 底稿" },
-  { key: "execOtherPoints", sheet: "pre", section: "底稿：高階ESG權重（年報沒有現成一格）", label: "高階變動薪酬－其他配分", unit: "分", why: "個人職能、專案、其他非財務也非ESG的配分。三格加總＝變動薪酬總配分，ESG權重＝ESG配分÷總配分。", gri: "薪酬辦法；GRI 2-19 底稿" },
+  { key: "kpiRevWeight", sheet: "pre", section: "底稿：高階考核表－財務KPI權重（這才是源頭）", label: "考核表：營收／業績達成權重", unit: "%", why: "向人資／薪酬委員會調「總經理及副總績效考核表」或「變動薪酬績效指標權重表」。這一列抄表上營收或業績KPI的權重％，不是自己編的。", gri: "高階考核表；GRI 2-19" },
+  { key: "kpiProfitWeight", sheet: "pre", section: "底稿：高階考核表－財務KPI權重（這才是源頭）", label: "考核表：獲利／EPS權重", unit: "%", why: "同一張考核表上稅前淨利、EPS、稅後純益那一列的權重％。", gri: "高階考核表；GRI 2-19" },
+  { key: "kpiRoeWeight", sheet: "pre", section: "底稿：高階考核表－財務KPI權重（這才是源頭）", label: "考核表：ROE／其他財務權重", unit: "%", why: "ROE、成本率、現金、其他財務指標權重。三列加總＝財務配分。年報薪酬政策若只寫「經營績效」，仍要回到考核表才有拆開的％。", gri: "高階考核表；GRI 2-19" },
+  { key: "kpiCarbonWeight", sheet: "pre", section: "底稿：高階考核表－ESG KPI權重（這才是源頭）", label: "考核表：減碳／密集度權重", unit: "%", why: "考核表上排放、密集度、綠電等環境KPI的權重％。沒有此指標填 0。", gri: "高階考核表；GRI 2-19" },
+  { key: "kpiOshWeight", sheet: "pre", section: "底稿：高階考核表－ESG KPI權重（這才是源頭）", label: "考核表：職安權重", unit: "%", why: "重大職災、FR、工安目標那一列的權重％。", gri: "高階考核表；GRI 2-19" },
+  { key: "kpiOtherEsgWeight", sheet: "pre", section: "底稿：高階考核表－ESG KPI權重（這才是源頭）", label: "考核表：其他永續權重", unit: "%", why: "供應商評鑑、訓練、誠信等其餘永續KPI權重。三列加總＝ESG配分。", gri: "高階考核表；GRI 2-19" },
+  { key: "kpiPersonalWeight", sheet: "pre", section: "底稿：高階考核表－其他權重", label: "考核表：個人職能／專案權重", unit: "%", why: "非財務也非ESG的個人職能、專案權重。沒有就填 0。", gri: "高階考核表；GRI 2-19" },
+  { key: "execFinPoints", sheet: "pre", section: "系統加總：不要手填70或15", label: "財務／營運績效配分（加總）", unit: "分", why: "＝營收權重＋獲利權重＋其他財務權重。示範 25+25+20＝70。這格不是源頭。", gri: "由考核表加總", fromPre: true },
+  { key: "execEsgPoints", sheet: "pre", section: "系統加總：不要手填70或15", label: "ESG／永續績效配分（加總）", unit: "分", why: "＝減碳權重＋職安權重＋其他永續權重。示範 8+4+3＝15。這格不是源頭。", gri: "由考核表加總", fromPre: true },
+  { key: "execOtherPoints", sheet: "pre", section: "系統加總：不要手填70或15", label: "其他配分（加總）", unit: "分", why: "＝個人職能／專案權重。示範 15。", gri: "由考核表加總", fromPre: true },
   { key: "capexEnergySave", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "節能設備資本支出", unit: "億元", why: "現金流量表只有「購置不動產廠房設備」總額。綠色占比要會計師從固定資產增加明細把節能設備挑出來加總。", gri: "資產明細；投資揭露底稿" },
   { key: "capexRenewable", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "再生能源設備資本支出", unit: "億元", why: "太陽能、儲能、綠電相關設備，年報通常不單獨等於「綠色Capex」。", gri: "資產明細" },
   { key: "capexPollution", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "污染防治設備資本支出", unit: "億元", why: "廢水、廢氣、廢棄物處理設備。", gri: "資產明細" },
@@ -283,7 +304,7 @@ export const fieldCatalog: FieldDef[] = [
   { key: "dueReview", sheet: "kpi", section: "績效薪酬", label: "應考核人數", unit: "人", why: "考核覆蓋率分母。", gri: "GRI 404-3" },
   { key: "doneReview", sheet: "kpi", section: "績效薪酬", label: "已考核人數", unit: "人", why: "考核覆蓋率分子。", gri: "GRI 404-3" },
   { key: "withEsgKpi", sheet: "kpi", section: "績效薪酬", label: "KPI含ESG指標人數", unit: "人", why: "永續是否寫進考核，不是業務達成率。", gri: "實務守則 §9" },
-  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "不是問卷分數。從薪酬辦法拆：ESG配分÷（財務配分＋ESG配分＋其他配分）。請先填前置底稿，系統帶入。", gri: "GRI 2-19", fromPre: true },
+  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "源頭是高階考核表各列權重，不是年報也不是自己填70、15。ESG配分÷考核表權重合計。", gri: "GRI 2-19", fromPre: true },
   { key: "businessTarget", sheet: "kpi", section: "績效薪酬", label: "業務目標", unit: "億元", why: "財務KPI，不計入社會面分數。", gri: "內部績效" },
   { key: "businessActual", sheet: "kpi", section: "績效薪酬", label: "業務實際", unit: "億元", why: "與目標相除得業務達成率。", gri: "內部績效" },
   { key: "esgTargetScore", sheet: "kpi", section: "績效薪酬", label: "ESG KPI目標", unit: "分", why: "減碳／職安等永續目標分數。", gri: "GRI 2-19" },
@@ -308,6 +329,11 @@ const ALLOW_ZERO = new Set<keyof Inputs>([
   "communitySpend",
   "execEsgPoints",
   "execOtherPoints",
+  "kpiRoeWeight",
+  "kpiCarbonWeight",
+  "kpiOshWeight",
+  "kpiOtherEsgWeight",
+  "kpiPersonalWeight",
   "capexOtherGreen",
   "expSteam",
   "fineEnv",
@@ -326,10 +352,30 @@ type PreRule = {
 
 export const preRules: PreRule[] = [
   {
+    target: "execFinPoints",
+    combine: "sum",
+    formula: "考核表營收權重＋獲利權重＋其他財務權重",
+    sources: ["kpiRevWeight", "kpiProfitWeight", "kpiRoeWeight"],
+  },
+  {
+    target: "execEsgPoints",
+    combine: "sum",
+    allowAllZero: true,
+    formula: "考核表減碳權重＋職安權重＋其他永續權重",
+    sources: ["kpiCarbonWeight", "kpiOshWeight", "kpiOtherEsgWeight"],
+  },
+  {
+    target: "execOtherPoints",
+    combine: "sum",
+    allowAllZero: true,
+    formula: "考核表個人職能／專案權重",
+    sources: ["kpiPersonalWeight"],
+  },
+  {
     target: "esgWeight",
     combine: "ratio",
-    formula: "ESG配分 ÷（財務配分＋ESG配分＋其他配分）×100%",
-    sources: ["execFinPoints", "execEsgPoints", "execOtherPoints"],
+    formula: "ESG配分 ÷ 考核表權重合計 ×100%",
+    sources: ["kpiRevWeight", "kpiProfitWeight", "kpiRoeWeight", "kpiCarbonWeight", "kpiOshWeight", "kpiOtherEsgWeight", "kpiPersonalWeight"],
   },
   {
     target: "greenCapex",
@@ -412,10 +458,13 @@ export function labelOf(key: keyof Inputs) {
 
 function preMissing(i: Inputs, rule: PreRule): string[] {
   if (rule.combine === "ratio") {
+    const finKeys: (keyof Inputs)[] = ["kpiRevWeight", "kpiProfitWeight", "kpiRoeWeight"];
     const msgs: string[] = [];
-    if (blank(i, "execFinPoints")) msgs.push(`${labelOf("execFinPoints")}尚未輸入`);
-    const total = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
-    if (total === 0) msgs.push("高階變動薪酬配分合計尚未輸入");
+    if (finKeys.every((k) => n(i[k]) === 0)) {
+      msgs.push(...finKeys.filter((k) => blank(i, k)).map((k) => `${labelOf(k)}尚未輸入`));
+    }
+    const total = rule.sources.reduce((s, k) => s + n(i[k]), 0);
+    if (total === 0) msgs.push("高階考核表權重合計尚未輸入");
     return msgs;
   }
   const allZero = rule.sources.every((k) => n(i[k]) === 0);
@@ -441,8 +490,14 @@ export function missingOnRow(i: Inputs, key: keyof Inputs): string[] {
 
 export function derived(i: Inputs): Inputs {
   const out: Inputs = { ...i };
-  const execTotal = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
-  if (execTotal > 0) out.esgWeight = (n(i.execEsgPoints) / execTotal) * 100;
+  const fin = n(i.kpiRevWeight) + n(i.kpiProfitWeight) + n(i.kpiRoeWeight);
+  const esg = n(i.kpiCarbonWeight) + n(i.kpiOshWeight) + n(i.kpiOtherEsgWeight);
+  const other = n(i.kpiPersonalWeight);
+  if (fin > 0) out.execFinPoints = fin;
+  if (esg > 0) out.execEsgPoints = esg;
+  if (other > 0) out.execOtherPoints = other;
+  const execTotal = n(out.execFinPoints) + n(out.execEsgPoints) + n(out.execOtherPoints);
+  if (execTotal > 0) out.esgWeight = (n(out.execEsgPoints) / execTotal) * 100;
   const green = n(i.capexEnergySave) + n(i.capexRenewable) + n(i.capexPollution) + n(i.capexOtherGreen);
   if (green > 0) out.greenCapex = green;
   const energy = n(i.expElectricity) + n(i.expFuel) + n(i.expSteam);
@@ -458,7 +513,7 @@ export function derived(i: Inputs): Inputs {
 
 export function preResults(i: Inputs) {
   const d = derived(i);
-  const execTotal = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
+  const execTotal = n(d.execFinPoints) + n(d.execEsgPoints) + n(d.execOtherPoints);
   const unit = (target: keyof Inputs) => fieldCatalog.find((f) => f.key === target)?.unit ?? "";
   return preRules.map((rule) => {
     const raw = d[rule.target];

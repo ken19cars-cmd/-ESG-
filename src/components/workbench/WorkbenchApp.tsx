@@ -149,6 +149,7 @@ export function WorkbenchApp() {
                           <input
                             type="number"
                             step="any"
+                            readOnly={!!f.fromPre}
                             value={Number(shown)}
                             onChange={(e) => set(f.key, num(e) as never)}
                           />
@@ -174,9 +175,9 @@ export function WorkbenchApp() {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                這裡不是把年報數字再抄一次。是會計師接到 A 公司後，<b>財報／年報沒有現成一格、必須自己用明細算過</b>
-                才能填進主表的項目。例如「高階ESG權重」不是問卷分數，是薪酬辦法裡 ESG 配分除以變動薪酬總配分。
-                缺一項底稿，該列與主表對應列會出現紅字。
+                70、15 不是年報科目，也不是自己編的配分。源頭是人資／薪酬委員會的
+                <b>高階主管績效考核表</b>（或變動薪酬績效指標權重表）：表上每一列 KPI 的權重％抄進來，系統才加總成財務配分、ESG配分，再算出高階ESG權重。
+                缺一項會紅字。
               </p>
               <table className="w-full border-collapse">
                 <thead>
