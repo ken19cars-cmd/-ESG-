@@ -14,13 +14,14 @@ import {
   type Inputs,
   type Metric,
 } from "@/lib/esg-engine";
+import { griIndex, reportDraft } from "@/lib/report-draft";
 import {
   OFFICIAL_FACTOR_KEYS,
   REFRIGERANTS,
   type FactorAudit,
 } from "@/lib/official-factors";
 
-type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg";
+type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg" | "rep";
 
 const sheets: { id: Sheet; label: string }[] = [
   { id: "pre", label: "0.接案前置底稿" },
@@ -33,6 +34,7 @@ const sheets: { id: Sheet; label: string }[] = [
   { id: "chart", label: "7.指標圖預覽" },
   { id: "why", label: "8.欄位對照" },
   { id: "reg", label: "9.法規庫" },
+  { id: "rep", label: "10.報告書底稿" },
 ];
 
 function num(e: React.ChangeEvent<HTMLInputElement>) {
@@ -436,6 +438,72 @@ export function WorkbenchApp() {
                         {r.version}／庫內 {r.asOf}
                       </td>
                       <td className="border px-2 py-1">{r.point}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {sheet === "rep" && (
+            <div className="text-[13px]">
+              <div className="mb-3 flex items-center justify-between">
+                <p>
+                  {inputs.client}　{inputs.year}　永續報告書績效表／GRI 索引底稿
+                </p>
+                <button
+                  type="button"
+                  className="border border-[#444] bg-[#eee] px-3 py-1"
+                  onClick={() => window.print()}
+                >
+                  列印
+                </button>
+              </div>
+              {reportDraft(d, result.metrics).map((block) => (
+                <div key={block.chapter} className="mb-4">
+                  <p className="mb-1 text-[12px] font-bold">
+                    {block.chapter}
+                    <span className="ml-2 font-normal text-[#666]">{block.gri}</span>
+                  </p>
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                        <th className="border border-[#888] px-2 py-1">項目</th>
+                        <th className="border border-[#888] px-2 py-1">數值</th>
+                        <th className="border border-[#888] px-2 py-1">單位</th>
+                        <th className="border border-[#888] px-2 py-1">對應</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {block.rows.map((r) => (
+                        <tr key={r.name}>
+                          <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
+                          <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
+                          <td className="border border-[#c8c8c8] px-2 py-1">{r.unit}</td>
+                          <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+              <p className="mb-1 text-[12px] font-bold">附錄　GRI 內容索引（績效項）</p>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                    <th className="border border-[#888] px-2 py-1">揭露</th>
+                    <th className="border border-[#888] px-2 py-1">主題</th>
+                    <th className="border border-[#888] px-2 py-1">數值</th>
+                    <th className="border border-[#888] px-2 py-1">章節</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {griIndex(result.metrics).map((r) => (
+                    <tr key={r.topic}>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.topic}</td>
+                      <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.chapter}</td>
                     </tr>
                   ))}
                 </tbody>
