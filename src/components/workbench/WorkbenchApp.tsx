@@ -36,9 +36,9 @@ function num(e: React.ChangeEvent<HTMLInputElement>) {
 
 export function WorkbenchApp() {
   const [sheet, setSheet] = useState<Sheet>("pre");
-  const d = useMemo(() => derived(inputs), [inputs]);
   const [inputs, setInputs] = useState<Inputs>(defaultInputs);
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
+  const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
 
   function set<K extends keyof Inputs>(key: K, value: Inputs[K]) {
