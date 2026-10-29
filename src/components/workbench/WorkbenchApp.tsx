@@ -5,15 +5,18 @@ import { useMemo, useState } from "react";
 import {
   compute,
   defaultInputs,
+  derived,
   fieldCatalog,
+  missingOnRow,
   regulationCatalog,
   type Inputs,
   type Metric,
 } from "@/lib/esg-engine";
 
-type Sheet = "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg";
+type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg";
 
 const sheets: { id: Sheet; label: string }[] = [
+  { id: "pre", label: "0.前置運算" },
   { id: "fin", label: "1.財務分母" },
   { id: "env", label: "2.環境E" },
   { id: "hr", label: "3.社會S" },
@@ -32,7 +35,8 @@ function num(e: React.ChangeEvent<HTMLInputElement>) {
 }
 
 export function WorkbenchApp() {
-  const [sheet, setSheet] = useState<Sheet>("why");
+  const [sheet, setSheet] = useState<Sheet>("pre");
+  const d = useMemo(() => derived(inputs), [inputs]);
   const [inputs, setInputs] = useState<Inputs>(defaultInputs);
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
   const result = useMemo(() => compute(inputs), [inputs]);
@@ -114,7 +118,7 @@ export function WorkbenchApp() {
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="border-r border-[#bbb] bg-white p-3">
-          {["fin", "env", "hr", "gov", "kpi", "par"].includes(sheet) &&
+          {["pre", "fin", "env", "hr", "gov", "kpi", "par"].includes(sheet) &&
             Object.entries(grouped).map(([section, rows]) => (
               <div key={section} className="mb-4">
                 <p className="mb-1 text-[12px] font-bold">
@@ -131,7 +135,9 @@ export function WorkbenchApp() {
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((f) => (
+                    {rows.map((f) => {
+                      const miss = missingOnRow(inputs, f.key);
+                      return (
                       <tr key={String(f.key)}>
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">{f.label}</td>
                         <td className="border border-[#c8c8c8] px-1 py-1">
@@ -141,6 +147,11 @@ export function WorkbenchApp() {
                             value={Number(inputs[f.key])}
                             onChange={(e) => set(f.key, num(e) as never)}
                           />
+                          {miss.length > 0 && (
+                            <div className="text-[11px] font-bold text-[#c00000]">
+                              {miss.join("、")}
+                            </div>
+                          )}
                         </td>
                         <td className="border border-[#c8c8c8] px-2 py-1 text-[12px]">{f.unit}</td>
                         <td className="border border-[#c8c8c8] px-2 py-1 text-[12px] text-[#444]">
@@ -148,11 +159,19 @@ export function WorkbenchApp() {
                           <div className="text-[11px] text-[#777]">{f.gri}</div>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             ))}
+
+          {sheet === "pre" && (
+            <p className="mb-2 text-[12px] text-[#333]">
+              系統已用前置欄算出：年用電 {d.electricityKwh.toLocaleString()} kWh、平均人數 {d.headcountAvg} 人、總工時{" "}
+              {d.workHours.toLocaleString()} 小時。缺任一前置欄，該列會出現紅字。
+            </p>
+          )}
 
           {sheet === "chart" && <ChartPreview metrics={result.metrics} />}
 
@@ -270,52 +289,90 @@ export function WorkbenchApp() {
   );
 }
 
-function ChartPreview({ metrics }: { metrics: Metric[] }) {
-  const bars = [
-    ["再生能源%", metrics.find((m) => m.id === "ren")?.raw ?? 0],
-    ["回收率%", metrics.find((m) => m.id === "rec")?.raw ?? 0],
-    ["女性占比%", metrics.find((m) => m.id === "fem")?.raw ?? 0],
-    ["考核覆蓋%", metrics.find((m) => m.id === "rev")?.raw ?? 0],
-    ["獨董比%", metrics.find((m) => m.id === "ind")?.raw ?? 0],
-    ["出席率%", metrics.find((m) => m.id === "att")?.raw ?? 0],
-    ["供應商評鑑%", metrics.find((m) => m.id === "sup")?.raw ?? 0],
-    ["反貪腐訓練%", metrics.find((m) => m.id === "ac")?.raw ?? 0],
-  ] as [string, number][];
-  const s1 = metrics.find((m) => m.id === "s1")?.raw ?? 0;
-  const s2 = metrics.find((m) => m.id === "s2")?.raw ?? 0;
-  const tot = s1 + s2 || 1;
+function BarChart({ title, rows }: { title: string; rows: [string, number][] }) {
+  const h = Math.max(120, rows.length * 22 + 16);
+  const max = Math.max(1, ...rows.map((r) => (Number.isFinite(r[1]) ? r[1] : 0)));
+  return (
+    <div className="mb-3 border border-[#ccc] p-3">
+      <b>{title}</b>
+      <svg viewBox={`0 0 560 ${h}`} className="mt-1 h-auto w-full bg-white">
+        {rows.map((row, i) => {
+          const v = Number.isFinite(row[1]) ? row[1] : 0;
+          const w = (v / max) * 360;
+          return (
+            <g key={row[0]}>
+              <text x="4" y={16 + i * 22} fontSize="10" fill="#222">
+                {row[0]}
+              </text>
+              <rect x="148" y={6 + i * 22} width="360" height="12" fill="#eee" stroke="#999" />
+              <rect x="148" y={6 + i * 22} width={w} height="12" fill="#4a6b8a" />
+              <text x="514" y={16 + i * 22} fontSize="10" fill="#111">
+                {Number.isFinite(row[1]) ? row[1].toFixed(1) : "—"}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+    </div>
+  );
+}
 
+function ChartPreview({ metrics }: { metrics: Metric[] }) {
+  const pick = (id: string) => metrics.find((m) => m.id === id)?.raw ?? NaN;
+  const pct = metrics.filter((m) => m.unit === "%").map((m) => [m.name, m.raw] as [string, number]);
+  const s1 = pick("s1");
+  const s2 = pick("s2");
+  const s3 = pick("s3") - (Number.isFinite(s1) ? s1 : 0) - (Number.isFinite(s2) ? s2 : 0);
+  const tot = (s1 || 0) + (s2 || 0) || 1;
   return (
     <div className="text-[13px]">
       <p className="mb-2">
         <span className="wb-tag">預覽</span>
-        依目前寫入即時重算。列印／確信前仍以右側數字表為準。
+        依目前寫入即時重算，含環境／社會／治理／薪酬運算結果。
       </p>
-      <div className="mb-4 border border-[#ccc] p-3">
-        <b>比率類指標（%）</b>
-        <svg viewBox="0 0 520 220" className="mt-2 h-auto w-full max-w-[640px] bg-white">
-          {bars.map((row, i) => {
-            const w = Math.max(0, Math.min(100, row[1])) * 3.4;
-            return (
-              <g key={row[0]}>
-                <text x="4" y={18 + i * 26} fontSize="11" fill="#222">
-                  {row[0]}
-                </text>
-                <rect x="120" y={8 + i * 26} width="340" height="14" fill="#eee" stroke="#999" />
-                <rect x="120" y={8 + i * 26} width={w} height="14" fill="#4a6b8a" />
-                <text x="466" y={18 + i * 26} fontSize="11" fill="#111">
-                  {Number.isFinite(row[1]) ? row[1].toFixed(1) : "—"}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+      <BarChart title="全部比率指標（%）" rows={pct} />
+      <BarChart
+        title="環境絕對值"
+        rows={[
+          ["Scope 1 tCO2e", pick("s1")],
+          ["Scope 2 tCO2e", pick("s2")],
+          ["密集度", pick("int")],
+          ["能源 GJ", pick("en")],
+          ["用水密集度", pick("wint")],
+          ["耗水 千噸", pick("wuse")],
+        ]}
+      />
+      <BarChart
+        title="社會／職安"
+        rows={[
+          ["流動率%", pick("turn")],
+          ["新進率%", pick("hire")],
+          ["人均訓練 h", pick("tr")],
+          ["FR", pick("fr")],
+          ["SR", pick("sr")],
+          ["TRIR", pick("trir")],
+          ["育嬰復職%", pick("par")],
+          ["女性主管%", pick("fm")],
+        ]}
+      />
+      <BarChart
+        title="治理／薪酬"
+        rows={[
+          ["獨董比%", pick("ind")],
+          ["出席率%", pick("att")],
+          ["反貪腐%", pick("ac")],
+          ["考核覆蓋%", pick("rev")],
+          ["ESG KPI員工%", pick("ek")],
+          ["業務達成%", pick("biz")],
+          ["ESG達成%", pick("eh")],
+          ["最高薪倍數", pick("pay")],
+          ["女男薪酬比", pick("gp")],
+        ]}
+      />
       <div className="border border-[#ccc] p-3">
         <b>Scope 1 / 2 結構（tCO2e）</b>
         <p className="mt-1 text-[12px]">
-          Scope 1 {s1.toFixed(0)}（{((s1 / tot) * 100).toFixed(1)}%）　Scope 2 {s2.toFixed(0)}（
-          {((s2 / tot) * 100).toFixed(1)}%）
+          S1 {s1.toFixed(0)}　S2 {s2.toFixed(0)}　S3 彙總差額 {Number.isFinite(s3) ? s3.toFixed(0) : "—"}
         </p>
         <div className="mt-2 flex h-6 w-full max-w-[520px] overflow-hidden border border-[#888]">
           <div className="bg-[#6b4a3a] text-center text-[11px] text-white" style={{ width: `${(s1 / tot) * 100}%` }}>

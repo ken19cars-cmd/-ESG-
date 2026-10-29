@@ -76,6 +76,13 @@ export type Inputs = {
   femalePay: number;
   malePay: number;
   trainingHoursTarget: number;
+  headcountOpen: number;
+  workDays: number;
+  hoursPerDay: number;
+  elecQ1: number;
+  elecQ2: number;
+  elecQ3: number;
+  elecQ4: number;
 };
 
 export const defaultInputs: Inputs = {
@@ -156,6 +163,13 @@ export const defaultInputs: Inputs = {
   femalePay: 108,
   malePay: 116,
   trainingHoursTarget: 24,
+  headcountOpen: 1248,
+  workDays: 250,
+  hoursPerDay: 8,
+  elecQ1: 4500000,
+  elecQ2: 4700000,
+  elecQ3: 4900000,
+  elecQ4: 4500000,
 };
 
 export type FieldDef = {
@@ -166,9 +180,18 @@ export type FieldDef = {
   unit: string;
   why: string;
   gri: string;
+  needs?: { key: keyof Inputs; label: string }[];
+  allowZero?: boolean;
 };
 
 export const fieldCatalog: FieldDef[] = [
+  { key: "elecQ1", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第1季外購電力", unit: "kWh", why: "電費單通常按月／季。系統加總成年度用電，再乘電力係數。", gri: "GRI 302-1 前置" },
+  { key: "elecQ2", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第2季外購電力", unit: "kWh", why: "缺一季就無法得到可靠年用電與 Scope 2。", gri: "GRI 302-1 前置" },
+  { key: "elecQ3", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第3季外購電力", unit: "kWh", why: "同上。", gri: "GRI 302-1 前置" },
+  { key: "elecQ4", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第4季外購電力", unit: "kWh", why: "同上。", gri: "GRI 302-1 前置" },
+  { key: "headcountOpen", sheet: "pre", section: "前置：人數（期初＋期末才有平均人數）", label: "期初人數", unit: "人", why: "年平均人數＝(期初＋期末)÷2。流動率、人均訓練都用這個分母。", gri: "GRI 401-1 前置" },
+  { key: "workDays", sheet: "pre", section: "前置：工時（日數×時數×人數才有總工時）", label: "年工作日數", unit: "日", why: "若沒有職安年報總工時，用 平均人數×日數×日工時 先算出分母。", gri: "GRI 403-9 前置" },
+  { key: "hoursPerDay", sheet: "pre", section: "前置：工時（日數×時數×人數才有總工時）", label: "標準日工時", unit: "小時", why: "與工作日、平均人數相乘得總經歷工時。", gri: "GRI 403-9 前置" },
   { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "金管會要求排放／用水密集度分母與合併財報營收一致，否則報告書與簽證財報對不上。", gri: "金管會作業辦法；GRI 305-4" },
   { key: "rdExpense", sheet: "fin", section: "財務分母", label: "研發費用", unit: "億元", why: "對到創新與綠色產品投入，年報附註可勾稽。", gri: "綜合損益表／GRI 201" },
   { key: "energyExpense", sheet: "fin", section: "財務分母", label: "能源相關費用", unit: "億元", why: "與用電／燃油活動數據交叉，避免盤查與帳載差太大。", gri: "財報附註" },
@@ -243,6 +266,99 @@ export const fieldCatalog: FieldDef[] = [
   { key: "malePay", sheet: "kpi", section: "績效薪酬", label: "男性平均薪酬", unit: "萬元", why: "女／男薪酬比分母。", gri: "GRI 405-2" },
 ];
 
+const ALLOW_ZERO = new Set<keyof Inputs>([
+  "fatalities",
+  "lostDays",
+  "disablingInjuries",
+  "legalFines",
+  "unionCovered",
+  "infoSecIncidents",
+  "scope1Manual",
+  "scope2Manual",
+  "steamGj",
+  "communitySpend",
+]);
+
+const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
+  electricityKwh: ["elecQ1", "elecQ2", "elecQ3", "elecQ4", "efElectricity"],
+  renewableKwh: ["electricityKwh"],
+  dieselLiter: ["efDiesel"],
+  gasolineLiter: ["efGasoline"],
+  lngM3: ["efLng"],
+  refrigerantKg: ["gwpRefrigerant"],
+  wasteRecycledT: ["wasteT"],
+  wasteHazardT: ["wasteT"],
+  wastewaterKt: ["waterKt"],
+  greenCapex: ["totalCapex"],
+  intensityTarget: ["revenueMillion"],
+  headcountAvg: ["headcountOpen", "headcountEnd"],
+  workHours: ["workDays", "hoursPerDay", "headcountAvg"],
+  headcountFemale: ["headcountEnd"],
+  headcountDisabled: ["headcountEnd"],
+  newHires: ["headcountAvg"],
+  leavers: ["headcountAvg"],
+  trainingHours: ["headcountAvg"],
+  trainingFemaleHours: ["headcountFemale"],
+  recordableInjuries: ["workHours"],
+  parentalReturn: ["parentalDue"],
+  femaleManagers: ["totalManagers"],
+  unionCovered: ["headcountEnd"],
+  humanRightsTrained: ["headcountEnd"],
+  supplierScreened: ["supplierCount"],
+  independentSeats: ["boardSeats"],
+  boardAttend: ["boardSeats", "boardMeetings"],
+  antiCorruptDone: ["antiCorruptDue"],
+  doneReview: ["dueReview"],
+  withEsgKpi: ["headcountEnd"],
+  businessActual: ["businessTarget"],
+  esgActualScore: ["esgTargetScore"],
+  femalePay: ["malePay"],
+  highestPay: ["medianPay"],
+};
+
+function blank(i: Inputs, key: keyof Inputs) {
+  const v = i[key];
+  if (typeof v !== "number") return false;
+  if (ALLOW_ZERO.has(key)) return false;
+  return v === 0;
+}
+
+export function labelOf(key: keyof Inputs) {
+  return fieldCatalog.find((f) => f.key === key)?.label ?? String(key);
+}
+
+export function missingOnRow(i: Inputs, key: keyof Inputs): string[] {
+  const msgs: string[] = [];
+  if (blank(i, key)) msgs.push(`${labelOf(key)}尚未輸入`);
+  const qKeys = ["elecQ1", "elecQ2", "elecQ3", "elecQ4"] as const;
+  const qUsed = qKeys.some((k) => n(i[k]) > 0);
+  for (const dep of NEEDS[key] ?? []) {
+    if (qKeys.includes(dep as (typeof qKeys)[number]) && !qUsed && n(i.electricityKwh) > 0) continue;
+    if (key === "headcountAvg" && n(i.headcountAvg) > 0 && (dep === "headcountOpen" || dep === "headcountEnd")) {
+      if (blank(i, dep)) continue;
+    }
+    if (key === "workHours" && n(i.workHours) > 0 && (dep === "workDays" || dep === "hoursPerDay")) {
+      if (n(i.workHours) > 0) continue;
+    }
+    if (blank(i, dep)) msgs.push(`${labelOf(dep)}尚未輸入`);
+  }
+  return [...new Set(msgs)];
+}
+
+export function derived(i: Inputs) {
+  const q = n(i.elecQ1) + n(i.elecQ2) + n(i.elecQ3) + n(i.elecQ4);
+  const electricityKwh = q > 0 ? q : n(i.electricityKwh);
+  const headcountAvg =
+    n(i.headcountOpen) > 0 && n(i.headcountEnd) > 0
+      ? (n(i.headcountOpen) + n(i.headcountEnd)) / 2
+      : n(i.headcountAvg);
+  const workHours =
+    n(i.workDays) > 0 && n(i.hoursPerDay) > 0 && headcountAvg > 0
+      ? headcountAvg * n(i.workDays) * n(i.hoursPerDay)
+      : n(i.workHours);
+  return { ...i, electricityKwh, headcountAvg, workHours };
+}
+
 export type Metric = {
   id: string;
   group: string;
@@ -295,7 +411,8 @@ function M(
   return { id, group, name, raw, value: fmt(raw, extra?.flag === "ok" ? 2 : 2), unit, formula, basis, compute: true, ...extra };
 }
 
-export function compute(i: Inputs) {
+export function compute(raw: Inputs) {
+  const i = derived(raw);
   const s1Fuel = (n(i.dieselLiter) * n(i.efDiesel) + n(i.gasolineLiter) * n(i.efGasoline) + n(i.lngM3) * n(i.efLng)) / 1000;
   const s1Ref = (n(i.refrigerantKg) * n(i.gwpRefrigerant)) / 1000;
   const scope1Act = s1Fuel + s1Ref;
