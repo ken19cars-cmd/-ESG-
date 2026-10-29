@@ -41,6 +41,12 @@ function num(e: React.ChangeEvent<HTMLInputElement>) {
   return Number(v);
 }
 
+const INT_UNITS = new Set(["人", "次", "日", "件", "席", "家", "張", "kWh", "小時", "人次"]);
+
+function inputStep(unit: string) {
+  return INT_UNITS.has(unit) ? 1 : 0.1;
+}
+
 export function WorkbenchApp() {
   const [sheet, setSheet] = useState<Sheet>("pre");
   const [inputs, setInputs] = useState<Inputs>(defaultInputs);
@@ -204,7 +210,7 @@ export function WorkbenchApp() {
                           ) : (
                             <input
                               type="number"
-                              step="any"
+                              step={inputStep(f.unit)}
                               value={Number(shown)}
                               onChange={(e) => set(f.key, num(e) as never)}
                             />
