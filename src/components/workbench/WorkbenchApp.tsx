@@ -8,6 +8,7 @@ import {
   derived,
   fieldCatalog,
   missingOnRow,
+  preResults,
   regulationCatalog,
   type Inputs,
   type Metric,
@@ -16,7 +17,7 @@ import {
 type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg";
 
 const sheets: { id: Sheet; label: string }[] = [
-  { id: "pre", label: "0.前置運算" },
+  { id: "pre", label: "0.接案前置底稿" },
   { id: "fin", label: "1.財務分母" },
   { id: "env", label: "2.環境E" },
   { id: "hr", label: "3.社會S" },
@@ -137,14 +138,18 @@ export function WorkbenchApp() {
                   <tbody>
                     {rows.map((f) => {
                       const miss = missingOnRow(inputs, f.key);
+                      const shown = f.fromPre ? d[f.key] : inputs[f.key];
                       return (
                       <tr key={String(f.key)}>
-                        <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">{f.label}</td>
-                        <td className="border border-[#c8c8c8] px-1 py-1">
+                        <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
+                          {f.label}
+                          {f.fromPre && <div className="text-[11px] text-[#666]">由前置底稿帶入</div>}
+                        </td>
+                        <td className={`border border-[#c8c8c8] px-1 py-1 ${f.fromPre ? "wb-calc" : ""}`}>
                           <input
                             type="number"
                             step="any"
-                            value={Number(inputs[f.key])}
+                            value={Number(shown)}
                             onChange={(e) => set(f.key, num(e) as never)}
                           />
                           {miss.length > 0 && (
@@ -167,10 +172,36 @@ export function WorkbenchApp() {
             ))}
 
           {sheet === "pre" && (
-            <p className="mb-2 text-[12px] text-[#333]">
-              系統已用前置欄算出：年用電 {d.electricityKwh.toLocaleString()} kWh、平均人數 {d.headcountAvg} 人、總工時{" "}
-              {d.workHours.toLocaleString()} 小時。缺任一前置欄，該列會出現紅字。
-            </p>
+            <div className="mb-3 text-[12px] text-[#333]">
+              <p className="mb-2 leading-6">
+                這裡不是把年報數字再抄一次。是會計師接到 A 公司後，<b>財報／年報沒有現成一格、必須自己用明細算過</b>
+                才能填進主表的項目。例如「高階ESG權重」不是問卷分數，是薪酬辦法裡 ESG 配分除以變動薪酬總配分。
+                缺一項底稿，該列與主表對應列會出現紅字。
+              </p>
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                    <th className="border border-[#888] px-2 py-1">主表欄位（系統帶入）</th>
+                    <th className="border border-[#888] px-2 py-1">運算結果</th>
+                    <th className="border border-[#888] px-2 py-1">會計師怎麼算</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {preResults(inputs).map((r) => (
+                    <tr key={r.name}>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
+                      <td className="wb-calc border border-[#c8c8c8] px-2 py-1">
+                        {r.value}
+                        {r.missing.length > 0 && (
+                          <div className="text-[11px] font-bold text-[#c00000]">{r.missing.join("、")}</div>
+                        )}
+                      </td>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.formula}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
 
           {sheet === "chart" && <ChartPreview metrics={result.metrics} />}

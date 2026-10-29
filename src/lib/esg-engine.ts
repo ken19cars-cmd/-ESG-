@@ -76,13 +76,23 @@ export type Inputs = {
   femalePay: number;
   malePay: number;
   trainingHoursTarget: number;
-  headcountOpen: number;
-  workDays: number;
-  hoursPerDay: number;
-  elecQ1: number;
-  elecQ2: number;
-  elecQ3: number;
-  elecQ4: number;
+  execFinPoints: number;
+  execEsgPoints: number;
+  execOtherPoints: number;
+  capexEnergySave: number;
+  capexRenewable: number;
+  capexPollution: number;
+  capexOtherGreen: number;
+  expElectricity: number;
+  expFuel: number;
+  expSteam: number;
+  fineEnv: number;
+  fineOsh: number;
+  fineOther: number;
+  donateCharity: number;
+  donateCommunity: number;
+  trainInternal: number;
+  trainExternal: number;
 };
 
 export const defaultInputs: Inputs = {
@@ -163,13 +173,23 @@ export const defaultInputs: Inputs = {
   femalePay: 108,
   malePay: 116,
   trainingHoursTarget: 24,
-  headcountOpen: 1248,
-  workDays: 250,
-  hoursPerDay: 8,
-  elecQ1: 4500000,
-  elecQ2: 4700000,
-  elecQ3: 4900000,
-  elecQ4: 4500000,
+  execFinPoints: 70,
+  execEsgPoints: 15,
+  execOtherPoints: 15,
+  capexEnergySave: 0.8,
+  capexRenewable: 0.5,
+  capexPollution: 0.2,
+  capexOtherGreen: 0.1,
+  expElectricity: 1.45,
+  expFuel: 0.55,
+  expSteam: 0.1,
+  fineEnv: 0,
+  fineOsh: 0,
+  fineOther: 0,
+  donateCharity: 0.08,
+  donateCommunity: 0.04,
+  trainInternal: 22100,
+  trainExternal: 13292,
 };
 
 export type FieldDef = {
@@ -180,24 +200,33 @@ export type FieldDef = {
   unit: string;
   why: string;
   gri: string;
-  needs?: { key: keyof Inputs; label: string }[];
-  allowZero?: boolean;
+  fromPre?: boolean;
 };
 
 export const fieldCatalog: FieldDef[] = [
-  { key: "elecQ1", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第1季外購電力", unit: "kWh", why: "電費單通常按月／季。系統加總成年度用電，再乘電力係數。", gri: "GRI 302-1 前置" },
-  { key: "elecQ2", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第2季外購電力", unit: "kWh", why: "缺一季就無法得到可靠年用電與 Scope 2。", gri: "GRI 302-1 前置" },
-  { key: "elecQ3", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第3季外購電力", unit: "kWh", why: "同上。", gri: "GRI 302-1 前置" },
-  { key: "elecQ4", sheet: "pre", section: "前置：四季用電（加總後才有年用電）", label: "第4季外購電力", unit: "kWh", why: "同上。", gri: "GRI 302-1 前置" },
-  { key: "headcountOpen", sheet: "pre", section: "前置：人數（期初＋期末才有平均人數）", label: "期初人數", unit: "人", why: "年平均人數＝(期初＋期末)÷2。流動率、人均訓練都用這個分母。", gri: "GRI 401-1 前置" },
-  { key: "workDays", sheet: "pre", section: "前置：工時（日數×時數×人數才有總工時）", label: "年工作日數", unit: "日", why: "若沒有職安年報總工時，用 平均人數×日數×日工時 先算出分母。", gri: "GRI 403-9 前置" },
-  { key: "hoursPerDay", sheet: "pre", section: "前置：工時（日數×時數×人數才有總工時）", label: "標準日工時", unit: "小時", why: "與工作日、平均人數相乘得總經歷工時。", gri: "GRI 403-9 前置" },
-  { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "金管會要求排放／用水密集度分母與合併財報營收一致，否則報告書與簽證財報對不上。", gri: "金管會作業辦法；GRI 305-4" },
-  { key: "rdExpense", sheet: "fin", section: "財務分母", label: "研發費用", unit: "億元", why: "對到創新與綠色產品投入，年報附註可勾稽。", gri: "綜合損益表／GRI 201" },
-  { key: "energyExpense", sheet: "fin", section: "財務分母", label: "能源相關費用", unit: "億元", why: "與用電／燃油活動數據交叉，避免盤查與帳載差太大。", gri: "財報附註" },
-  { key: "totalCapex", sheet: "fin", section: "財務分母", label: "總資本支出", unit: "億元", why: "綠色投資占比的分母，來自現金流量表。", gri: "現金流量表" },
-  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "綠色資本支出", unit: "億元", why: "節能設備、綠電、環保資產；報告書常單獨揭露。", gri: "EU／實務揭露" },
-  { key: "communitySpend", sheet: "fin", section: "財務分母", label: "社區／公益支出", unit: "億元", why: "社會參與金額，對 GRI 203。", gri: "GRI 203-1" },
+  { key: "execFinPoints", sheet: "pre", section: "底稿：高階ESG權重（年報沒有現成一格）", label: "高階變動薪酬－財務／營運績效配分", unit: "分", why: "從薪酬委員會辦法、年報薪酬政策拆。變動薪酬通常分成財務KPI、永續KPI、其他。這格抄財務／營運那一塊的配分。", gri: "薪酬辦法；GRI 2-19 底稿" },
+  { key: "execEsgPoints", sheet: "pre", section: "底稿：高階ESG權重（年報沒有現成一格）", label: "高階變動薪酬－ESG／永續績效配分", unit: "分", why: "同一份辦法裡「減碳／職安／永續」那一塊的配分。沒有這格，高階ESG權重無法自己算出來。若辦法寫沒有永續權重，填 0。", gri: "薪酬辦法；GRI 2-19 底稿" },
+  { key: "execOtherPoints", sheet: "pre", section: "底稿：高階ESG權重（年報沒有現成一格）", label: "高階變動薪酬－其他配分", unit: "分", why: "個人職能、專案、其他非財務也非ESG的配分。三格加總＝變動薪酬總配分，ESG權重＝ESG配分÷總配分。", gri: "薪酬辦法；GRI 2-19 底稿" },
+  { key: "capexEnergySave", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "節能設備資本支出", unit: "億元", why: "現金流量表只有「購置不動產廠房設備」總額。綠色占比要會計師從固定資產增加明細把節能設備挑出來加總。", gri: "資產明細；投資揭露底稿" },
+  { key: "capexRenewable", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "再生能源設備資本支出", unit: "億元", why: "太陽能、儲能、綠電相關設備，年報通常不單獨等於「綠色Capex」。", gri: "資產明細" },
+  { key: "capexPollution", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "污染防治設備資本支出", unit: "億元", why: "廢水、廢氣、廢棄物處理設備。", gri: "資產明細" },
+  { key: "capexOtherGreen", sheet: "pre", section: "底稿：綠色資本支出（要從資產增加明細分類）", label: "其他綠色資本支出", unit: "億元", why: "水資源、循環再利用等未列入上三項者。沒有就填 0。", gri: "資產明細" },
+  { key: "expElectricity", sheet: "pre", section: "底稿：能源相關費用（費用科目要加總）", label: "電費", unit: "億元", why: "綜合損益沒有「能源費用」一科目，要從製造費用／水電瓦斯費挑電費。", gri: "費用明細底稿" },
+  { key: "expFuel", sheet: "pre", section: "底稿：能源相關費用（費用科目要加總）", label: "燃料費（油氣）", unit: "億元", why: "柴油、汽油、天然氣帳載金額，與盤查公升數勾稽。", gri: "費用明細底稿" },
+  { key: "expSteam", sheet: "pre", section: "底稿：能源相關費用（費用科目要加總）", label: "蒸汽／熱能費用", unit: "億元", why: "有外購蒸汽才填；沒有填 0。", gri: "費用明細底稿" },
+  { key: "fineEnv", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "環保重大裁罰", unit: "萬元", why: "年報或然負債／重大裁罰可能只寫「無」或列幾筆。要核環保署裁罰公告後加總。確定無裁罰填 0。", gri: "GRI 2-27 底稿" },
+  { key: "fineOsh", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "職安重大裁罰", unit: "萬元", why: "勞動檢查裁罰，與職災數字分開看。", gri: "GRI 2-27 底稿" },
+  { key: "fineOther", sheet: "pre", section: "底稿：重大裁罰（裁罰公告要加總）", label: "其他重大裁罰（公平交易等）", unit: "萬元", why: "公平會、金管會、其他主管機關。沒有填 0。", gri: "GRI 2-27 底稿" },
+  { key: "donateCharity", sheet: "pre", section: "底稿：社區／公益支出（捐贈明細要加總）", label: "捐贈支出", unit: "億元", why: "財報捐贈費加總，排除政治獻金若報告書不計入。", gri: "GRI 203-1 底稿" },
+  { key: "donateCommunity", sheet: "pre", section: "底稿：社區／公益支出（捐贈明細要加總）", label: "社區實質投入", unit: "億元", why: "志工、在地採購溢價、社區工程等，帳上不一定叫捐贈。", gri: "GRI 203-1 底稿" },
+  { key: "trainInternal", sheet: "pre", section: "底稿：總訓練時數（課程紀錄要加總）", label: "內部訓練時數", unit: "小時", why: "年報常見只寫人均時數。總時數要從教育訓練紀錄加總內訓。", gri: "GRI 404-1 底稿" },
+  { key: "trainExternal", sheet: "pre", section: "底稿：總訓練時數（課程紀錄要加總）", label: "外部訓練時數", unit: "小時", why: "外訓、證照課時數。內＋外＝總訓練時數，再除平均人數才是人均。", gri: "GRI 404-1 底稿" },
+  { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "金管會要求排放／用水密集度分母與合併財報營收一致，否則報告書與簽證財報對不上。可直接抄合併綜合損益表。", gri: "金管會作業辦法；GRI 305-4" },
+  { key: "rdExpense", sheet: "fin", section: "財務分母", label: "研發費用", unit: "億元", why: "對到創新與綠色產品投入，年報附註可勾稽。可直接抄綜合損益表。", gri: "綜合損益表／GRI 201" },
+  { key: "energyExpense", sheet: "fin", section: "財務分母", label: "能源相關費用", unit: "億元", why: "不能直接抄一格：請先在前置底稿把電費＋燃料＋蒸汽加總。用來和盤查用量勾稽。", gri: "財報附註", fromPre: true },
+  { key: "totalCapex", sheet: "fin", section: "財務分母", label: "總資本支出", unit: "億元", why: "綠色投資占比的分母，可直接抄現金流量表「購置不動產廠房及設備」。", gri: "現金流量表" },
+  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "綠色資本支出", unit: "億元", why: "年報沒有現成「綠色Capex」。請先在前置底稿依資產增加明細分類加總。", gri: "EU／實務揭露", fromPre: true },
+  { key: "communitySpend", sheet: "fin", section: "財務分母", label: "社區／公益支出", unit: "億元", why: "請先在前置底稿把捐贈＋社區實質投入加總，不要只抄單一科目。", gri: "GRI 203-1", fromPre: true },
   { key: "electricityKwh", sheet: "env", section: "能源與排放", label: "外購電力", unit: "kWh", why: "Scope 2 最主要活動數據。", gri: "GRI 302-1、305-2" },
   { key: "renewableKwh", sheet: "env", section: "能源與排放", label: "再生能源電力", unit: "kWh", why: "再生能源占比＝再生 ÷ 總用電，金管會／客戶常問。", gri: "GRI 302-1" },
   { key: "dieselLiter", sheet: "env", section: "能源與排放", label: "柴油用量", unit: "L", why: "鍋爐、發電機、車輛，Scope 1。", gri: "GRI 305-1" },
@@ -226,7 +255,7 @@ export const fieldCatalog: FieldDef[] = [
   { key: "contractors", sheet: "hr", section: "人力結構", label: "非員工工作者", unit: "人", why: "承攬商人數，GRI 2-8。", gri: "GRI 2-8" },
   { key: "newHires", sheet: "hr", section: "人力結構", label: "新進人數", unit: "人", why: "新進率分子。", gri: "GRI 401-1" },
   { key: "leavers", sheet: "hr", section: "人力結構", label: "離職人數", unit: "人", why: "流動率分子。", gri: "GRI 401-1" },
-  { key: "trainingHours", sheet: "hr", section: "訓練與職安", label: "總訓練時數", unit: "小時", why: "人均訓練＝總時數÷平均人數。", gri: "GRI 404-1" },
+  { key: "trainingHours", sheet: "hr", section: "訓練與職安", label: "總訓練時數", unit: "小時", why: "年報常只給人均。請先在前置底稿加總內訓＋外訓，系統再除平均人數。", gri: "GRI 404-1", fromPre: true },
   { key: "trainingFemaleHours", sheet: "hr", section: "訓練與職安", label: "女性訓練時數", unit: "小時", why: "拆性別人均訓練，報告書常要。", gri: "GRI 404-1" },
   { key: "trainingHoursTarget", sheet: "hr", section: "訓練與職安", label: "人均訓練目標", unit: "小時", why: "判斷訓練是否達標。", gri: "內部目標" },
   { key: "workHours", sheet: "hr", section: "訓練與職安", label: "總經歷工時", unit: "小時", why: "FR／SR／可記錄傷害率的分母。", gri: "GRI 403-9" },
@@ -245,25 +274,25 @@ export const fieldCatalog: FieldDef[] = [
   { key: "boardSeats", sheet: "gov", section: "治理", label: "董事席次", unit: "席", why: "獨董比分母。", gri: "年報治理專章" },
   { key: "independentSeats", sheet: "gov", section: "治理", label: "獨立董事席次", unit: "席", why: "公開發行常見至少 3 席或 1/3。", gri: "證交法／評鑑" },
   { key: "boardMeetings", sheet: "gov", section: "治理", label: "董事會開會次數", unit: "次", why: "出席率分母＝次數×席次。", gri: "議事錄" },
-  { key: "boardAttend", sheet: "gov", section: "治理", label: "董事出席人次合計", unit: "人次", why: "出席率分子。", gri: "議事錄" },
+  { key: "boardAttend", sheet: "gov", section: "治理", label: "董事出席人次合計", unit: "人次", why: "年報沒有現成「出席人次」。要從各次董事會議事錄把出席人數加總，再除以（席次×開會次數）才是出席率。", gri: "議事錄" },
   { key: "antiCorruptDue", sheet: "gov", section: "治理", label: "應受反貪腐訓練人數", unit: "人", why: "訓練覆蓋分母。", gri: "GRI 205-2" },
   { key: "antiCorruptDone", sheet: "gov", section: "治理", label: "已完成反貪腐訓練", unit: "人", why: "訓練覆蓋分子。", gri: "GRI 205-2" },
-  { key: "legalFines", sheet: "gov", section: "治理", label: "重大裁罰金額", unit: "萬元", why: "環境／職安／公平交易裁罰須揭露。", gri: "GRI 2-27" },
+  { key: "legalFines", sheet: "gov", section: "治理", label: "重大裁罰金額", unit: "萬元", why: "請先在前置底稿加總環保＋職安＋其他裁罰。確定都沒有就各填 0。", gri: "GRI 2-27", fromPre: true },
   { key: "isoCert", sheet: "gov", section: "治理", label: "管理系統證書數", unit: "張", why: "ISO 14001／45001／27001 張數，質性佐證。", gri: "管理系統" },
   { key: "infoSecIncidents", sheet: "gov", section: "治理", label: "資安重大事件", unit: "件", why: "資安治理揭露。", gri: "GRI 418" },
   { key: "dueReview", sheet: "kpi", section: "績效薪酬", label: "應考核人數", unit: "人", why: "考核覆蓋率分母。", gri: "GRI 404-3" },
   { key: "doneReview", sheet: "kpi", section: "績效薪酬", label: "已考核人數", unit: "人", why: "考核覆蓋率分子。", gri: "GRI 404-3" },
   { key: "withEsgKpi", sheet: "kpi", section: "績效薪酬", label: "KPI含ESG指標人數", unit: "人", why: "永續是否寫進考核，不是業務達成率。", gri: "實務守則 §9" },
-  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "變動薪酬裡永續占比，常見 10–20%。", gri: "GRI 2-19" },
+  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "不是問卷分數。從薪酬辦法拆：ESG配分÷（財務配分＋ESG配分＋其他配分）。請先填前置底稿，系統帶入。", gri: "GRI 2-19", fromPre: true },
   { key: "businessTarget", sheet: "kpi", section: "績效薪酬", label: "業務目標", unit: "億元", why: "財務KPI，不計入社會面分數。", gri: "內部績效" },
   { key: "businessActual", sheet: "kpi", section: "績效薪酬", label: "業務實際", unit: "億元", why: "與目標相除得業務達成率。", gri: "內部績效" },
   { key: "esgTargetScore", sheet: "kpi", section: "績效薪酬", label: "ESG KPI目標", unit: "分", why: "減碳／職安等永續目標分數。", gri: "GRI 2-19" },
   { key: "esgActualScore", sheet: "kpi", section: "績效薪酬", label: "ESG KPI實際", unit: "分", why: "永續KPI實際分數。", gri: "GRI 2-19" },
   { key: "bonusPool", sheet: "kpi", section: "績效薪酬", label: "變動獎金池", unit: "萬元", why: "試算 ESG 連動獎金。", gri: "薪酬委員會" },
-  { key: "highestPay", sheet: "kpi", section: "績效薪酬", label: "最高個人年薪", unit: "萬元", why: "GRI 2-21 分子。", gri: "GRI 2-21" },
-  { key: "medianPay", sheet: "kpi", section: "績效薪酬", label: "其他員工年薪中位數", unit: "萬元", why: "GRI 2-21 分母。", gri: "GRI 2-21" },
-  { key: "femalePay", sheet: "kpi", section: "績效薪酬", label: "女性平均薪酬", unit: "萬元", why: "女／男薪酬比。", gri: "GRI 405-2" },
-  { key: "malePay", sheet: "kpi", section: "績效薪酬", label: "男性平均薪酬", unit: "萬元", why: "女／男薪酬比分母。", gri: "GRI 405-2" },
+  { key: "highestPay", sheet: "kpi", section: "績效薪酬", label: "最高個人年薪", unit: "萬元", why: "年報董事酬金是區間，GRI 2-21 要從薪資清冊排序取最高一人。這步在事務所底稿做完再填。", gri: "GRI 2-21" },
+  { key: "medianPay", sheet: "kpi", section: "績效薪酬", label: "其他員工年薪中位數", unit: "萬元", why: "排除最高薪後，其餘員工年薪中位數，從薪資清冊計算，不是抄平均薪。", gri: "GRI 2-21" },
+  { key: "femalePay", sheet: "kpi", section: "績效薪酬", label: "女性平均薪酬", unit: "萬元", why: "薪資清冊女性加總÷女性人數，年報通常沒有現成一格。", gri: "GRI 405-2" },
+  { key: "malePay", sheet: "kpi", section: "績效薪酬", label: "男性平均薪酬", unit: "萬元", why: "薪資清冊男性加總÷男性人數。", gri: "GRI 405-2" },
 ];
 
 const ALLOW_ZERO = new Set<keyof Inputs>([
@@ -277,10 +306,66 @@ const ALLOW_ZERO = new Set<keyof Inputs>([
   "scope2Manual",
   "steamGj",
   "communitySpend",
+  "execEsgPoints",
+  "execOtherPoints",
+  "capexOtherGreen",
+  "expSteam",
+  "fineEnv",
+  "fineOsh",
+  "fineOther",
+  "donateCommunity",
 ]);
 
+type PreRule = {
+  target: keyof Inputs;
+  combine: "ratio" | "sum";
+  allowAllZero?: boolean;
+  formula: string;
+  sources: (keyof Inputs)[];
+};
+
+export const preRules: PreRule[] = [
+  {
+    target: "esgWeight",
+    combine: "ratio",
+    formula: "ESG配分 ÷（財務配分＋ESG配分＋其他配分）×100%",
+    sources: ["execFinPoints", "execEsgPoints", "execOtherPoints"],
+  },
+  {
+    target: "greenCapex",
+    combine: "sum",
+    formula: "節能＋再生能源＋污染防治＋其他綠色資本支出",
+    sources: ["capexEnergySave", "capexRenewable", "capexPollution", "capexOtherGreen"],
+  },
+  {
+    target: "energyExpense",
+    combine: "sum",
+    formula: "電費＋燃料費＋蒸汽／熱能費用",
+    sources: ["expElectricity", "expFuel", "expSteam"],
+  },
+  {
+    target: "legalFines",
+    combine: "sum",
+    allowAllZero: true,
+    formula: "環保裁罰＋職安裁罰＋其他裁罰",
+    sources: ["fineEnv", "fineOsh", "fineOther"],
+  },
+  {
+    target: "communitySpend",
+    combine: "sum",
+    formula: "捐贈支出＋社區實質投入",
+    sources: ["donateCharity", "donateCommunity"],
+  },
+  {
+    target: "trainingHours",
+    combine: "sum",
+    formula: "內部訓練時數＋外部訓練時數",
+    sources: ["trainInternal", "trainExternal"],
+  },
+];
+
 const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
-  electricityKwh: ["elecQ1", "elecQ2", "elecQ3", "elecQ4", "efElectricity"],
+  electricityKwh: ["efElectricity"],
   renewableKwh: ["electricityKwh"],
   dieselLiter: ["efDiesel"],
   gasolineLiter: ["efGasoline"],
@@ -291,8 +376,6 @@ const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
   wastewaterKt: ["waterKt"],
   greenCapex: ["totalCapex"],
   intensityTarget: ["revenueMillion"],
-  headcountAvg: ["headcountOpen", "headcountEnd"],
-  workHours: ["workDays", "hoursPerDay", "headcountAvg"],
   headcountFemale: ["headcountEnd"],
   headcountDisabled: ["headcountEnd"],
   newHires: ["headcountAvg"],
@@ -327,36 +410,67 @@ export function labelOf(key: keyof Inputs) {
   return fieldCatalog.find((f) => f.key === key)?.label ?? String(key);
 }
 
+function preMissing(i: Inputs, rule: PreRule): string[] {
+  if (rule.combine === "ratio") {
+    const msgs: string[] = [];
+    if (blank(i, "execFinPoints")) msgs.push(`${labelOf("execFinPoints")}尚未輸入`);
+    const total = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
+    if (total === 0) msgs.push("高階變動薪酬配分合計尚未輸入");
+    return msgs;
+  }
+  const allZero = rule.sources.every((k) => n(i[k]) === 0);
+  if (allZero && rule.allowAllZero) return [];
+  if (allZero) return rule.sources.filter((k) => blank(i, k)).map((k) => `${labelOf(k)}尚未輸入`);
+  return [];
+}
+
 export function missingOnRow(i: Inputs, key: keyof Inputs): string[] {
   const msgs: string[] = [];
-  if (blank(i, key)) msgs.push(`${labelOf(key)}尚未輸入`);
-  const qKeys = ["elecQ1", "elecQ2", "elecQ3", "elecQ4"] as const;
-  const qUsed = qKeys.some((k) => n(i[k]) > 0);
+  const rule = preRules.find((r) => r.target === key);
+  if (rule) msgs.push(...preMissing(i, rule));
+  else if (blank(i, key)) msgs.push(`${labelOf(key)}尚未輸入`);
+  if (blank(i, key) && fieldCatalog.find((f) => f.key === key)?.sheet === "pre") {
+    if (!msgs.includes(`${labelOf(key)}尚未輸入`)) msgs.push(`${labelOf(key)}尚未輸入`);
+  }
   for (const dep of NEEDS[key] ?? []) {
-    if (qKeys.includes(dep as (typeof qKeys)[number]) && !qUsed && n(i.electricityKwh) > 0) continue;
-    if (key === "headcountAvg" && n(i.headcountAvg) > 0 && (dep === "headcountOpen" || dep === "headcountEnd")) {
-      if (blank(i, dep)) continue;
-    }
-    if (key === "workHours" && n(i.workHours) > 0 && (dep === "workDays" || dep === "hoursPerDay")) {
-      if (n(i.workHours) > 0) continue;
-    }
+    if (rule?.sources.includes(dep)) continue;
     if (blank(i, dep)) msgs.push(`${labelOf(dep)}尚未輸入`);
   }
   return [...new Set(msgs)];
 }
 
-export function derived(i: Inputs) {
-  const q = n(i.elecQ1) + n(i.elecQ2) + n(i.elecQ3) + n(i.elecQ4);
-  const electricityKwh = q > 0 ? q : n(i.electricityKwh);
-  const headcountAvg =
-    n(i.headcountOpen) > 0 && n(i.headcountEnd) > 0
-      ? (n(i.headcountOpen) + n(i.headcountEnd)) / 2
-      : n(i.headcountAvg);
-  const workHours =
-    n(i.workDays) > 0 && n(i.hoursPerDay) > 0 && headcountAvg > 0
-      ? headcountAvg * n(i.workDays) * n(i.hoursPerDay)
-      : n(i.workHours);
-  return { ...i, electricityKwh, headcountAvg, workHours };
+export function derived(i: Inputs): Inputs {
+  const out: Inputs = { ...i };
+  const execTotal = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
+  if (execTotal > 0) out.esgWeight = (n(i.execEsgPoints) / execTotal) * 100;
+  const green = n(i.capexEnergySave) + n(i.capexRenewable) + n(i.capexPollution) + n(i.capexOtherGreen);
+  if (green > 0) out.greenCapex = green;
+  const energy = n(i.expElectricity) + n(i.expFuel) + n(i.expSteam);
+  if (energy > 0) out.energyExpense = energy;
+  const fines = n(i.fineEnv) + n(i.fineOsh) + n(i.fineOther);
+  if (fines > 0) out.legalFines = fines;
+  const community = n(i.donateCharity) + n(i.donateCommunity);
+  if (community > 0) out.communitySpend = community;
+  const train = n(i.trainInternal) + n(i.trainExternal);
+  if (train > 0) out.trainingHours = train;
+  return out;
+}
+
+export function preResults(i: Inputs) {
+  const d = derived(i);
+  const execTotal = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
+  const unit = (target: keyof Inputs) => fieldCatalog.find((f) => f.key === target)?.unit ?? "";
+  return preRules.map((rule) => {
+    const raw = d[rule.target];
+    const num = typeof raw === "number" ? raw : NaN;
+    const emptyRatio = rule.combine === "ratio" && execTotal === 0;
+    return {
+      name: fieldCatalog.find((f) => f.key === rule.target)?.label ?? String(rule.target),
+      value: emptyRatio || !Number.isFinite(num) ? "—" : `${fmt(num, rule.target === "trainingHours" ? 0 : 2)} ${unit(rule.target)}`,
+      formula: rule.formula,
+      missing: preMissing(i, rule),
+    };
+  });
 }
 
 export type Metric = {
@@ -390,8 +504,9 @@ export const regulationCatalog = [
   { id: "twse-csr", name: "永續發展實務守則 §9", version: "證交所／櫃買", asOf: "2026-10", point: "績效考核宜結合永續政策。", url: "https://twse-regulation.twse.com.tw/" },
 ];
 
-function n(v: number) {
-  return Number.isFinite(v) ? v : 0;
+function n(v: unknown) {
+  const x = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(x) ? x : 0;
 }
 export function fmt(v: number, d = 2) {
   if (!Number.isFinite(v)) return "—";
