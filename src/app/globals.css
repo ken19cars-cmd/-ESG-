@@ -155,13 +155,8 @@ body {
   letter-spacing: -0.04em;
 }
 
-body:has(.wb-root) {
-  background: #ececec;
-  color: #111;
-}
-
 .wb-root {
-  min-height: 100%;
+  min-height: 100vh;
   background: #ececec;
   color: #111;
   font-family: "PMingLiU", "Microsoft JhengHei", var(--font-sans), sans-serif;

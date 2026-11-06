@@ -57,6 +57,7 @@ export function WorkbenchApp() {
   const [factorBusy, setFactorBusy] = useState(false);
   const [factorTick, setFactorTick] = useState(0);
   const [factorFocus, setFactorFocus] = useState<string | null>(null);
+  const [docxBusy, setDocxBusy] = useState(false);
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
 
@@ -83,6 +84,29 @@ export function WorkbenchApp() {
   function set<K extends keyof Inputs>(key: K, value: Inputs[K]) {
     if (isLockedKey(key)) return;
     setInputs((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function exportWord() {
+    setDocxBusy(true);
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(inputs),
+      });
+      if (!res.ok) throw new Error("export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${inputs.client}_${inputs.year}_永續報告書底稿.docx`.replace(/[\\/:*?"<>|]/g, "");
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      window.alert("Word 匯出失敗");
+    } finally {
+      setDocxBusy(false);
+    }
   }
 
   const fail = result.checks.filter((c) => c.level === "異常").length;
@@ -451,13 +475,19 @@ export function WorkbenchApp() {
                 <p>
                   {inputs.client}　{inputs.year}　永續報告書績效表／GRI 索引底稿
                 </p>
-                <button
-                  type="button"
-                  className="border border-[#444] bg-[#eee] px-3 py-1"
-                  onClick={() => window.print()}
-                >
-                  列印
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    className="border border-[#444] bg-[#eee] px-3 py-1"
+                    disabled={docxBusy}
+                    onClick={() => void exportWord()}
+                  >
+                    {docxBusy ? "匯出中" : "匯出 Word"}
+                  </button>
+                  <button type="button" className="border border-[#444] bg-[#eee] px-3 py-1" onClick={() => window.print()}>
+                    列印
+                  </button>
+                </div>
               </div>
               {reportDraft(d, result.metrics).map((block) => (
                 <div key={block.chapter} className="mb-4">

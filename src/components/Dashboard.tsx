@@ -221,7 +221,7 @@ export function Dashboard() {
 
   return (
     <div
-      className="hud-grid relative min-h-screen overflow-hidden"
+      className="hud-grid relative min-h-screen overflow-hidden bg-bg text-text"
       onMouseMove={(e) => {
         const r = e.currentTarget.getBoundingClientRect();
         setSpot({
