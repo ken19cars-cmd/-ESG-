@@ -188,26 +188,26 @@ export type FieldDef = {
 };
 
 export const fieldCatalog: FieldDef[] = [
-  { key: "execFinPoints", sheet: "pre", section: "高階薪酬配分", label: "財務／營運績效配分", unit: "%", why: "來源：高階主管績效考核表、薪酬辦法。高階ESG權重分母。", gri: "GRI 2-19" },
-  { key: "execEsgPoints", sheet: "pre", section: "高階薪酬配分", label: "ESG／永續績效配分", unit: "%", why: "來源：同上。高階ESG權重分子。", gri: "GRI 2-19" },
-  { key: "execOtherPoints", sheet: "pre", section: "高階薪酬配分", label: "其他配分", unit: "%", why: "職能／專案等其餘權重。高階ESG權重＝ESG配分÷三項合計。", gri: "GRI 2-19" },
-  { key: "capexEnergySave", sheet: "pre", section: "綠色資本支出", label: "節能設備資本支出", unit: "億元", why: "來源：固定資產增加明細。綠色資本支出加總項。", gri: "資產明細" },
-  { key: "capexRenewable", sheet: "pre", section: "綠色資本支出", label: "再生能源設備資本支出", unit: "億元", why: "來源：固定資產增加明細。綠色資本支出加總項。", gri: "資產明細" },
-  { key: "capexPollution", sheet: "pre", section: "綠色資本支出", label: "污染防治設備資本支出", unit: "億元", why: "來源：固定資產增加明細。綠色資本支出加總項。", gri: "資產明細" },
-  { key: "capexOtherGreen", sheet: "pre", section: "綠色資本支出", label: "其他綠色資本支出", unit: "億元", why: "來源：固定資產增加明細。綠色資本支出加總項。", gri: "資產明細" },
-  { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "來源：合併綜合損益表。排放／用水／能源密集度分母。", gri: "金管會作業辦法；GRI 305-4" },
-  { key: "totalCapex", sheet: "fin", section: "財務分母", label: "總資本支出", unit: "億元", why: "來源：現金流量表購置不動產廠房及設備。綠色資本支出比分母。", gri: "現金流量表" },
-  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "綠色資本支出", unit: "億元", why: "由綠色資本支出四項加總帶入。綠色資本支出比分子。", gri: "投資揭露", fromPre: true },
-  { key: "communitySpend", sheet: "fin", section: "財務分母", label: "社區／公益支出", unit: "億元", why: "來源：帳載捐贈及社區支出合計。GRI 203。", gri: "GRI 203-1" },
-  { key: "electricityKwh", sheet: "env", section: "能源與排放", label: "外購電力", unit: "kWh", why: "Scope 2 活動數據。×電力係數＝tCO2e。", gri: "GRI 302-1、305-2" },
-  { key: "renewableKwh", sheet: "env", section: "能源與排放", label: "再生能源電力", unit: "kWh", why: "再生能源比分子。分母為外購電力。", gri: "GRI 302-1" },
-  { key: "dieselLiter", sheet: "env", section: "能源與排放", label: "柴油用量", unit: "L", why: "Scope 1 活動數據。×柴油係數。", gri: "GRI 305-1" },
-  { key: "gasolineLiter", sheet: "env", section: "能源與排放", label: "汽油用量", unit: "L", why: "Scope 1 活動數據。×汽油係數。", gri: "GRI 305-1" },
-  { key: "lngM3", sheet: "env", section: "能源與排放", label: "天然氣用量", unit: "m³", why: "Scope 1 活動數據。×天然氣係數。", gri: "GRI 305-1" },
-  { key: "refrigerantKg", sheet: "env", section: "能源與排放", label: "冷媒逸散", unit: "kg", why: "Scope 1。×GWP÷1000＝tCO2e。", gri: "GRI 305-1、305-6" },
-  { key: "steamGj", sheet: "env", section: "能源與排放", label: "外購蒸汽", unit: "GJ", why: "能源使用加總項；屬 Scope 2 熱能。", gri: "GRI 302-1" },
-  { key: "scope3", sheet: "env", section: "能源與排放", label: "Scope 3", unit: "tCO2e", why: "盤查彙總。Scope 1+2+3 加項。", gri: "GRI 305-3" },
-  { key: "intensityTarget", sheet: "env", section: "能源與排放", label: "排放密集度目標", unit: "tCO2e／百萬營收", why: "與實際密集度比較達標。", gri: "氣候目標" },
+  { key: "execFinPoints", sheet: "pre", section: "高階薪酬與永續連結（公司考核設計）", label: "財務／營運績效配分", unit: "%", why: "GRI 2-19 要求說明薪酬政策如何與目標連結；配分百分比是公司考核表上的權重，不是準則專名。", gri: "GRI 2-19" },
+  { key: "execEsgPoints", sheet: "pre", section: "高階薪酬與永續連結（公司考核設計）", label: "永續績效配分", unit: "%", why: "同上。用來算出高階薪酬中與永續相關之權重。", gri: "GRI 2-19" },
+  { key: "execOtherPoints", sheet: "pre", section: "高階薪酬與永續連結（公司考核設計）", label: "其他配分", unit: "%", why: "職能等其餘權重。權重＝永續配分÷三項合計。", gri: "GRI 2-19" },
+  { key: "capexEnergySave", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "節能設備資本支出", unit: "億元", why: "帳載固定資產增加。金管會氣候資訊要求揭露因應氣候之資本支出，準則未規定此分項名稱。", gri: "金管會氣候相關資訊" },
+  { key: "capexRenewable", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "再生能源設備資本支出", unit: "億元", why: "同上。再生能源設備投資屬氣候減緩相關資本支出之常見分項，非 GRI 專名。", gri: "金管會氣候相關資訊" },
+  { key: "capexPollution", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "污染防治設備資本支出", unit: "億元", why: "環保設備投資。非 GRI 專名；年報／報告書常見揭露。", gri: "年報環保支出實務" },
+  { key: "capexOtherGreen", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "其他氣候／環保資本支出", unit: "億元", why: "其餘可歸入氣候減緩、調適或污染防治之資本支出。加總名稱由本系統設定，非法規專名。", gri: "金管會氣候相關資訊" },
+  { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "必要。合併綜合損益表之營業收入。金管會永續報告書作業辦法及 GRI 305-4 密集度可選營收作分母。", gri: "金管會作業辦法；GRI 305-4" },
+  { key: "totalCapex", sheet: "fin", section: "財務分母", label: "購置不動產廠房及設備", unit: "億元", why: "現金流量表投資活動「購置不動產、廠房及設備」之數。本系統用作資本支出占比分母。", gri: "IAS 7／現金流量表" },
+  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "氣候／環保相關資本支出合計", unit: "億元", why: "前置頁四項加總。非法規專名「綠色資本支出」；對應氣候資訊中之相關資本支出加總。", gri: "金管會氣候相關資訊", fromPre: true },
+  { key: "communitySpend", sheet: "fin", section: "財務分母", label: "基礎設施投資與公益捐贈", unit: "億元", why: "GRI 203-1 為基礎設施投資與支援服務；捐贈常一併揭露，準則未強制使用「公益支出」一詞。", gri: "GRI 203-1" },
+  { key: "electricityKwh", sheet: "env", section: "能源與排放", label: "外購電力", unit: "kWh", why: "電費單度數。屬範疇二用量；系統再×電力係數得到排放。詳見法規庫。", gri: "GRI 302-1、305-2" },
+  { key: "renewableKwh", sheet: "env", section: "能源與排放", label: "再生能源電力", unit: "kWh", why: "綠電或憑證度數，用來算占外購電力的比例。詳見法規庫。", gri: "GRI 302-1" },
+  { key: "dieselLiter", sheet: "env", section: "能源與排放", label: "柴油用量", unit: "L", why: "加油公升數（範疇一用量）。無柴油填 0。詳見法規庫「範疇一」。", gri: "GRI 305-1" },
+  { key: "gasolineLiter", sheet: "env", section: "能源與排放", label: "汽油用量", unit: "L", why: "加油公升數（範疇一用量）。無汽油填 0。詳見法規庫「範疇一」。", gri: "GRI 305-1" },
+  { key: "lngM3", sheet: "env", section: "能源與排放", label: "天然氣用量", unit: "m³", why: "天然氣立方公尺（範疇一用量）。無天然氣填 0。詳見法規庫「範疇一」。", gri: "GRI 305-1" },
+  { key: "refrigerantKg", sheet: "env", section: "能源與排放", label: "冷媒逸散", unit: "kg", why: "補填或逸散公斤數（範疇一）。當年沒補填填 0。詳見法規庫。", gri: "GRI 305-1、305-6" },
+  { key: "steamGj", sheet: "env", section: "能源與排放", label: "外購蒸汽", unit: "GJ", why: "向外購買的蒸汽熱值。屬範疇二。沒有外購蒸汽填 0。詳見法規庫。", gri: "GRI 302-1、305-2" },
+  { key: "scope3", sheet: "env", section: "能源與排放", label: "範疇三（其他間接排放）", unit: "tCO2e", why: "GHG Protocol／GRI 305-3。請填已盤查彙總值，非本系統由活動數據推算。", gri: "GRI 305-3；GHG Protocol" },
+  { key: "intensityTarget", sheet: "env", section: "能源與排放", label: "溫室氣體排放密集度（公司目標）", unit: "tCO2e／百萬營收", why: "GRI 305-4 為密集度本身；目標值由組織自訂，非準則規定之法定數字。", gri: "GRI 305-4；TCFD 指標與目標" },
   { key: "waterKt", sheet: "env", section: "水與廢棄物", label: "取水量", unit: "千噸", why: "用水密集度分子；耗水＝取水−放流。", gri: "GRI 303-3" },
   { key: "wastewaterKt", sheet: "env", section: "水與廢棄物", label: "放流水量", unit: "千噸", why: "耗水計算減項。", gri: "GRI 303-4、303-5" },
   { key: "wasteT", sheet: "env", section: "水與廢棄物", label: "廢棄物產生", unit: "噸", why: "回收率、有害比分母。", gri: "GRI 306-3" },
@@ -220,70 +220,52 @@ export const fieldCatalog: FieldDef[] = [
   { key: "efGasoline", sheet: "par", section: "係數", label: "汽油係數", unit: "kgCO2e/L", why: "來源：《溫室氣體排放係數管理表》6.0.4版。", gri: "環境部係數管理表" },
   { key: "efLng", sheet: "par", section: "係數", label: "天然氣係數", unit: "kgCO2e/m³", why: "來源：《溫室氣體排放係數管理表》6.0.4版。", gri: "環境部係數管理表" },
   { key: "gwpRefrigerant", sheet: "par", section: "係數", label: "冷媒 GWP", unit: "倍", why: "來源：IPCC（2024年起盤查採 AR5）。依冷媒代碼帶入。", gri: "IPCC；盤查作業指引" },
-  { key: "headcountEnd", sheet: "hr", section: "人力結構", label: "期末人數", unit: "人", why: "女性／身障占比、考核及訓練覆蓋率分母。", gri: "GRI 2-7" },
-  { key: "headcountAvg", sheet: "hr", section: "人力結構", label: "年平均人數", unit: "人", why: "流動率、新進率、人均訓練分母。", gri: "GRI 401-1、404-1" },
-  { key: "headcountFemale", sheet: "hr", section: "人力結構", label: "女性人數", unit: "人", why: "女性占比分子。", gri: "GRI 405-1" },
-  { key: "headcountDisabled", sheet: "hr", section: "人力結構", label: "身障員工", unit: "人", why: "身障占比分子。", gri: "GRI 405-1" },
-  { key: "contractors", sheet: "hr", section: "人力結構", label: "非員工工作者", unit: "人", why: "GRI 2-8 揭露。", gri: "GRI 2-8" },
-  { key: "newHires", sheet: "hr", section: "人力結構", label: "新進人數", unit: "人", why: "新進率分子。", gri: "GRI 401-1" },
-  { key: "leavers", sheet: "hr", section: "人力結構", label: "離職人數", unit: "人", why: "流動率分子。", gri: "GRI 401-1" },
-  { key: "trainingHours", sheet: "hr", section: "訓練與職安", label: "總訓練時數", unit: "小時", why: "人均訓練＝總時數÷年平均人數。", gri: "GRI 404-1" },
-  { key: "trainingFemaleHours", sheet: "hr", section: "訓練與職安", label: "女性訓練時數", unit: "小時", why: "女性人均訓練分子。", gri: "GRI 404-1" },
-  { key: "trainingHoursTarget", sheet: "hr", section: "訓練與職安", label: "人均訓練目標", unit: "小時", why: "與人均訓練實際值比較。", gri: "內部目標" },
-  { key: "workHours", sheet: "hr", section: "訓練與職安", label: "總經歷工時", unit: "小時", why: "FR／SR／TRIR 分母。", gri: "GRI 403-9" },
-  { key: "disablingInjuries", sheet: "hr", section: "訓練與職安", label: "失能傷害次數", unit: "次", why: "FR 分子。", gri: "GRI 403-9" },
-  { key: "lostDays", sheet: "hr", section: "訓練與職安", label: "損失日數", unit: "日", why: "SR 分子。", gri: "GRI 403-9" },
-  { key: "fatalities", sheet: "hr", section: "訓練與職安", label: "職災死亡", unit: "人", why: "GRI 403-9 單獨揭露。", gri: "GRI 403-9" },
-  { key: "recordableInjuries", sheet: "hr", section: "訓練與職安", label: "可記錄傷害", unit: "件", why: "TRIR 分子。", gri: "GRI 403-9" },
-  { key: "parentalDue", sheet: "hr", section: "權益與供應鏈", label: "育嬰應復職人數", unit: "人", why: "育嬰復職率分母。", gri: "GRI 401-3" },
-  { key: "parentalReturn", sheet: "hr", section: "權益與供應鏈", label: "育嬰實際復職", unit: "人", why: "育嬰復職率分子。", gri: "GRI 401-3" },
-  { key: "femaleManagers", sheet: "hr", section: "權益與供應鏈", label: "女性主管人數", unit: "人", why: "女性主管比分子。", gri: "GRI 405-1" },
-  { key: "totalManagers", sheet: "hr", section: "權益與供應鏈", label: "主管總人數", unit: "人", why: "女性主管比分母。", gri: "GRI 405-1" },
-  { key: "unionCovered", sheet: "hr", section: "權益與供應鏈", label: "團體協約涵蓋人數", unit: "人", why: "團體協約覆蓋率分子。", gri: "GRI 2-30" },
-  { key: "humanRightsTrained", sheet: "hr", section: "權益與供應鏈", label: "人權／誠信受訓人數", unit: "人", why: "人權訓練覆蓋率分子。", gri: "GRI 2-24" },
-  { key: "supplierCount", sheet: "hr", section: "權益與供應鏈", label: "供應商家數", unit: "家", why: "供應商ESG評鑑覆蓋率分母。", gri: "GRI 308、414" },
-  { key: "supplierScreened", sheet: "hr", section: "權益與供應鏈", label: "已ESG評鑑供應商", unit: "家", why: "供應商ESG評鑑覆蓋率分子。", gri: "GRI 308-1、414-1" },
-  { key: "boardSeats", sheet: "gov", section: "治理", label: "董事席次", unit: "席", why: "獨立董事比分母；出席率分母之一。", gri: "年報治理" },
-  { key: "independentSeats", sheet: "gov", section: "治理", label: "獨立董事席次", unit: "席", why: "獨立董事比分子。", gri: "證交法／評鑑" },
-  { key: "boardMeetings", sheet: "gov", section: "治理", label: "董事會開會次數", unit: "次", why: "出席率分母＝席次×次數。", gri: "議事錄" },
-  { key: "boardAttend", sheet: "gov", section: "治理", label: "董事出席人次合計", unit: "人次", why: "出席率分子。來源：各次議事錄加總。", gri: "議事錄" },
-  { key: "antiCorruptDue", sheet: "gov", section: "治理", label: "應受反貪腐訓練人數", unit: "人", why: "反貪腐訓練覆蓋率分母。", gri: "GRI 205-2" },
-  { key: "antiCorruptDone", sheet: "gov", section: "治理", label: "已完成反貪腐訓練", unit: "人", why: "反貪腐訓練覆蓋率分子。", gri: "GRI 205-2" },
-  { key: "legalFines", sheet: "gov", section: "治理", label: "重大裁罰金額", unit: "萬元", why: "來源：年報重大裁罰或法務清單合計。GRI 2-27。", gri: "GRI 2-27" },
-  { key: "isoCert", sheet: "gov", section: "治理", label: "管理系統證書數", unit: "張", why: "ISO 14001／45001／27001 等。", gri: "管理系統" },
-  { key: "infoSecIncidents", sheet: "gov", section: "治理", label: "資安重大事件", unit: "件", why: "資安治理揭露。", gri: "GRI 418" },
-  { key: "dueReview", sheet: "kpi", section: "績效薪酬", label: "應考核人數", unit: "人", why: "考核覆蓋率分母。", gri: "GRI 404-3" },
-  { key: "doneReview", sheet: "kpi", section: "績效薪酬", label: "已考核人數", unit: "人", why: "考核覆蓋率分子。", gri: "GRI 404-3" },
-  { key: "withEsgKpi", sheet: "kpi", section: "績效薪酬", label: "KPI含ESG指標人數", unit: "人", why: "納入ESG KPI員工比分子。", gri: "實務守則 §9" },
-  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階ESG權重", unit: "%", why: "ESG配分÷（財務＋ESG＋其他配分）。由薪酬配分帶入。", gri: "GRI 2-19", fromPre: true },
-  { key: "businessTarget", sheet: "kpi", section: "績效薪酬", label: "業務目標", unit: "億元", why: "業務達成率分母。不計入社會面分數。", gri: "內部績效" },
-  { key: "businessActual", sheet: "kpi", section: "績效薪酬", label: "業務實際", unit: "億元", why: "業務達成率分子。", gri: "內部績效" },
-  { key: "esgTargetScore", sheet: "kpi", section: "績效薪酬", label: "ESG KPI目標", unit: "分", why: "ESG KPI達成率分母。", gri: "GRI 2-19" },
-  { key: "esgActualScore", sheet: "kpi", section: "績效薪酬", label: "ESG KPI實際", unit: "分", why: "ESG KPI達成率分子。", gri: "GRI 2-19" },
-  { key: "bonusPool", sheet: "kpi", section: "績效薪酬", label: "變動獎金池", unit: "萬元", why: "ESG連動獎金＝獎金池×權重×ESG達成率。", gri: "薪酬委員會" },
-  { key: "highestPay", sheet: "kpi", section: "績效薪酬", label: "最高個人年薪", unit: "萬元", why: "GRI 2-21 分子。來源：薪資清冊。", gri: "GRI 2-21" },
-  { key: "medianPay", sheet: "kpi", section: "績效薪酬", label: "其他員工年薪中位數", unit: "萬元", why: "GRI 2-21 分母。來源：薪資清冊（排除最高薪）。", gri: "GRI 2-21" },
-  { key: "femalePay", sheet: "kpi", section: "績效薪酬", label: "女性平均薪酬", unit: "萬元", why: "女／男薪酬比分子。", gri: "GRI 405-2" },
-  { key: "malePay", sheet: "kpi", section: "績效薪酬", label: "男性平均薪酬", unit: "萬元", why: "女／男薪酬比分母。", gri: "GRI 405-2" },
+  { key: "headcountEnd", sheet: "hr", section: "人力結構", label: "報導期間結束日員工總數", unit: "人", why: "必要。GRI 2-7 員工總數。準則允許結束日或期間平均；本欄填結束日人數（人數，非約當全職）。", gri: "GRI 2-7" },
+  { key: "headcountAvg", sheet: "hr", section: "人力結構", label: "報導期間平均員工數", unit: "人", why: "必要。GRI 2-7 允許的另一種時點。GRI 401-1 新進／離職、404-1 平均受訓時數實務上多用此數作分母。", gri: "GRI 2-7、401-1、404-1" },
+  { key: "headcountFemale", sheet: "hr", section: "人力結構", label: "女性員工數（結束日）", unit: "人", why: "GRI 2-7／405-1 要求員工及治理單位依性別細分。須與結束日員工總數同一時點。", gri: "GRI 2-7、405-1" },
+  { key: "headcountDisabled", sheet: "hr", section: "人力結構", label: "身心障礙員工數", unit: "人", why: "身心障礙者權益保障法用詞。GRI 405-1 為多元化類別，未強制使用「身障」簡稱。", gri: "GRI 405-1；身權法" },
+  { key: "contractors", sheet: "hr", section: "人力結構", label: "非員工的工作者", unit: "人", why: "GRI 2-8 專名：Workers who are not employees（承攬、派遣等由組織控制工作的人）。", gri: "GRI 2-8" },
+  { key: "newHires", sheet: "hr", section: "人力結構", label: "新進員工數", unit: "人", why: "GRI 401-1 新進員工總數。", gri: "GRI 401-1" },
+  { key: "leavers", sheet: "hr", section: "人力結構", label: "離職員工數", unit: "人", why: "GRI 401-1 員工離職總數。報告書用「離職率」，不是人資口語「流動率」。", gri: "GRI 401-1" },
+  { key: "trainingHours", sheet: "hr", section: "訓練與職安", label: "員工訓練總時數", unit: "小時", why: "GRI 404-1 平均每位員工受訓時數＝總時數÷平均員工數。", gri: "GRI 404-1" },
+  { key: "trainingFemaleHours", sheet: "hr", section: "訓練與職安", label: "女性員工訓練時數", unit: "小時", why: "GRI 404-1 應依性別細分平均受訓時數。", gri: "GRI 404-1" },
+  { key: "trainingHoursTarget", sheet: "hr", section: "訓練與職安", label: "平均受訓時數（內部目標）", unit: "小時", why: "公司自訂目標，非 GRI／金管會法定名詞。", gri: "內部目標（非準則專名）" },
+  { key: "workHours", sheet: "hr", section: "訓練與職安", label: "總經歷工時", unit: "小時", why: "勞動部職業災害統計用語。失能傷害頻率、嚴重率之分母；亦作 GRI 403-9 工時分母。", gri: "勞動部職災統計；GRI 403-9" },
+  { key: "disablingInjuries", sheet: "hr", section: "訓練與職安", label: "失能傷害次數", unit: "次", why: "勞動部職業災害統計：失能傷害頻率（FR）＝次數×10^6÷總經歷工時。GRI 403-9 口徑不完全相同。", gri: "勞動部職災統計" },
+  { key: "lostDays", sheet: "hr", section: "訓練與職安", label: "失能傷害損失日數", unit: "日", why: "勞動部職業災害統計：失能傷害嚴重率（SR）＝損失日數×10^6÷總經歷工時。", gri: "勞動部職災統計" },
+  { key: "fatalities", sheet: "hr", section: "訓練與職安", label: "職業傷害死亡人數", unit: "人", why: "GRI 403-9 應單獨揭露工作相關死亡人數。", gri: "GRI 403-9" },
+  { key: "recordableInjuries", sheet: "hr", section: "訓練與職安", label: "可記錄之職業傷害件數", unit: "件", why: "GRI 403-9 recordable work-related injuries。TRIR 為美國 OSHA 常用率，非台灣職安法專名。", gri: "GRI 403-9" },
+  { key: "parentalDue", sheet: "hr", section: "權益與供應鏈", label: "育嬰留職停薪到期應復職人數", unit: "人", why: "GRI 401-3：報導期間結束育嬰假、有權復職之員工。", gri: "GRI 401-3" },
+  { key: "parentalReturn", sheet: "hr", section: "權益與供應鏈", label: "育嬰留職停薪後實際復職人數", unit: "人", why: "GRI 401-3：上述人員中實際復職人數。", gri: "GRI 401-3" },
+  { key: "femaleManagers", sheet: "hr", section: "權益與供應鏈", label: "女性主管人數", unit: "人", why: "GRI 405-1 員工類別（如主管職）之性別細分。", gri: "GRI 405-1" },
+  { key: "totalManagers", sheet: "hr", section: "權益與供應鏈", label: "主管職總人數", unit: "人", why: "與女性主管同一員工類別定義下的總數。", gri: "GRI 405-1" },
+  { key: "unionCovered", sheet: "hr", section: "權益與供應鏈", label: "團體協約涵蓋人數", unit: "人", why: "GRI 2-30 團體協約涵蓋之員工百分比。", gri: "GRI 2-30" },
+  { key: "humanRightsTrained", sheet: "hr", section: "權益與供應鏈", label: "接受人權政策相關訓練人數", unit: "人", why: "GRI 2-24 將人權政策嵌入作為。覆蓋率非準則規定之專名，分母由組織自訂。", gri: "GRI 2-24" },
+  { key: "supplierCount", sheet: "hr", section: "權益與供應鏈", label: "供應商總數", unit: "家", why: "GRI 308-1／414-1 新供應商篩選之脈絡；總數用於計算採用環境／社會準則篩選的比例。", gri: "GRI 308-1、414-1" },
+  { key: "supplierScreened", sheet: "hr", section: "權益與供應鏈", label: "已用環境或社會準則篩選之供應商", unit: "家", why: "GRI 308-1、414-1。本系統加總環境與社會篩選，非準則上的「ESG評鑑」專名。", gri: "GRI 308-1、414-1" },
+  { key: "boardSeats", sheet: "gov", section: "治理", label: "董事席次", unit: "席", why: "必要。公司法／證交法董事會組成。年報應揭露。", gri: "公司法；年報應揭露事項" },
+  { key: "independentSeats", sheet: "gov", section: "治理", label: "獨立董事席次", unit: "席", why: "證券交易法獨立董事。公司治理評鑑亦檢視席次與比率。", gri: "證交法" },
+  { key: "boardMeetings", sheet: "gov", section: "治理", label: "董事會開會次數", unit: "次", why: "必要。公開發行公司董事會議事辦法；年報揭露開會次數。", gri: "董事會議事辦法" },
+  { key: "boardAttend", sheet: "gov", section: "治理", label: "董事出席人次合計", unit: "人次", why: "各次議事錄出席加總。出席率＝人次÷（席次×開會次數），為評鑑／年報常用算法，GRI 未定此專名。", gri: "年報董事會運作" },
+  { key: "antiCorruptDue", sheet: "gov", section: "治理", label: "應接受反貪腐訓練之人數", unit: "人", why: "GRI 205-2 反貪腐政策溝通與訓練，依治理單位／員工等類別揭露。", gri: "GRI 205-2" },
+  { key: "antiCorruptDone", sheet: "gov", section: "治理", label: "已完成反貪腐訓練之人數", unit: "人", why: "GRI 205-2。", gri: "GRI 205-2" },
+  { key: "legalFines", sheet: "gov", section: "治理", label: "重大違反法令之罰鍰", unit: "萬元", why: "GRI 2-27 法規遵循。金管會作業辦法亦要求揭露重大裁罰。", gri: "GRI 2-27；金管會作業辦法" },
+  { key: "isoCert", sheet: "gov", section: "治理", label: "管理系統驗證件數", unit: "張", why: "例如 ISO 14001、45001、27001。件數加總非準則專名，屬實務揭露。", gri: "管理系統（非GRI專名）" },
+  { key: "infoSecIncidents", sheet: "gov", section: "治理", label: "經證實之客戶個資申訴件數", unit: "件", why: "GRI 418-1 為有關侵犯顧客隱私及遺失顧客資料的實證申訴。非泛稱「資安重大事件」。", gri: "GRI 418-1" },
+  { key: "dueReview", sheet: "kpi", section: "績效薪酬", label: "應接受定期績效考核之人數", unit: "人", why: "非必要。有人資考核資料再填。對應 GRI 404-3。", gri: "GRI 404-3" },
+  { key: "doneReview", sheet: "kpi", section: "績效薪酬", label: "已接受定期績效考核之人數", unit: "人", why: "非必要。有考核完成人數再填。", gri: "GRI 404-3" },
+  { key: "withEsgKpi", sheet: "kpi", section: "績效薪酬", label: "績效指標含永續項目之人數", unit: "人", why: "非必要。公司自己的考核設計，金管會未規定此欄。沒有就填 0。", gri: "永續發展實務守則（非專名）" },
+  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階薪酬中永續相關權重", unit: "%", why: "非必要。由前置配分算出。沒做永續連動薪酬可為 0。", gri: "GRI 2-19", fromPre: true },
+  { key: "businessTarget", sheet: "kpi", section: "績效薪酬", label: "財務／營運目標（內部）", unit: "億元", why: "非必要。內部預算，不是永續報告書法定欄。沒有就填 0。", gri: "內部考核（非準則專名）" },
+  { key: "businessActual", sheet: "kpi", section: "績效薪酬", label: "財務／營運實際（內部）", unit: "億元", why: "非必要。對應內部目標。沒有就填 0。", gri: "內部考核（非準則專名）" },
+  { key: "esgTargetScore", sheet: "kpi", section: "績效薪酬", label: "永續績效目標分數（內部）", unit: "分", why: "非必要。公司自訂分數。沒有就填 0。", gri: "內部考核（非準則專名）" },
+  { key: "esgActualScore", sheet: "kpi", section: "績效薪酬", label: "永續績效實際分數（內部）", unit: "分", why: "非必要。公司自訂分數。沒有就填 0。", gri: "內部考核（非準則專名）" },
+  { key: "bonusPool", sheet: "kpi", section: "績效薪酬", label: "變動薪酬總額", unit: "萬元", why: "非必要。用來估算與永續連動的獎金。沒有就填 0。", gri: "GRI 2-19" },
+  { key: "highestPay", sheet: "kpi", section: "績效薪酬", label: "組織最高薪酬個人之年度總薪酬", unit: "萬元", why: "非必要。GRI 2-21 才用到。敏感薪資拿不到就填 0。", gri: "GRI 2-21" },
+  { key: "medianPay", sheet: "kpi", section: "績效薪酬", label: "其他員工年度總薪酬中位數", unit: "萬元", why: "非必要。GRI 2-21 分母。拿不到就填 0。", gri: "GRI 2-21" },
+  { key: "femalePay", sheet: "kpi", section: "績效薪酬", label: "女性基本薪資加薪酬之平均", unit: "萬元", why: "非必要。GRI 405-2。拿不到就填 0。", gri: "GRI 405-2" },
+  { key: "malePay", sheet: "kpi", section: "績效薪酬", label: "男性基本薪資加薪酬之平均", unit: "萬元", why: "非必要。GRI 405-2。拿不到就填 0。", gri: "GRI 405-2" },
 ];
-
-const ALLOW_ZERO = new Set<keyof Inputs>([
-  "fatalities",
-  "lostDays",
-  "disablingInjuries",
-  "legalFines",
-  "unionCovered",
-  "infoSecIncidents",
-  "scope1Manual",
-  "scope2Manual",
-  "steamGj",
-  "communitySpend",
-  "execEsgPoints",
-  "execOtherPoints",
-  "capexOtherGreen",
-  "capexRenewable",
-  "capexPollution",
-]);
 
 type PreRule = {
   target: keyof Inputs;
@@ -303,7 +285,7 @@ export const preRules: PreRule[] = [
   {
     target: "greenCapex",
     combine: "sum",
-    formula: "節能＋再生能源＋污染防治＋其他綠色資本支出",
+    formula: "節能＋再生能源＋污染防治＋其他氣候／環保資本支出",
     sources: ["capexEnergySave", "capexRenewable", "capexPollution", "capexOtherGreen"],
   },
 ];
@@ -347,10 +329,18 @@ const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
   highestPay: ["medianPay"],
 };
 
+const REQUIRED_KEYS = new Set<keyof Inputs>([
+  "revenueMillion",
+  "headcountEnd",
+  "headcountAvg",
+  "boardSeats",
+  "boardMeetings",
+]);
+
 function blank(i: Inputs, key: keyof Inputs) {
+  if (!REQUIRED_KEYS.has(key)) return false;
   const v = i[key];
   if (typeof v !== "number") return false;
-  if (ALLOW_ZERO.has(key)) return false;
   return v === 0;
 }
 
@@ -358,33 +348,14 @@ export function labelOf(key: keyof Inputs) {
   return fieldCatalog.find((f) => f.key === key)?.label ?? String(key);
 }
 
-function preMissing(i: Inputs, rule: PreRule): string[] {
-  if (rule.combine === "ratio") {
-    const msgs: string[] = [];
-    if (blank(i, "execFinPoints")) msgs.push(`${labelOf("execFinPoints")}尚未輸入`);
-    const total = n(i.execFinPoints) + n(i.execEsgPoints) + n(i.execOtherPoints);
-    if (total === 0) msgs.push("高階考核表配分合計尚未輸入");
-    return msgs;
-  }
-  const allZero = rule.sources.every((k) => n(i[k]) === 0);
-  if (allZero && rule.allowAllZero) return [];
-  if (allZero) return rule.sources.filter((k) => blank(i, k)).map((k) => `${labelOf(k)}尚未輸入`);
+function preMissing(_i: Inputs, _rule: PreRule): string[] {
   return [];
 }
 
 export function missingOnRow(i: Inputs, key: keyof Inputs): string[] {
-  const msgs: string[] = [];
-  const rule = preRules.find((r) => r.target === key);
-  if (rule) msgs.push(...preMissing(i, rule));
-  else if (blank(i, key)) msgs.push(`${labelOf(key)}尚未輸入`);
-  if (blank(i, key) && fieldCatalog.find((f) => f.key === key)?.sheet === "pre") {
-    if (!msgs.includes(`${labelOf(key)}尚未輸入`)) msgs.push(`${labelOf(key)}尚未輸入`);
-  }
-  for (const dep of NEEDS[key] ?? []) {
-    if (rule?.sources.includes(dep)) continue;
-    if (blank(i, dep)) msgs.push(`${labelOf(dep)}尚未輸入`);
-  }
-  return [...new Set(msgs)];
+  if (!REQUIRED_KEYS.has(key)) return [];
+  if (!blank(i, key)) return [];
+  return [`${labelOf(key)}尚未輸入`];
 }
 
 export function derived(i: Inputs): Inputs {
@@ -443,7 +414,7 @@ export type Check = {
 export const regulationCatalog = [
   { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會", asOf: "2026-10", point: "依 GRI；溫室氣體最近兩年排放量、密集度（噸CO2e／百萬元）及涵蓋範圍。", url: "https://law.moj.gov.tw/" },
   { id: "gri-2021", name: "GRI Standards 2021", version: "GRI 1／2／3 及主題準則", asOf: "2026-10", point: "2-7、2-21、2-27、205、302–306、401、403–405、308、414。", url: "https://www.globalreporting.org/" },
-  { id: "ghg", name: "GHG Protocol／ISO 14064-1", version: "邊界對齊合併報表", asOf: "2026-10", point: "活動數據 × 係數 → Scope 1／2；Scope 3 可彙總。", url: "https://ghgprotocol.org/" },
+  { id: "ghg", name: "GHG Protocol／ISO 14064-1", version: "邊界對齊合併報表", asOf: "2026-10", point: "活動數據（用量）× 係數＝範疇一／二排放。下方有中文說明。", url: "https://ghgprotocol.org/" },
   { id: "ef", name: "排放係數／GWP", version: "可覆核參數表", asOf: "2026-10", point: "電力、油氣、冷媒係數以環境部／IPCC 當期為準。", url: "https://www.moenv.gov.tw/" },
   { id: "osh", name: "職安頻率", version: "每百萬工時", asOf: "2026-10", point: "FR／SR／TRIR＝件數×10^6÷總工時。", url: "https://www.osha.gov.tw/" },
   { id: "twse-csr", name: "永續發展實務守則 §9", version: "證交所／櫃買", asOf: "2026-10", point: "績效考核宜結合永續政策。", url: "https://twse-regulation.twse.com.tw/" },
@@ -519,56 +490,56 @@ export function compute(raw: Inputs) {
   const intensityHit = Number.isFinite(intensity) && intensity <= n(i.intensityTarget);
 
   const metrics: Metric[] = [
-    M("s1", "E 環境", "Scope 1", scope1, "tCO2e", "油氣係數＋冷媒×GWP", "GRI 305-1"),
-    M("s2", "E 環境", "Scope 2", scope2, "tCO2e", "電力kWh × 電力係數", "GRI 305-2"),
-    M("s12", "E 環境", "Scope 1+2", ghg12, "tCO2e", "S1+S2", "金管會排放量"),
-    M("s3", "E 環境", "Scope 1+2+3", ghg123, "tCO2e", "加 Scope 3 彙總", "GRI 305-3"),
-    M("int", "E 環境", "排放密集度", intensity, "tCO2e／百萬營收", "(S1+S2)÷合併營收", "金管會；GRI 305-4", { flag: intensityHit ? "ok" : "warn" }),
-    M("ren", "E 環境", "再生能源電力比", renewPct, "%", "再生kWh÷總用電", "GRI 302-1"),
-    M("en", "E 環境", "能源使用", energyGj, "GJ", "電／蒸汽／油氣熱值加總", "GRI 302-1"),
+    M("s1", "E 環境", "範疇一直接排放", scope1, "tCO2e", "油氣係數＋冷媒×GWP", "GRI 305-1；GHG Protocol"),
+    M("s2", "E 環境", "範疇二能源間接排放", scope2, "tCO2e", "電力kWh × 電力係數", "GRI 305-2；GHG Protocol"),
+    M("s12", "E 環境", "範疇一＋二", ghg12, "tCO2e", "S1+S2", "金管會作業辦法"),
+    M("s3", "E 環境", "範疇一＋二＋三", ghg123, "tCO2e", "加範疇三彙總", "GRI 305-3"),
+    M("int", "E 環境", "溫室氣體排放密集度", intensity, "tCO2e／百萬營收", "(S1+S2)÷合併營收", "金管會；GRI 305-4", { flag: intensityHit ? "ok" : "warn" }),
+    M("ren", "E 環境", "再生能源占外購電力", renewPct, "%", "再生kWh÷外購電力", "GRI 302-1"),
+    M("en", "E 環境", "組織內能源消耗", energyGj, "GJ", "電／蒸汽／油氣熱值加總", "GRI 302-1"),
     M("eni", "E 環境", "能源密集度", energyInt, "GJ／百萬營收", "能源GJ÷營收", "GRI 302-3"),
-    M("wint", "E 環境", "用水密集度", waterInt, "千噸／百萬營收", "取水÷營收", "GRI 303"),
-    M("wuse", "E 環境", "耗水量(簡化)", waterUse, "千噸", "取水−放流", "GRI 303-5"),
-    M("rec", "E 環境", "廢棄物回收率", recycle, "%", "回收÷產生", "GRI 306"),
-    M("haz", "E 環境", "有害廢棄物比", haz, "%", "有害÷產生", "GRI 306"),
-    M("grn", "E 環境", "綠色資本支出比", greenRatio, "%", "綠色Capex÷總Capex", "投資揭露"),
-    M("turn", "S 人力", "流動率", turnover, "%", "離職÷平均人數", "GRI 401-1"),
-    M("hire", "S 人力", "新進率", hireRate, "%", "新進÷平均人數", "GRI 401-1"),
-    M("fem", "S 人力", "女性占比", femalePct, "%", "女性÷期末", "GRI 405-1"),
-    M("dis", "S 人力", "身障占比", disPct, "%", "身障÷期末", "GRI 405-1"),
-    M("tr", "S 人力", "人均訓練", trainPer, "小時", "總時數÷平均人數", "GRI 404-1"),
-    M("trf", "S 人力", "女性人均訓練", trainF, "小時", "女性時數÷女性人數", "GRI 404-1"),
-    M("fr", "S 職安", "FR 失能傷害頻率", fr, "／百萬工時", "失能次數×10^6÷工時", "GRI 403-9"),
-    M("sr", "S 職安", "SR 嚴重率", sr, "／百萬工時", "損失日×10^6÷工時", "GRI 403-9"),
-    M("trir", "S 職安", "TRIR", trir, "／百萬工時", "可記錄傷害×10^6÷工時", "GRI 403-9"),
-    M("par", "S 權益", "育嬰復職率", parental, "%", "復職÷應復職", "GRI 401-3"),
-    M("fm", "S 權益", "女性主管比", femMgr, "%", "女性主管÷主管", "GRI 405-1"),
-    M("un", "S 權益", "團體協約覆蓋", union, "%", "涵蓋÷期末", "GRI 2-30"),
-    M("hrt", "S 權益", "人權訓練覆蓋", hrTrain, "%", "受訓÷期末", "GRI 2-24"),
-    M("sup", "S 供應鏈", "供應商ESG評鑑覆蓋", supp, "%", "已評鑑÷供應商", "GRI 308／414"),
-    M("rev", "S 績效KPI", "考核覆蓋率", reviewPct, "%", "已考核÷應考核", "GRI 404-3"),
-    M("ek", "S 績效KPI", "納入ESG KPI員工比", esgKpiPct, "%", "有ESG KPI÷期末", "實務守則§9"),
-    M("biz", "S 績效KPI", "業務目標達成率", bizHit, "%", "實際÷目標（非S分數）", "內部績效"),
-    M("eh", "S 績效KPI", "ESG KPI達成率", esgHit, "%", "ESG實際÷目標", "GRI 2-19"),
-    M("wtd", "S 績效KPI", "加權績效達成率", weighted, "%", "(1-w)×業務 + w×ESG", "獎金"),
-    M("bon", "G 薪酬", "ESG連動獎金", esgBonus, "萬元", "獎金池×權重×ESG達成", "GRI 2-19"),
-    M("pay", "G 薪酬", "最高薪／中位數", payRatio, "倍", "最高÷中位數", "GRI 2-21"),
-    M("gp", "G 薪酬", "女／男薪酬比", genderPay, "倍", "女性均薪÷男性均薪", "GRI 405-2"),
-    M("ind", "G 治理", "獨立董事比", indPct, "%", "獨董÷席次", "證交法／評鑑"),
-    M("att", "G 治理", "董事會出席率", attend, "%", "出席人次÷(席次×次數)", "議事錄"),
-    M("ac", "G 治理", "反貪腐訓練覆蓋", anti, "%", "完成÷應訓", "GRI 205-2"),
+    M("wint", "E 環境", "取水密集度", waterInt, "千噸／百萬營收", "取水÷營收", "GRI 303-3"),
+    M("wuse", "E 環境", "耗水（取水減放流，簡化）", waterUse, "千噸", "取水−放流，非完整水平衡", "GRI 303-5（簡化）"),
+    M("rec", "E 環境", "從處置移轉之廢棄物占比", recycle, "%", "回收再利用÷產生", "GRI 306-4"),
+    M("haz", "E 環境", "有害廢棄物占產生量", haz, "%", "有害÷產生", "廢棄物清理法；GRI 306-3"),
+    M("grn", "E 環境", "氣候／環保資本支出占比", greenRatio, "%", "相關Capex÷購置不動產廠房設備", "金管會氣候資訊（實務比）"),
+    M("turn", "S 人力", "員工離職率", turnover, "%", "離職÷平均員工數", "GRI 401-1"),
+    M("hire", "S 人力", "新進員工率", hireRate, "%", "新進÷平均員工數", "GRI 401-1"),
+    M("fem", "S 人力", "女性占結束日員工", femalePct, "%", "女性÷結束日員工總數", "GRI 405-1"),
+    M("dis", "S 人力", "身心障礙者占結束日員工", disPct, "%", "身障÷結束日員工總數", "GRI 405-1；身權法"),
+    M("tr", "S 人力", "平均每位員工受訓時數", trainPer, "小時", "總時數÷平均員工數", "GRI 404-1"),
+    M("trf", "S 人力", "女性平均受訓時數", trainF, "小時", "女性時數÷女性員工數", "GRI 404-1"),
+    M("fr", "S 職安", "失能傷害頻率", fr, "／百萬工時", "失能次數×10^6÷總經歷工時", "勞動部職災統計"),
+    M("sr", "S 職安", "失能傷害嚴重率", sr, "／百萬工時", "損失日×10^6÷總經歷工時", "勞動部職災統計"),
+    M("trir", "S 職安", "可記錄職業傷害率（OSHA TRIR）", trir, "／百萬工時", "可記錄傷害×10^6÷工時", "GRI 403-9；OSHA（非職安法專名）"),
+    M("par", "S 權益", "育嬰留停後復職率", parental, "%", "復職÷應復職", "GRI 401-3"),
+    M("fm", "S 權益", "女性占主管職", femMgr, "%", "女性主管÷主管職", "GRI 405-1"),
+    M("un", "S 權益", "團體協約涵蓋比率", union, "%", "涵蓋÷結束日員工總數", "GRI 2-30"),
+    M("hrt", "S 權益", "人權訓練覆蓋（自訂）", hrTrain, "%", "受訓÷結束日員工總數", "GRI 2-24（比率自訂）"),
+    M("sup", "S 供應鏈", "以環境或社會準則篩選之供應商比率", supp, "%", "已篩選÷供應商總數", "GRI 308-1／414-1"),
+    M("rev", "S 績效KPI", "定期績效考核比率", reviewPct, "%", "已考核÷應考核", "GRI 404-3"),
+    M("ek", "S 績效KPI", "考核含永續指標之員工比（自訂）", esgKpiPct, "%", "有永續KPI÷結束日員工總數", "實務守則（非專名）"),
+    M("biz", "S 績效KPI", "財務／營運目標達成率（內部）", bizHit, "%", "實際÷目標", "內部考核"),
+    M("eh", "S 績效KPI", "永續績效目標達成率（內部）", esgHit, "%", "永續實際÷目標", "內部考核"),
+    M("wtd", "S 績效KPI", "加權績效達成率（內部）", weighted, "%", "(1-w)×財務 + w×永續", "內部考核"),
+    M("bon", "G 薪酬", "與永續績效連動之變動薪酬（估算）", esgBonus, "萬元", "變動薪酬×權重×永續達成", "GRI 2-19（估算）"),
+    M("pay", "G 薪酬", "最高薪酬對中位數之倍數", payRatio, "倍", "最高÷中位數", "GRI 2-21"),
+    M("gp", "G 薪酬", "女性對男性薪酬比", genderPay, "倍", "女性平均÷男性平均", "GRI 405-2"),
+    M("ind", "G 治理", "獨立董事席次比率", indPct, "%", "獨董÷席次", "證交法／評鑑"),
+    M("att", "G 治理", "董事會出席率", attend, "%", "出席人次÷(席次×次數)", "年報董事會運作"),
+    M("ac", "G 治理", "反貪腐訓練比率", anti, "%", "完成÷應訓", "GRI 205-2"),
   ];
 
   const checks: Check[] = [];
   if (n(i.revenueMillion) <= 0) checks.push({ id: "rev0", level: "異常", title: "合併營收未輸入", detail: "密集度無法計算。", basis: "金管會" });
   if (n(i.wasteRecycledT) > n(i.wasteT) && n(i.wasteT) > 0) checks.push({ id: "w1", level: "異常", title: "回收>產生", detail: "廢棄物勾稽失敗。", basis: "GRI 306" });
   if (n(i.doneReview) > n(i.dueReview)) checks.push({ id: "r1", level: "異常", title: "已考核>應考核", detail: "404-3 分母錯誤。", basis: "GRI 404-3" });
-  if (n(i.headcountFemale) > n(i.headcountEnd)) checks.push({ id: "f1", level: "異常", title: "女性人數>期末", detail: "人力結構勾稽失敗。", basis: "GRI 2-7" });
+  if (n(i.headcountFemale) > n(i.headcountEnd)) checks.push({ id: "f1", level: "異常", title: "女性員工數大於結束日員工總數", detail: "人力結構勾稽失敗。", basis: "GRI 2-7" });
   if (n(i.independentSeats) > n(i.boardSeats)) checks.push({ id: "b1", level: "異常", title: "獨董>席次", detail: "治理結構錯誤。", basis: "年報" });
-  if (n(i.headcountAvg) <= 0) checks.push({ id: "a1", level: "異常", title: "平均人數未輸入", detail: "流動率／訓練無法算。", basis: "GRI 401" });
+  if (n(i.headcountAvg) <= 0) checks.push({ id: "a1", level: "異常", title: "平均員工數未輸入", detail: "離職率／平均受訓時數無法算。", basis: "GRI 401" });
   if (n(i.renewableKwh) > n(i.electricityKwh) && n(i.electricityKwh) > 0) checks.push({ id: "re", level: "異常", title: "再生電>總用電", detail: "能源結構錯誤。", basis: "GRI 302" });
   if ((indPct || 0) < 33 && n(i.independentSeats) < 3) checks.push({ id: "indw", level: "注意", title: "獨董可能不足", detail: `獨董 ${fmt(indPct, 0)}%、${i.independentSeats} 席。`, basis: "公開發行實務" });
-  if (n(i.esgWeight) < 10) checks.push({ id: "w", level: "注意", title: "高階ESG權重偏低", detail: `目前 ${i.esgWeight}%。`, basis: "GRI 2-19" });
+  if (n(i.esgWeight) < 10) checks.push({ id: "w", level: "注意", title: "高階薪酬中永續權重偏低", detail: `目前 ${i.esgWeight}%。`, basis: "GRI 2-19" });
   if (!intensityHit && Number.isFinite(intensity)) checks.push({ id: "intw", level: "注意", title: "密集度未達目標", detail: `實際 ${fmt(intensity, 4)}。`, basis: "氣候目標" });
   if (n(i.fatalities) > 0) checks.push({ id: "fat", level: "異常", title: "有職災死亡", detail: "必須在報告書重大事件揭露。", basis: "GRI 403-9" });
   if (checks.length === 0) checks.push({ id: "ok", level: "通過", title: "勾稽未發現異常", detail: "可進入覆核；係數仍應對當期公告。", basis: "底稿" });

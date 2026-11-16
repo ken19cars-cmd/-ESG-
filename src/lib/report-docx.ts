@@ -36,53 +36,35 @@ function p(text: string, opts?: { heading?: (typeof HeadingLevel)[keyof typeof H
   });
 }
 
-function cell(text: string, header = false) {
+function cell(text: string, header = false, widthPct = 25) {
   return new TableCell({
     borders: BORDERS,
-    shading: header ? { fill: NAVY } : undefined,
-    width: { size: 25, type: WidthType.PERCENTAGE },
+    shading: header ? { fill: NAVY } : { fill: "F4F6F8" },
+    width: { size: widthPct, type: WidthType.PERCENTAGE },
     children: [
       new Paragraph({
-        children: [run(text, { bold: header, color: header ? "FFFFFF" : "111111", size: 20 })],
+        spacing: { before: 40, after: 40 },
+        children: [run(text, { bold: header, color: header ? "FFFFFF" : "111111", size: 18 })],
       }),
     ],
   });
 }
 
-function table(headers: string[], rows: string[][]) {
+function table(headers: string[], rows: string[][], widths?: number[]) {
+  const w = widths ?? headers.map(() => Math.round(100 / headers.length));
   return new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
+    width: { size: 72, type: WidthType.PERCENTAGE },
     rows: [
-      new TableRow({ children: headers.map((h) => cell(h, true)) }),
-      ...rows.map((r) => new TableRow({ children: r.map((c) => cell(c)) })),
+      new TableRow({ children: headers.map((h, i) => cell(h, true, w[i])) }),
+      ...rows.map((r) => new TableRow({ children: r.map((c, i) => cell(c, false, w[i])) })),
     ],
   });
 }
 
-function nums(metrics: ReturnType<typeof compute>["metrics"], ids: string[]) {
-  return ids.map((id) => {
-    const m = metrics.find((x) => x.id === id);
-    const v = m && Number.isFinite(m.raw) ? m.raw : 0;
-    return { name: m?.name ?? id, value: v };
-  });
-}
-
-function bar(title: string, items: { name: string; value: number }[]) {
-  const rows = items.filter((x) => Number.isFinite(x.value));
-  if (rows.length === 0) return p("（無數值）");
+function cap(text: string) {
   return new Paragraph({
-    spacing: { before: 120, after: 200 },
-    children: [
-      new ChartRun({
-        type: "bar",
-        title,
-        legend: false,
-        font: { name: FONT },
-        categories: rows.map((r) => r.name),
-        series: [{ name: "數值", values: rows.map((r) => r.value), color: "4A6B8A" }],
-        transformation: { width: 540, height: Math.min(420, 80 + rows.length * 28) },
-      }),
-    ],
+    spacing: { before: 160, after: 60 },
+    children: [run(text, { bold: true, size: 20, color: NAVY })],
   });
 }
 
@@ -91,10 +73,6 @@ export async function buildReportDocx(inputs: Inputs) {
   const result = compute(inputs);
   const blocks = reportDraft(d, result.metrics);
   const index = griIndex(result.metrics);
-  const env = nums(result.metrics, ["s1", "s2", "int", "ren", "en"]);
-  const water = nums(result.metrics, ["wint", "wuse", "rec", "haz"]);
-  const social = nums(result.metrics, ["turn", "hire", "tr", "fr", "sr", "trir", "par", "fm"]);
-  const gov = nums(result.metrics, ["ind", "att", "ac", "rev", "ek", "eh", "pay"]);
   const s1 = Math.max(0, result.metrics.find((m) => m.id === "s1")?.raw ?? 0);
   const s2 = Math.max(0, result.metrics.find((m) => m.id === "s2")?.raw ?? 0);
 
@@ -107,57 +85,60 @@ export async function buildReportDocx(inputs: Inputs) {
     p("二、環境績效"),
     p("三、社會績效"),
     p("四、治理與薪酬"),
-    p("五、勾稽結果"),
-    p("附錄、GRI 內容索引（績效項）"),
+    p("附錄、GRI 內容索引"),
     p("一、關於本報告書", { heading: HeadingLevel.HEADING_1 }),
+    cap("表　報導基礎"),
     table(
-      ["項目", "內容", "對應"],
+      ["項目", "內容"],
       [
-        ["組織名稱", d.client, "GRI 2-1"],
-        ["報導期間", `${d.year}年1月1日至12月31日`, "GRI 2-3"],
-        ["依循準則", "GRI Standards 2021；上市櫃公司編製與申報永續報告書作業辦法", "GRI 1"],
+        ["組織名稱", d.client],
+        ["報導期間", `${d.year}年1月1日至12月31日`],
+        ["依循準則", "GRI Standards 2021；上市櫃公司編製與申報永續報告書作業辦法"],
       ],
+      [28, 72],
     ),
   ];
 
+  const yearCol = `${d.year}年`;
   for (const block of blocks.filter((b) => b.chapter !== "關於本報告書")) {
     children.push(p(block.chapter, { heading: HeadingLevel.HEADING_1 }));
-    children.push(p(block.gri));
-    children.push(table(["項目", "數值", "單位", "對應"], block.rows.map((r) => [r.name, r.value, r.unit, r.gri])));
-    if (block.chapter.startsWith("5 環境—能源")) {
-      children.push(bar("環境指標", env));
-      if (s1 + s2 > 0) {
-        children.push(
-          new Paragraph({
-            spacing: { before: 120, after: 200 },
-            children: [
-              new ChartRun({
-                type: "pie",
-                title: "Scope 1／2 結構（tCO2e）",
-                font: { name: FONT },
-                categories: ["Scope 1", "Scope 2"],
-                series: [{ name: "tCO2e", values: [s1, s2] }],
-                transformation: { width: 480, height: 280 },
-              }),
-            ],
-          }),
-        );
-      }
+    children.push(cap(`表　${block.chapter.replace(/^\d+\s/, "")}`));
+    children.push(
+      table(
+        ["項目", yearCol],
+        block.rows.map((r) => [r.unit && r.unit !== "—" ? `${r.name}(${r.unit})` : r.name, r.value]),
+        [70, 30],
+      ),
+    );
+    if (block.chapter.startsWith("5 環境—能源") && s1 + s2 > 0) {
+      children.push(
+        new Paragraph({
+          spacing: { before: 120, after: 80 },
+          children: [
+            new ChartRun({
+              type: "pie",
+              title: "",
+              font: { name: FONT },
+              categories: ["範疇一", "範疇二"],
+              series: [{ name: "公噸CO2e", values: [s1, s2], color: "6B4A3A" }],
+              transformation: { width: 320, height: 200 },
+            }),
+          ],
+        }),
+      );
+      children.push(cap("圖　範疇一與範疇二排放結構"));
     }
-    if (block.chapter.startsWith("5 環境—水")) children.push(bar("水與廢棄物指標", water));
-    if (block.chapter.startsWith("6 社會—人力")) children.push(bar("社會／職安指標", social));
-    if (block.chapter.startsWith("4 治理—薪酬")) children.push(bar("治理／薪酬指標", gov));
   }
 
-  children.push(p("五、勾稽結果", { heading: HeadingLevel.HEADING_1 }));
+  children.push(p("附錄、GRI 內容索引", { heading: HeadingLevel.HEADING_1 }));
+  children.push(cap("表A-1　GRI內容索引"));
   children.push(
     table(
-      ["等級", "項目", "說明", "依據"],
-      result.checks.map((c) => [c.level, c.title, c.detail, c.basis]),
+      ["GRI準則", "揭露項目", "章節"],
+      index.filter((r) => r.gri.startsWith("GRI") || r.gri.startsWith("金管會") || r.gri.startsWith("證交法")).map((r) => [r.gri, r.topic, r.chapter]),
+      [28, 44, 28],
     ),
   );
-  children.push(p("附錄、GRI 內容索引（績效項）", { heading: HeadingLevel.HEADING_1 }));
-  children.push(table(["揭露", "主題", "數值", "章節"], index.map((r) => [r.gri, r.topic, r.value, r.chapter])));
 
   const doc = new Document({
     styles: { default: { document: { run: { font: FONT, size: 22 } } } },

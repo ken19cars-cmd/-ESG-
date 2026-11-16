@@ -15,6 +15,7 @@ import {
   type Metric,
 } from "@/lib/esg-engine";
 import { griIndex, reportDraft } from "@/lib/report-draft";
+import { regulationArticles } from "@/lib/regulation-library";
 import {
   OFFICIAL_FACTOR_KEYS,
   REFRIGERANTS,
@@ -375,7 +376,7 @@ export function WorkbenchApp() {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                高階ESG權重、綠色資本支出由本頁運算後帶入主表。
+                高階薪酬中永續相關權重、氣候／環保相關資本支出合計，由本頁運算後帶入主表。這兩項是公司考核與氣候資訊實務加總，不是 GRI 條文上的專有名詞。
               </p>
               <table className="w-full border-collapse">
                 <thead>
@@ -432,6 +433,9 @@ export function WorkbenchApp() {
 
           {sheet === "reg" && (
             <div>
+              <p className="mb-2 text-[13px] leading-6 text-[#333]">
+                下列為規範重點的中文說明（意譯），方便對照輸入欄。完整條文請開來源連結；GRI／GHG Protocol 原文有著作權，此處不整段照抄。
+              </p>
               <button
                 type="button"
                 className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
@@ -466,6 +470,23 @@ export function WorkbenchApp() {
                   ))}
                 </tbody>
               </table>
+              {regulationArticles.map((a) => (
+                <div key={a.id} className="mt-4 border border-[#c8c8c8] bg-[#f7f7f7] p-3 text-[13px] leading-6">
+                  <p className="font-bold text-[#1b3a4b]">{a.topic}</p>
+                  <p className="text-[12px] text-[#555]">
+                    {a.source}　{a.cite}
+                  </p>
+                  {a.plain.map((para, idx) => (
+                    <p key={`${a.id}-${idx}`} className="mt-1">
+                      {para}
+                    </p>
+                  ))}
+                  <p className="mt-1 text-[#1b3a4b]">
+                    <b>本系統怎麼填：</b>
+                    {a.fill}
+                  </p>
+                </div>
+              ))}
             </div>
           )}
 
@@ -640,9 +661,9 @@ function ChartPreview({ metrics }: { metrics: Metric[] }) {
       <BarChart
         title="社會／職安"
         rows={[
-          ["流動率%", pick("turn")],
+          ["離職率%", pick("turn")],
           ["新進率%", pick("hire")],
-          ["人均訓練 h", pick("tr")],
+          ["平均受訓 h", pick("tr")],
           ["FR", pick("fr")],
           ["SR", pick("sr")],
           ["TRIR", pick("trir")],
