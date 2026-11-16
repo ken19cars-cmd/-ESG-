@@ -120,7 +120,7 @@ export async function buildReportDocx(inputs: Inputs) {
               title: "",
               font: { name: FONT },
               categories: ["範疇一", "範疇二"],
-              series: [{ name: "公噸CO2e", values: [s1, s2], color: "6B4A3A" }],
+              series: [{ name: "公噸CO2e", values: [s1, s2], colors: ["6B4A3A", "3A5A6B"] }],
               transformation: { width: 320, height: 200 },
             }),
           ],
