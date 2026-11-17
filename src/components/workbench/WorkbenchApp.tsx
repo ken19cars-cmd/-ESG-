@@ -24,6 +24,57 @@ import {
 
 type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg" | "rep";
 
+const metricLink: Record<string, { sheet: Sheet; keys: (keyof Inputs)[] }> = {
+  s1: { sheet: "env", keys: ["dieselLiter", "gasolineLiter", "lngM3", "refrigerantKg"] },
+  s2: { sheet: "env", keys: ["electricityKwh", "steamGj"] },
+  s12: { sheet: "env", keys: ["dieselLiter", "gasolineLiter", "lngM3", "refrigerantKg", "electricityKwh"] },
+  s3o: { sheet: "env", keys: ["scope3"] },
+  s3: { sheet: "env", keys: ["scope3"] },
+  int: { sheet: "env", keys: ["intensityTarget"] },
+  p12: { sheet: "env", keys: ["prevGhg12"] },
+  pint: { sheet: "env", keys: ["prevGhg12", "prevRevenueMillion"] },
+  gyoy: { sheet: "env", keys: ["prevGhg12"] },
+  iyoy: { sheet: "env", keys: ["prevGhg12", "prevRevenueMillion"] },
+  ren: { sheet: "env", keys: ["renewableKwh", "electricityKwh"] },
+  en: { sheet: "env", keys: ["electricityKwh", "steamGj", "dieselLiter", "gasolineLiter", "lngM3"] },
+  eni: { sheet: "env", keys: ["electricityKwh", "steamGj", "dieselLiter", "gasolineLiter", "lngM3"] },
+  wint: { sheet: "env", keys: ["waterKt"] },
+  wuse: { sheet: "env", keys: ["waterKt", "wastewaterKt"] },
+  rec: { sheet: "env", keys: ["wasteT", "wasteRecycledT"] },
+  haz: { sheet: "env", keys: ["wasteT", "wasteHazardT"] },
+  wastI: { sheet: "env", keys: ["wasteT"] },
+  ghge: { sheet: "hr", keys: ["headcountAvg"] },
+  csp: { sheet: "fin", keys: ["communitySpend", "revenueMillion"] },
+  grn: { sheet: "fin", keys: ["totalCapex", "greenCapex"] },
+  turn: { sheet: "hr", keys: ["leavers", "headcountAvg"] },
+  hire: { sheet: "hr", keys: ["newHires", "headcountAvg"] },
+  fem: { sheet: "hr", keys: ["headcountFemale", "headcountEnd"] },
+  male: { sheet: "hr", keys: ["headcountFemale", "headcountEnd"] },
+  dis: { sheet: "hr", keys: ["headcountDisabled", "headcountEnd"] },
+  tr: { sheet: "hr", keys: ["trainingHours", "headcountAvg"] },
+  trf: { sheet: "hr", keys: ["trainingFemaleHours", "headcountFemale"] },
+  trhit: { sheet: "hr", keys: ["trainingHours", "trainingHoursTarget"] },
+  fr: { sheet: "hr", keys: ["disablingInjuries", "workHours"] },
+  sr: { sheet: "hr", keys: ["lostDays", "workHours"] },
+  trir: { sheet: "hr", keys: ["recordableInjuries", "workHours"] },
+  par: { sheet: "hr", keys: ["parentalReturn", "parentalDue"] },
+  fm: { sheet: "hr", keys: ["femaleManagers", "totalManagers"] },
+  un: { sheet: "hr", keys: ["unionCovered", "headcountEnd"] },
+  hrt: { sheet: "hr", keys: ["humanRightsTrained", "headcountEnd"] },
+  sup: { sheet: "hr", keys: ["supplierScreened", "supplierCount"] },
+  rev: { sheet: "kpi", keys: ["doneReview", "dueReview"] },
+  ek: { sheet: "kpi", keys: ["withEsgKpi"] },
+  biz: { sheet: "kpi", keys: ["businessActual", "businessTarget"] },
+  eh: { sheet: "kpi", keys: ["esgActualScore", "esgTargetScore"] },
+  wtd: { sheet: "kpi", keys: ["businessActual", "esgActualScore"] },
+  bon: { sheet: "kpi", keys: ["bonusPool"] },
+  pay: { sheet: "kpi", keys: ["highestPay", "medianPay"] },
+  gp: { sheet: "kpi", keys: ["femalePay", "malePay"] },
+  ind: { sheet: "gov", keys: ["independentSeats", "boardSeats"] },
+  att: { sheet: "gov", keys: ["boardAttend", "boardSeats", "boardMeetings"] },
+  ac: { sheet: "gov", keys: ["antiCorruptDone", "antiCorruptDue"] },
+};
+
 const sheets: { id: Sheet; label: string }[] = [
   { id: "pre", label: "0.接案前置底稿" },
   { id: "fin", label: "1.財務分母" },
@@ -59,6 +110,7 @@ export function WorkbenchApp() {
   const [factorTick, setFactorTick] = useState(0);
   const [factorFocus, setFactorFocus] = useState<string | null>(null);
   const [docxBusy, setDocxBusy] = useState(false);
+  const [highlightKeys, setHighlightKeys] = useState<(keyof Inputs)[]>([]);
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
 
@@ -119,13 +171,20 @@ export function WorkbenchApp() {
     return acc;
   }, {});
 
-  const sideMetrics = result.metrics.filter((m) => {
-    if (sheet === "env" || sheet === "chart") return m.group.startsWith("E");
-    if (sheet === "hr") return m.group.startsWith("S") && !m.group.includes("績效");
-    if (sheet === "kpi") return m.group.includes("績效") || m.group.includes("薪酬");
-    if (sheet === "gov") return m.group.startsWith("G") && !m.group.includes("薪酬");
-    return true;
-  });
+  const sideMetrics = result.metrics.filter((m) => metricLink[m.id]?.sheet === (sheet === "chart" ? "env" : sheet));
+
+  useEffect(() => {
+    const key = highlightKeys[0];
+    if (!key) return;
+    document.getElementById(`wb-field-${String(key)}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [highlightKeys, sheet]);
+
+  function openMetric(id: string) {
+    const link = metricLink[id];
+    if (!link) return;
+    setSheet(link.sheet);
+    setHighlightKeys(link.keys);
+  }
 
   return (
     <div className="min-h-screen">
@@ -242,7 +301,11 @@ export function WorkbenchApp() {
                       const isOfficial = OFFICIAL_FACTOR_KEYS.includes(f.key as (typeof OFFICIAL_FACTOR_KEYS)[number]);
                       const factorCheck = factorAudit?.checks.find((c) => c.key === f.key);
                       return (
-                      <tr key={String(f.key)} className={factorFocus === f.key ? "outline outline-1 outline-[#1f4a7a]" : ""}>
+                      <tr
+                        key={String(f.key)}
+                        id={`wb-field-${String(f.key)}`}
+                        className={highlightKeys.includes(f.key) ? "wb-jump" : factorFocus === f.key ? "outline outline-1 outline-[#1f4a7a]" : ""}
+                      >
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
                           {f.label}
                           {locked && (
@@ -570,8 +633,10 @@ export function WorkbenchApp() {
               {sideMetrics.map((m) => (
                 <tr key={m.id}>
                   <td className="border border-[#ccc] px-2 py-1">
-                    {m.name}
-                    <div className="text-[10px] text-[#666]">{m.formula}</div>
+                    <button type="button" className="w-full text-left hover:bg-[#fff3bf]" onClick={() => openMetric(m.id)}>
+                      <span className="underline decoration-[#888]">{m.name}</span>
+                      <div className="text-[10px] text-[#333]">{m.formula}</div>
+                    </button>
                   </td>
                   <td className="wb-calc border border-[#ccc] px-2 py-1 text-right">
                     {m.value} {m.unit}
