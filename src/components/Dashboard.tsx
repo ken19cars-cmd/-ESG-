@@ -222,8 +222,7 @@ export function Dashboard() {
     <div className="app-shell flex min-h-screen">
       <aside className="hidden w-56 shrink-0 flex-col border-r border-[#d7e6ee] bg-white lg:flex">
         <div className="border-b border-[#e6eef3] px-4 py-5">
-          <p className="text-sm font-semibold text-[#243044]">企業ESG永續應用系統</p>
-          <p className="mt-1 text-xs text-[#243044]">規範 · 檢索 · 計算 · 應用</p>
+          <p className="text-sm font-semibold leading-6 text-[#243044]">OO公司ESG永續儀表板</p>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
           {nav.map((item) => (
@@ -258,7 +257,10 @@ export function Dashboard() {
 
       <div className="min-w-0 flex-1">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d7e6ee] bg-white px-5 py-4">
-        <h1 className="text-lg font-semibold text-[#243044]">OO公司ESG永續儀表板</h1>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-wide text-[#243044] md:text-3xl">企業ESG永續應用系統</h1>
+          <p className="mt-1 text-sm text-[#3e4e5a] md:text-base">規範 · 檢索 · 計算 · 應用</p>
+        </div>
         <div className="flex gap-1 lg:hidden">
           {years.map((y) => (
             <button
