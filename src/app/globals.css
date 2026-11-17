@@ -106,6 +106,45 @@ body {
   transform: translateY(-2px);
 }
 
+.app-shell {
+  background: #e7f3f8;
+  color: #243044;
+}
+
+.app-shell .panel {
+  border: 1px solid #e3eef3;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(36, 84, 112, 0.06);
+  backdrop-filter: none;
+}
+
+.app-shell .panel:hover {
+  border-color: #b9d5e2;
+  box-shadow: 0 10px 24px rgba(36, 84, 112, 0.1);
+}
+
+.app-shell .panel.active {
+  border-color: #2aa3b8;
+  box-shadow: 0 0 0 2px rgba(42, 163, 184, 0.18);
+  transform: none;
+}
+
+.app-shell .text-cyan {
+  color: #1f7a8c;
+}
+
+.app-shell .text-amber {
+  color: #c45c74;
+}
+
+.app-shell .text-blue {
+  color: #3d6fbf;
+}
+
+.app-shell .text-mute {
+  color: #6b7c8a;
+}
+
 .live-dot {
   animation: pulse 1.6s ease-in-out infinite;
 }

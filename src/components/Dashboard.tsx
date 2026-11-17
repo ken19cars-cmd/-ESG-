@@ -95,8 +95,8 @@ function ScoreRing({
       onClick={onClick}
       className={`panel flex flex-col items-center gap-2 rounded-2xl p-4 ${active ? "active" : ""}`}
     >
-      <svg width="108" height="108" viewBox="0 0 108 108" className="drop-shadow-[0_0_12px_rgba(62,232,208,0.25)]">
-        <circle cx="54" cy="54" r={radius} fill="none" stroke="rgba(62,232,208,0.12)" strokeWidth="8" />
+      <svg width="108" height="108" viewBox="0 0 108 108">
+        <circle cx="54" cy="54" r={radius} fill="none" stroke="#e6eef2" strokeWidth="8" />
         <circle
           cx="54"
           cy="54"
@@ -110,7 +110,7 @@ function ScoreRing({
           transform="rotate(-90 54 54)"
           style={{ transition: "stroke-dashoffset 0.2s linear" }}
         />
-        <text x="54" y="60" textAnchor="middle" fill="#e8f4ff" fontSize="22" className="num">
+        <text x="54" y="60" textAnchor="middle" fill="#243044" fontSize="22" className="num">
           {shown}
         </text>
       </svg>
@@ -131,7 +131,7 @@ function TrendChart({
   const height = 190;
   const pad = 32;
   const keys = ["e", "s", "g"] as const;
-  const colors = { e: "#3ee8d0", s: "#5aa8ff", g: "#f0c14b" };
+  const colors = { e: "#2aa3b8", s: "#5b8def", g: "#e06b86" };
   const x = (i: number) => pad + (i * (width - pad * 2)) / (trend.length - 1);
   const y = (v: number) => height - pad - ((v - 50) / 50) * (height - pad * 2);
   const active = hover ?? trend.findIndex((row) => row.year === year);
@@ -140,8 +140,8 @@ function TrendChart({
     <svg viewBox={`0 0 ${width} ${height}`} className="h-auto w-full">
       {[60, 70, 80, 90].map((tick) => (
         <g key={tick}>
-          <line x1={pad} x2={width - pad} y1={y(tick)} y2={y(tick)} stroke="rgba(62,232,208,0.1)" />
-          <text x="6" y={y(tick) + 3} fontSize="10" fill="#8aa0b8">
+          <line x1={pad} x2={width - pad} y1={y(tick)} y2={y(tick)} stroke="#e3eef3" />
+          <text x="6" y={y(tick) + 3} fontSize="10" fill="#7b8b98">
             {tick}
           </text>
         </g>
@@ -167,7 +167,7 @@ function TrendChart({
             y={height - 8}
             textAnchor="middle"
             fontSize="11"
-            fill={row.year === year ? "#3ee8d0" : "#8aa0b8"}
+            fill={row.year === year ? "#1f7a8c" : "#7b8b98"}
           >
             {row.year}
           </text>
@@ -181,13 +181,13 @@ function TrendChart({
             width="92"
             height="44"
             rx="8"
-            fill="rgba(6,12,22,0.92)"
-            stroke="rgba(62,232,208,0.35)"
+            fill="#ffffff"
+            stroke="#d5e4ec"
           />
-          <text x={x(active)} y={32} textAnchor="middle" fontSize="10" fill="#8aa0b8">
+          <text x={x(active)} y={32} textAnchor="middle" fontSize="10" fill="#7b8b98">
             {trend[active].year}
           </text>
-          <text x={x(active)} y={48} textAnchor="middle" fontSize="11" fill="#e8f4ff">
+          <text x={x(active)} y={48} textAnchor="middle" fontSize="11" fill="#243044">
             E {trend[active].e}  S {trend[active].s}  G {trend[active].g}
           </text>
         </g>
@@ -200,17 +200,17 @@ export function Dashboard() {
   const [year, setYear] = useState<Year>("2025");
   const [tab, setTab] = useState<Tab>("overview");
   const [step, setStep] = useState<Step>("present");
-  const [clock, setClock] = useState("");
-  const [spot, setSpot] = useState({ x: 40, y: 20 });
   const data = yearData[year];
   const overall = useCount(data.scores.overall);
-
-  useEffect(() => {
-    const tick = () => setClock(new Date().toLocaleTimeString("zh-TW", { hour12: false }));
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
+  const nav: { id: Tab; label: string }[] = [
+    { id: "overview", label: "總覽" },
+    { id: "E", label: "環境" },
+    { id: "S", label: "社會" },
+    { id: "G", label: "治理" },
+    { id: "dossier", label: "年度資料" },
+    { id: "map", label: "來源對照" },
+    { id: "report", label: "報告書" },
+  ];
 
   const highlight = useMemo(() => {
     if (step === "collect") return "fin";
@@ -220,51 +220,56 @@ export function Dashboard() {
   }, [step]);
 
   return (
-    <div
-      className="hud-grid relative min-h-screen overflow-hidden bg-bg text-text"
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        setSpot({
-          x: ((e.clientX - r.left) / r.width) * 100,
-          y: ((e.clientY - r.top) / r.height) * 100,
-        });
-      }}
-    >
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: `radial-gradient(520px circle at ${spot.x}% ${spot.y}%, rgba(62,232,208,0.09), transparent 42%)`,
-        }}
-      />
-      <div className="scanline absolute inset-x-0 top-0 h-40" />
-
-      <div className="relative z-10 px-5 pt-8 text-center">
-        <h1 className="text-3xl font-semibold tracking-[0.14em] md:text-5xl">企業ESG永續應用系統</h1>
-        <p className="mt-3 text-base tracking-[0.32em] text-cyan md:text-2xl">規範 · 檢索 · 計算 · 應用</p>
-      </div>
-
-      <header className="relative z-10 mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-5 py-5">
-        <div>
-          <p className="flex items-center gap-2 text-[11px] tracking-[0.32em] text-cyan uppercase">
-            <span className="live-dot inline-block h-2 w-2 rounded-full bg-cyan" />
-            LIVE FEED · {clock}
-            <Link href="/workbench" className="ml-3 tracking-normal text-amber underline">
-              會計師工作底稿
-            </Link>
-          </p>
-          <h2 className="mt-1 text-base font-medium tracking-wide text-mute md:text-lg">
-            ESG財務狀況報告表板
-          </h2>
+    <div className="app-shell flex min-h-screen">
+      <aside className="hidden w-56 shrink-0 flex-col border-r border-[#d7e6ee] bg-white lg:flex">
+        <div className="border-b border-[#e6eef3] px-4 py-5">
+          <p className="text-sm font-semibold text-[#243044]">企業ESG永續應用系統</p>
+          <p className="mt-1 text-xs text-[#1f7a8c]">規範 · 檢索 · 計算 · 應用</p>
         </div>
-        <div className="flex rounded-full border border-line bg-black/30 p-1">
+        <nav className="flex flex-1 flex-col gap-1 p-3">
+          {nav.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setTab(item.id)}
+              className={`rounded-lg px-3 py-2 text-left text-sm ${
+                tab === item.id ? "bg-[#e5f6f8] font-medium text-[#1f7a8c]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+          <Link href="/workbench" className="mt-2 rounded-lg px-3 py-2 text-sm text-[#4d6270] hover:bg-[#f4f8fb]">
+            工作底稿
+          </Link>
+        </nav>
+        <div className="border-t border-[#e6eef3] p-3">
+          <p className="px-2 pb-2 text-xs text-[#7b8b98]">年度</p>
           {years.map((y) => (
             <button
               key={y}
               type="button"
               onClick={() => setYear(y)}
-              className={`rounded-full px-3 py-1.5 text-sm transition ${
-                year === y ? "bg-cyan text-black" : "text-mute hover:text-text"
+              className={`block w-full rounded-lg px-3 py-1.5 text-left text-sm ${
+                year === y ? "bg-[#e5f6f8] text-[#1f7a8c]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
               }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <div className="min-w-0 flex-1">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d7e6ee] bg-white px-5 py-4">
+        <h1 className="text-lg font-semibold text-[#243044]">OO公司ESG永續儀表板</h1>
+        <div className="flex gap-1 lg:hidden">
+          {years.map((y) => (
+            <button
+              key={y}
+              type="button"
+              onClick={() => setYear(y)}
+              className={`rounded-md px-2 py-1 text-xs ${year === y ? "bg-[#1f7a8c] text-white" : "bg-[#eef5f8] text-[#4d6270]"}`}
             >
               {y}
             </button>
@@ -272,10 +277,10 @@ export function Dashboard() {
         </div>
       </header>
 
-      <section className="relative z-10 mx-auto max-w-[1400px] px-5 pb-4">
+      <section className="px-5 pt-4">
         <div className="mb-2 flex items-end justify-between gap-3">
-          <p className="text-[11px] tracking-[0.28em] text-cyan">SOURCE FILMSTRIP</p>
-          <p className="text-[11px] text-mute">示範文件畫面，點圖可對到對應分頁</p>
+          <p className="text-sm text-[#4d6270]">資料來源</p>
+          <p className="text-xs text-[#7b8b98]">點選可切到對應頁面</p>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2">
           {sourceVisuals.map((item) => (
@@ -303,9 +308,9 @@ export function Dashboard() {
         </div>
       </section>
 
-      <main className="relative z-10 mx-auto grid max-w-[1400px] gap-4 px-5 pb-10 lg:grid-cols-12">
-        <section className="grid gap-3 lg:col-span-3">
-          <p className="text-[11px] tracking-[0.28em] text-cyan">SOLUTION PIPELINE</p>
+      <main className="grid gap-4 px-5 py-4 xl:grid-cols-12">
+        <section className="grid gap-3 xl:col-span-3">
+          <p className="text-sm text-[#4d6270]">作業步驟</p>
           {steps.map((item, i) => (
             <button
               key={item.id}
@@ -324,33 +329,33 @@ export function Dashboard() {
           ))}
         </section>
 
-        <section className="grid gap-4 lg:col-span-9">
+        <section className="grid gap-4 xl:col-span-9">
           <div className="grid gap-3 sm:grid-cols-4">
             <ScoreRing
               label="綜合"
               score={data.scores.overall}
-              tone="#3ee8d0"
+              tone="#2aa3b8"
               active={highlight === "score"}
               onClick={() => setTab("overview")}
             />
             <ScoreRing
               label="環境 E"
               score={data.scores.e}
-              tone="#3ee8d0"
+              tone="#2aa3b8"
               active={tab === "E"}
               onClick={() => setTab("E")}
             />
             <ScoreRing
               label="社會 S"
               score={data.scores.s}
-              tone="#5aa8ff"
+              tone="#5b8def"
               active={tab === "S"}
               onClick={() => setTab("S")}
             />
             <ScoreRing
               label="治理 G"
               score={data.scores.g}
-              tone="#f0c14b"
+              tone="#e06b86"
               active={tab === "G"}
               onClick={() => setTab("G")}
             />
@@ -376,29 +381,17 @@ export function Dashboard() {
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                ["overview", "總覽趨勢"],
-                ["E", "環境"],
-                ["S", "社會"],
-                ["G", "治理"],
-                ["dossier", "年度資料"],
-                ["map", "來源對照"],
-                ["report", "報告書服務"],
-              ] as const
-            ).map(([id, label]) => (
+          <div className="flex gap-2 overflow-x-auto lg:hidden">
+            {nav.map((item) => (
               <button
-                key={id}
+                key={item.id}
                 type="button"
-                onClick={() => setTab(id)}
-                className={`rounded-full border px-4 py-1.5 text-sm transition ${
-                  tab === id
-                    ? "border-cyan bg-cyan/15 text-cyan"
-                    : "border-line text-mute hover:border-cyan/50 hover:text-text"
+                onClick={() => setTab(item.id)}
+                className={`shrink-0 rounded-md px-3 py-1.5 text-sm ${
+                  tab === item.id ? "bg-[#1f7a8c] text-white" : "bg-white text-[#4d6270]"
                 }`}
               >
-                {label}
+                {item.label}
               </button>
             ))}
           </div>
@@ -423,7 +416,7 @@ export function Dashboard() {
                       {item.value} {item.unit}
                     </span>
                   </div>
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/5">
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e6eef2]">
                     <div
                       className="bar-fill h-full origin-left rounded-full bg-gradient-to-r from-cyan to-blue"
                       style={{ width: `${item.bar}%` }}
@@ -539,7 +532,7 @@ export function Dashboard() {
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-mute">{reportService.pitch}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                   {reportService.packages.map((item) => (
-                    <div key={item.name} className="rounded-xl border border-line bg-black/20 p-4">
+                    <div key={item.name} className="rounded-xl border border-[#e3eef3] bg-[#f7fbfd] p-4">
                       <p className="text-cyan">{item.name}</p>
                       <p className="mt-2 text-sm leading-6 text-mute">{item.body}</p>
                     </div>
@@ -597,6 +590,7 @@ export function Dashboard() {
           )}
         </section>
       </main>
+      </div>
     </div>
   );
 }
