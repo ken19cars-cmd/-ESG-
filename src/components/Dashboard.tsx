@@ -239,7 +239,7 @@ export function Dashboard() {
       <div className="scanline absolute inset-x-0 top-0 h-40" />
 
       <div className="relative z-10 px-5 pt-8 text-center">
-        <h1 className="text-3xl font-semibold tracking-[0.14em] md:text-5xl">企業ESG永續管理系統</h1>
+        <h1 className="text-3xl font-semibold tracking-[0.14em] md:text-5xl">企業ESG永續應用系統</h1>
         <p className="mt-3 text-base tracking-[0.32em] text-cyan md:text-2xl">規範檢索，計算應用</p>
       </div>
 
