@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   annualDossiers,
@@ -239,9 +238,6 @@ export function Dashboard() {
               {item.label}
             </button>
           ))}
-          <Link href="/workbench" className="mt-2 rounded-lg px-3 py-2 text-sm text-[#4d6270] hover:bg-[#f4f8fb]">
-            工作底稿
-          </Link>
         </nav>
         <div className="border-t border-[#e6eef3] p-3">
           <p className="px-2 pb-2 text-xs text-[#7b8b98]">年度</p>
