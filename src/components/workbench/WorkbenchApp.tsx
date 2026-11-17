@@ -171,7 +171,23 @@ export function WorkbenchApp() {
     return acc;
   }, {});
 
+  const checkSheet: Record<string, Sheet> = {
+    rev0: "fin",
+    capex: "fin",
+    w1: "env",
+    re: "env",
+    intw: "env",
+    yoy: "env",
+    f1: "hr",
+    a1: "hr",
+    fat: "hr",
+    r1: "kpi",
+    w: "kpi",
+    b1: "gov",
+    indw: "gov",
+  };
   const sideMetrics = result.metrics.filter((m) => metricLink[m.id]?.sheet === (sheet === "chart" ? "env" : sheet));
+  const sideChecks = result.checks.filter((c) => checkSheet[c.id] === (sheet === "chart" ? "env" : sheet));
 
   useEffect(() => {
     const key = highlightKeys[0];
@@ -647,7 +663,17 @@ export function WorkbenchApp() {
           </table>
           <h2 className="mb-2 text-[14px] font-bold">自動勾稽</h2>
           <ul className="space-y-1 text-[12px]">
-            {result.checks.map((c) => (
+            {sideChecks.length === 0 && (
+              <li className="border border-[#2d6a2d] bg-[#e7f5e7] px-2 py-1">
+                <b>[通過] 本頁勾稽未發現異常</b>
+                <div>
+                  {sheet === "fin"
+                    ? "已核對合併營收，以及氣候／環保資本支出未大於購置不動產廠房及設備。"
+                    : "本頁已核對的項目彼此沒有對不上。"}
+                </div>
+              </li>
+            )}
+            {sideChecks.map((c) => (
               <li
                 key={c.id}
                 className={`border px-2 py-1 ${

@@ -580,7 +580,8 @@ export function compute(raw: Inputs) {
   ];
 
   const checks: Check[] = [];
-  if (n(i.revenueMillion) <= 0) checks.push({ id: "rev0", level: "異常", title: "合併營收未輸入", detail: "密集度無法計算。", basis: "金管會" });
+  if (n(i.revenueMillion) <= 0) checks.push({ id: "rev0", level: "異常", title: "合併營收未輸入", detail: "密集度與占比無法計算。", basis: "金管會" });
+  if (n(i.greenCapex) > n(i.totalCapex) && n(i.totalCapex) >= 0) checks.push({ id: "capex", level: "異常", title: "氣候／環保資本支出大於購置總額", detail: `氣候／環保 ${fmt(n(i.greenCapex), 2)} 億，購置不動產廠房及設備 ${fmt(n(i.totalCapex), 2)} 億。前者是後者的一部分，不能更大。`, basis: "現金流量表勾稽" });
   if (n(i.wasteRecycledT) > n(i.wasteT) && n(i.wasteT) > 0) checks.push({ id: "w1", level: "異常", title: "回收>產生", detail: "廢棄物勾稽失敗。", basis: "GRI 306" });
   if (n(i.doneReview) > n(i.dueReview)) checks.push({ id: "r1", level: "異常", title: "已考核>應考核", detail: "404-3 分母錯誤。", basis: "GRI 404-3" });
   if (n(i.headcountFemale) > n(i.headcountEnd)) checks.push({ id: "f1", level: "異常", title: "女性員工數大於結束日員工總數", detail: "人力結構勾稽失敗。", basis: "GRI 2-7" });
