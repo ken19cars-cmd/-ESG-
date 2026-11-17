@@ -130,7 +130,7 @@ function TrendChart({
   const height = 190;
   const pad = 32;
   const keys = ["e", "s", "g"] as const;
-  const colors = { e: "#2aa3b8", s: "#5b8def", g: "#e06b86" };
+  const colors = { e: "#4d7584", s: "#5d7394", g: "#8a6672" };
   const x = (i: number) => pad + (i * (width - pad * 2)) / (trend.length - 1);
   const y = (v: number) => height - pad - ((v - 50) / 50) * (height - pad * 2);
   const active = hover ?? trend.findIndex((row) => row.year === year);
@@ -166,7 +166,7 @@ function TrendChart({
             y={height - 8}
             textAnchor="middle"
             fontSize="11"
-            fill={row.year === year ? "#1f7a8c" : "#7b8b98"}
+            fill={row.year === year ? "#243044" : "#5c6b76"}
           >
             {row.year}
           </text>
@@ -223,7 +223,7 @@ export function Dashboard() {
       <aside className="hidden w-56 shrink-0 flex-col border-r border-[#d7e6ee] bg-white lg:flex">
         <div className="border-b border-[#e6eef3] px-4 py-5">
           <p className="text-sm font-semibold text-[#243044]">企業ESG永續應用系統</p>
-          <p className="mt-1 text-xs text-[#1f7a8c]">規範 · 檢索 · 計算 · 應用</p>
+          <p className="mt-1 text-xs text-[#243044]">規範 · 檢索 · 計算 · 應用</p>
         </div>
         <nav className="flex flex-1 flex-col gap-1 p-3">
           {nav.map((item) => (
@@ -232,7 +232,7 @@ export function Dashboard() {
               type="button"
               onClick={() => setTab(item.id)}
               className={`rounded-lg px-3 py-2 text-left text-sm ${
-                tab === item.id ? "bg-[#e5f6f8] font-medium text-[#1f7a8c]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
+                tab === item.id ? "bg-[#e5f6f8] font-medium text-[#243044]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
               }`}
             >
               {item.label}
@@ -247,7 +247,7 @@ export function Dashboard() {
               type="button"
               onClick={() => setYear(y)}
               className={`block w-full rounded-lg px-3 py-1.5 text-left text-sm ${
-                year === y ? "bg-[#e5f6f8] text-[#1f7a8c]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
+                year === y ? "bg-[#e5f6f8] text-[#243044]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
               }`}
             >
               {y}
@@ -265,7 +265,7 @@ export function Dashboard() {
               key={y}
               type="button"
               onClick={() => setYear(y)}
-              className={`rounded-md px-2 py-1 text-xs ${year === y ? "bg-[#1f7a8c] text-white" : "bg-[#eef5f8] text-[#4d6270]"}`}
+              className={`rounded-md px-2 py-1 text-xs ${year === y ? "bg-[#2c4454] text-white" : "bg-[#eef5f8] text-[#4d6270]"}`}
             >
               {y}
             </button>
@@ -318,7 +318,7 @@ export function Dashboard() {
               className={`panel fade-up rounded-2xl p-4 text-left ${step === item.id ? "active" : ""}`}
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <p className="num text-cyan">{item.n}</p>
+              <p className="num text-[#243044]">{item.n}</p>
               <h2 className="mt-1 text-lg">{item.title}</h2>
               <p className="mt-1 text-sm leading-6 text-mute">{item.body}</p>
             </button>
@@ -330,28 +330,28 @@ export function Dashboard() {
             <ScoreRing
               label="綜合"
               score={data.scores.overall}
-              tone="#2aa3b8"
+              tone="#4d7584"
               active={highlight === "score"}
               onClick={() => setTab("overview")}
             />
             <ScoreRing
               label="環境 E"
               score={data.scores.e}
-              tone="#2aa3b8"
+              tone="#4d7584"
               active={tab === "E"}
               onClick={() => setTab("E")}
             />
             <ScoreRing
               label="社會 S"
               score={data.scores.s}
-              tone="#5b8def"
+              tone="#5d7394"
               active={tab === "S"}
               onClick={() => setTab("S")}
             />
             <ScoreRing
               label="治理 G"
               score={data.scores.g}
-              tone="#e06b86"
+              tone="#8a6672"
               active={tab === "G"}
               onClick={() => setTab("G")}
             />
@@ -368,8 +368,8 @@ export function Dashboard() {
                 }`}
               >
                 <p className="text-xs text-mute">{item.label}</p>
-                <p className="num mt-2 text-2xl text-cyan">{item.value}</p>
-                <p className="mt-1 text-xs text-amber">{item.hint}</p>
+                <p className="num mt-2 text-2xl text-[#243044]">{item.value}</p>
+                <p className="mt-1 text-xs text-[#4a5963]">{item.hint}</p>
                 <p className="mt-2 text-[11px] leading-5 text-mute">
                   來源：{indicatorSources[item.label]}
                 </p>
@@ -384,7 +384,7 @@ export function Dashboard() {
                 type="button"
                 onClick={() => setTab(item.id)}
                 className={`shrink-0 rounded-md px-3 py-1.5 text-sm ${
-                  tab === item.id ? "bg-[#1f7a8c] text-white" : "bg-white text-[#4d6270]"
+                  tab === item.id ? "bg-[#2c4454] text-white" : "bg-white text-[#4d6270]"
                 }`}
               >
                 {item.label}
@@ -408,13 +408,13 @@ export function Dashboard() {
                 <div key={item.name}>
                   <div className="flex justify-between text-sm">
                     <span>{item.name}</span>
-                    <span className="num text-cyan">
+                    <span className="num text-[#243044]">
                       {item.value} {item.unit}
                     </span>
                   </div>
                   <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e6eef2]">
                     <div
-                      className="bar-fill h-full origin-left rounded-full bg-gradient-to-r from-cyan to-blue"
+                      className="bar-fill h-full origin-left rounded-full bg-[#5d7584]"
                       style={{ width: `${item.bar}%` }}
                     />
                   </div>
@@ -435,9 +435,9 @@ export function Dashboard() {
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   <p className="text-sm text-mute">{item.name}</p>
-                  <p className="num mt-2 text-2xl text-blue">{item.value}</p>
+                  <p className="num mt-2 text-2xl text-[#243044]">{item.value}</p>
                   <p className="mt-2 text-sm text-mute">{item.note}</p>
-                  <p className="mt-2 text-[11px] text-cyan/80">來源：{indicatorSources[item.name]}</p>
+                  <p className="mt-2 text-[11px] text-[#3e4e5a]">來源：{indicatorSources[item.name]}</p>
                 </article>
               ))}
             </div>
@@ -456,7 +456,7 @@ export function Dashboard() {
                     <p className="num mt-1 text-sm text-mute">{item.value}</p>
                     <p className="mt-1 text-[11px] text-mute">來源：{indicatorSources[item.name]}</p>
                   </div>
-                  <span className="rounded-full border border-cyan/30 px-3 py-1 text-xs text-cyan">
+                  <span className="rounded-full border border-[#d5e0e6] px-3 py-1 text-xs text-[#243044]">
                     {item.status}
                   </span>
                 </article>
@@ -477,10 +477,10 @@ export function Dashboard() {
                   key={row.source}
                   type="button"
                   onClick={() => setTab(row.dim as Tab)}
-                  className="flex w-full items-center justify-between gap-4 border-b border-line px-5 py-4 text-left last:border-0 hover:bg-cyan/5"
+                  className="flex w-full items-center justify-between gap-4 border-b border-line px-5 py-4 text-left last:border-0 hover:bg-[#f4f8fb]"
                 >
                   <span className="text-sm">{row.source}</span>
-                  <span className="text-sm text-cyan">{row.indicator}</span>
+                  <span className="text-sm text-[#243044]">{row.indicator}</span>
                 </button>
               ))}
             </div>
@@ -504,7 +504,7 @@ export function Dashboard() {
                     />
                   </div>
                   <div className="p-5">
-                  <p className="text-[11px] tracking-[0.2em] text-cyan">{group.note}</p>
+                  <p className="text-[11px] tracking-[0.2em] text-[#243044]">{group.note}</p>
                   <h2 className="mt-1 text-lg">{group.group}</h2>
                   <ul className="mt-4 space-y-3">
                     {group.items.map((item) => (
@@ -523,13 +523,13 @@ export function Dashboard() {
           {tab === "report" && (
             <div className="grid gap-4">
               <article className="panel fade-up rounded-2xl p-5">
-                <p className="text-[11px] tracking-[0.2em] text-cyan">SERVICE</p>
+                <p className="text-[11px] tracking-[0.2em] text-[#243044]">SERVICE</p>
                 <h2 className="mt-1 text-xl">{reportService.title}</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-mute">{reportService.pitch}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                   {reportService.packages.map((item) => (
                     <div key={item.name} className="rounded-xl border border-[#e3eef3] bg-[#f7fbfd] p-4">
-                      <p className="text-cyan">{item.name}</p>
+                      <p className="text-[#243044]">{item.name}</p>
                       <p className="mt-2 text-sm leading-6 text-mute">{item.body}</p>
                     </div>
                   ))}
@@ -538,7 +538,7 @@ export function Dashboard() {
                   {reportService.frameworks.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full border border-cyan/25 px-3 py-1 text-[11px] text-mute"
+                      className="rounded-full border border-[#d5e0e6] px-3 py-1 text-[11px] text-[#3e4e5a]"
                     >
                       {tag}
                     </span>
@@ -567,13 +567,13 @@ export function Dashboard() {
                   </div>
                 </div>
                 <div className="p-5">
-                <p className="text-[11px] tracking-[0.2em] text-amber">SAMPLE</p>
+                <p className="text-[11px] tracking-[0.2em] text-[#4a5963]">SAMPLE</p>
                 <h2 className="mt-1 text-lg">{reportSample.client}</h2>
                 <p className="mt-2 text-sm italic leading-7 text-mute">{reportSample.quote}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-2">
                   {reportSample.chapters.map((ch) => (
                     <div key={ch.no} className="rounded-xl border border-line px-4 py-3">
-                      <p className="num text-xs text-cyan">
+                      <p className="num text-xs text-[#243044]">
                         {ch.no} {ch.title}
                       </p>
                       <p className="mt-2 text-sm leading-6 text-mute">{ch.body}</p>

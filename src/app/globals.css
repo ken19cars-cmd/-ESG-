@@ -129,20 +129,14 @@ body {
   transform: none;
 }
 
-.app-shell .text-cyan {
-  color: #1f7a8c;
-}
-
+.app-shell .text-cyan,
+.app-shell .text-blue,
 .app-shell .text-amber {
-  color: #c45c74;
-}
-
-.app-shell .text-blue {
-  color: #3d6fbf;
+  color: #243044;
 }
 
 .app-shell .text-mute {
-  color: #6b7c8a;
+  color: #3e4e5a;
 }
 
 .live-dot {
