@@ -252,14 +252,9 @@ export function Dashboard() {
               會計師工作底稿
             </Link>
           </p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-wide md:text-4xl">
+          <h2 className="mt-1 text-base font-medium tracking-wide text-mute md:text-lg">
             ESG財務狀況報告表板
           </h2>
-          <p className="mt-1 max-w-3xl text-sm leading-6 text-mute">
-            {clientMeta.name} · {clientMeta.ticker} · {clientMeta.industry} · {year}
-            <br />
-            本板不是另做一套問卷，而是把會計師年度已處理的財務報告、公司年報、內控專審、永續報告書與盤查清冊，對成可簡報的成果。
-          </p>
         </div>
         <div className="flex rounded-full border border-line bg-black/30 p-1">
           {years.map((y) => (
