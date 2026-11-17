@@ -15,7 +15,7 @@ import {
   WidthType,
 } from "docx";
 import { ChartRun } from "docx/charts";
-import { compute, derived, type Inputs } from "@/lib/esg-engine";
+import { compute, derived, type Inputs, type ReportFigure } from "@/lib/esg-engine";
 import { griIndex, reportDraft } from "@/lib/report-draft";
 
 const FONT = "Microsoft JhengHei";
@@ -68,14 +68,47 @@ function cap(text: string) {
   });
 }
 
+const FIGURES_BY_CHAPTER: Record<string, string[]> = {
+  "5 環境—能源與溫室氣體": ["yoyGhg", "yoyInt", "ghg", "energy", "elec"],
+  "5 環境—水與廢棄物": ["water", "waste", "air"],
+  "5 環境—綠色投資": ["capex"],
+  "6 社會—人力結構與訓練": ["gender", "hr"],
+  "6 社會—職業安全": ["osh"],
+  "4 治理—董事會與誠信": ["gov"],
+};
+
+function figureRun(fig: ReportFigure) {
+  const rows = fig.kind === "pie" ? fig.rows.filter((r) => r.value > 0) : fig.rows;
+  if (rows.length === 0 || rows.every((r) => !Number.isFinite(r.value) || r.value === 0)) return [];
+  const chart =
+    fig.kind === "pie"
+      ? new ChartRun({
+          type: "pie",
+          title: "",
+          font: { name: FONT },
+          categories: rows.map((r) => r.label),
+          series: [{ name: fig.unit, values: rows.map((r) => r.value), colors: rows.map((r) => r.color) }],
+          transformation: { width: 360, height: 220 },
+        })
+      : new ChartRun({
+          type: "bar",
+          title: "",
+          font: { name: FONT },
+          categories: rows.map((r) => r.label),
+          series: [{ name: fig.unit, values: rows.map((r) => r.value), colors: rows.map((r) => r.color) }],
+          transformation: { width: 420, height: 220 },
+        });
+  return [
+    new Paragraph({ spacing: { before: 120, after: 40 }, children: [chart] }),
+    cap(fig.title),
+  ];
+}
+
 export async function buildReportDocx(inputs: Inputs) {
   const d = derived(inputs);
   const result = compute(inputs);
   const blocks = reportDraft(d, result.metrics);
   const index = griIndex(result.metrics);
-  const s1 = Math.max(0, result.metrics.find((m) => m.id === "s1")?.raw ?? 0);
-  const s2 = Math.max(0, result.metrics.find((m) => m.id === "s2")?.raw ?? 0);
-
   const children = [
     p(`${d.client}`, { center: true, heading: HeadingLevel.TITLE }),
     p(`${d.year} 永續報告書　績效底稿`, { center: true, heading: HeadingLevel.HEADING_1 }),
@@ -110,23 +143,10 @@ export async function buildReportDocx(inputs: Inputs) {
         [70, 30],
       ),
     );
-    if (block.chapter.startsWith("5 環境—能源") && s1 + s2 > 0) {
-      children.push(
-        new Paragraph({
-          spacing: { before: 120, after: 80 },
-          children: [
-            new ChartRun({
-              type: "pie",
-              title: "",
-              font: { name: FONT },
-              categories: ["範疇一", "範疇二"],
-              series: [{ name: "公噸CO2e", values: [s1, s2], colors: ["6B4A3A", "3A5A6B"] }],
-              transformation: { width: 320, height: 200 },
-            }),
-          ],
-        }),
-      );
-      children.push(cap("圖　範疇一與範疇二排放結構"));
+    const ids = FIGURES_BY_CHAPTER[block.chapter] ?? [];
+    for (const id of ids) {
+      const figure = result.figures.find((f) => f.id === id);
+      if (figure) children.push(...figureRun(figure));
     }
   }
 

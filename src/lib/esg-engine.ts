@@ -86,6 +86,8 @@ export type Inputs = {
   capexRenewable: number;
   capexPollution: number;
   capexOtherGreen: number;
+  prevGhg12: number;
+  prevRevenueMillion: number;
 };
 
 export const defaultInputs: Inputs = {
@@ -174,6 +176,8 @@ export const defaultInputs: Inputs = {
   capexRenewable: 0.5,
   capexPollution: 0.2,
   capexOtherGreen: 0.1,
+  prevGhg12: 11240,
+  prevRevenueMillion: 12110,
 };
 
 export type FieldDef = {
@@ -207,6 +211,8 @@ export const fieldCatalog: FieldDef[] = [
   { key: "refrigerantKg", sheet: "env", section: "能源與排放", label: "冷媒逸散", unit: "kg", why: "補填或逸散公斤數（範疇一）。當年沒補填填 0。詳見法規庫。", gri: "GRI 305-1、305-6" },
   { key: "steamGj", sheet: "env", section: "能源與排放", label: "外購蒸汽", unit: "GJ", why: "向外購買的蒸汽熱值。屬範疇二。沒有外購蒸汽填 0。詳見法規庫。", gri: "GRI 302-1、305-2" },
   { key: "scope3", sheet: "env", section: "能源與排放", label: "範疇三（其他間接排放）", unit: "tCO2e", why: "GHG Protocol／GRI 305-3。請填已盤查彙總值，非本系統由活動數據推算。", gri: "GRI 305-3；GHG Protocol" },
+  { key: "prevGhg12", sheet: "env", section: "上年對照（金管會兩年比較）", label: "上年範疇一＋二", unit: "tCO2e", why: "非必要。抄上年報告書已揭露之範疇一加範疇二。沒有上年就填 0，系統只出當年。", gri: "金管會作業辦法（最近兩年排放量）" },
+  { key: "prevRevenueMillion", sheet: "env", section: "上年對照（金管會兩年比較）", label: "上年合併營收", unit: "百萬元", why: "非必要。與上年排放同一報導邊界。系統用它算出上年密集度，不必手填密集度。", gri: "金管會作業辦法（最近兩年密集度）" },
   { key: "intensityTarget", sheet: "env", section: "能源與排放", label: "溫室氣體排放密集度（公司目標）", unit: "tCO2e／百萬營收", why: "GRI 305-4 為密集度本身；目標值由組織自訂，非準則規定之法定數字。", gri: "GRI 305-4；TCFD 指標與目標" },
   { key: "waterKt", sheet: "env", section: "水與廢棄物", label: "取水量", unit: "千噸", why: "用水密集度分子；耗水＝取水−放流。", gri: "GRI 303-3" },
   { key: "wastewaterKt", sheet: "env", section: "水與廢棄物", label: "放流水量", unit: "千噸", why: "耗水計算減項。", gri: "GRI 303-4、303-5" },
@@ -306,6 +312,7 @@ const NEEDS: Partial<Record<keyof Inputs, (keyof Inputs)[]>> = {
   wastewaterKt: ["waterKt"],
   greenCapex: ["totalCapex"],
   intensityTarget: ["revenueMillion"],
+  prevGhg12: ["prevRevenueMillion"],
   headcountFemale: ["headcountEnd"],
   headcountDisabled: ["headcountEnd"],
   newHires: ["headcountAvg"],
@@ -411,6 +418,27 @@ export type Check = {
   basis: string;
 };
 
+export type ReportFigureRow = { label: string; value: number; color: string };
+export type ReportFigure = {
+  id: string;
+  title: string;
+  kind: "bar" | "pie";
+  unit: string;
+  rows: ReportFigureRow[];
+};
+
+const FIG = {
+  ink: "4A6B8A",
+  brown: "6B4A3A",
+  teal: "3A5A6B",
+  olive: "5A6B4A",
+  gold: "8A6B4A",
+} as const;
+
+function fig(id: string, title: string, kind: ReportFigure["kind"], unit: string, rows: ReportFigureRow[]): ReportFigure {
+  return { id, title, kind, unit, rows: rows.filter((r) => Number.isFinite(r.value)) };
+}
+
 export const regulationCatalog = [
   { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會", asOf: "2026-10", point: "依 GRI；溫室氣體最近兩年排放量、密集度（噸CO2e／百萬元）及涵蓋範圍。", url: "https://law.moj.gov.tw/" },
   { id: "gri-2021", name: "GRI Standards 2021", version: "GRI 1／2／3 及主題準則", asOf: "2026-10", point: "2-7、2-21、2-27、205、302–306、401、403–405、308、414。", url: "https://www.globalreporting.org/" },
@@ -454,7 +482,11 @@ export function compute(raw: Inputs) {
   const ghg123 = ghg12 + n(i.scope3);
   const intensity = n(i.revenueMillion) === 0 ? NaN : ghg12 / n(i.revenueMillion);
   const renewPct = n(i.electricityKwh) === 0 ? NaN : (n(i.renewableKwh) / n(i.electricityKwh)) * 100;
-  const energyGj = (n(i.electricityKwh) * 0.0036) + n(i.steamGj) + n(i.dieselLiter) * 0.0386 + n(i.gasolineLiter) * 0.0342;
+  const elecGj = n(i.electricityKwh) * 0.0036;
+  const dieselGj = n(i.dieselLiter) * 0.0386;
+  const gasGj = n(i.gasolineLiter) * 0.0342;
+  const lngGj = n(i.lngM3) * 0.0378;
+  const energyGj = elecGj + n(i.steamGj) + dieselGj + gasGj + lngGj;
   const energyInt = n(i.revenueMillion) === 0 ? NaN : energyGj / n(i.revenueMillion);
   const waterInt = n(i.revenueMillion) === 0 ? NaN : n(i.waterKt) / n(i.revenueMillion);
   const waterUse = n(i.waterKt) - n(i.wastewaterKt);
@@ -488,13 +520,25 @@ export function compute(raw: Inputs) {
   const attend = n(i.boardSeats) * n(i.boardMeetings) === 0 ? NaN : (n(i.boardAttend) / (n(i.boardSeats) * n(i.boardMeetings))) * 100;
   const anti = n(i.antiCorruptDue) === 0 ? NaN : (n(i.antiCorruptDone) / n(i.antiCorruptDue)) * 100;
   const intensityHit = Number.isFinite(intensity) && intensity <= n(i.intensityTarget);
+  const prevYearLabel = Number.isFinite(Number(i.year)) ? String(Number(i.year) - 1) : "上年";
+  const yearLabel = i.year || "本年";
+  const prevGhg12 = n(i.prevGhg12);
+  const prevRev = n(i.prevRevenueMillion);
+  const prevIntensity = prevRev === 0 ? NaN : prevGhg12 / prevRev;
+  const ghgYoy = prevGhg12 === 0 ? NaN : ((ghg12 - prevGhg12) / prevGhg12) * 100;
+  const intYoy = !Number.isFinite(prevIntensity) || prevIntensity === 0 || !Number.isFinite(intensity) ? NaN : ((intensity - prevIntensity) / prevIntensity) * 100;
 
   const metrics: Metric[] = [
     M("s1", "E 環境", "範疇一直接排放", scope1, "tCO2e", "油氣係數＋冷媒×GWP", "GRI 305-1；GHG Protocol"),
     M("s2", "E 環境", "範疇二能源間接排放", scope2, "tCO2e", "電力kWh × 電力係數", "GRI 305-2；GHG Protocol"),
     M("s12", "E 環境", "範疇一＋二", ghg12, "tCO2e", "S1+S2", "金管會作業辦法"),
-    M("s3", "E 環境", "範疇一＋二＋三", ghg123, "tCO2e", "加範疇三彙總", "GRI 305-3"),
+    M("s3o", "E 環境", "範疇三其他間接排放", n(i.scope3), "tCO2e", "盤查彙總（不由活動數據推算）", "GRI 305-3"),
+    M("s3", "E 環境", "範疇一＋二＋三", ghg123, "tCO2e", "S1+S2+範疇三彙總", "GRI 305-3"),
     M("int", "E 環境", "溫室氣體排放密集度", intensity, "tCO2e／百萬營收", "(S1+S2)÷合併營收", "金管會；GRI 305-4", { flag: intensityHit ? "ok" : "warn" }),
+    M("p12", "E 環境", "上年範疇一＋二", prevGhg12, "tCO2e", "上年報告書已揭露數", "金管會作業辦法"),
+    M("pint", "E 環境", "上年排放密集度", prevIntensity, "tCO2e／百萬營收", "上年S1+S2÷上年營收", "金管會作業辦法"),
+    M("gyoy", "E 環境", "範疇一＋二較上年", ghgYoy, "%", "(本年−上年)÷上年", "金管會兩年比較"),
+    M("iyoy", "E 環境", "密集度較上年", intYoy, "%", "(本年密集度−上年)÷上年", "金管會兩年比較"),
     M("ren", "E 環境", "再生能源占外購電力", renewPct, "%", "再生kWh÷外購電力", "GRI 302-1"),
     M("en", "E 環境", "組織內能源消耗", energyGj, "GJ", "電／蒸汽／油氣熱值加總", "GRI 302-1"),
     M("eni", "E 環境", "能源密集度", energyInt, "GJ／百萬營收", "能源GJ÷營收", "GRI 302-3"),
@@ -502,6 +546,9 @@ export function compute(raw: Inputs) {
     M("wuse", "E 環境", "耗水（取水減放流，簡化）", waterUse, "千噸", "取水−放流，非完整水平衡", "GRI 303-5（簡化）"),
     M("rec", "E 環境", "從處置移轉之廢棄物占比", recycle, "%", "回收再利用÷產生", "GRI 306-4"),
     M("haz", "E 環境", "有害廢棄物占產生量", haz, "%", "有害÷產生", "廢棄物清理法；GRI 306-3"),
+    M("wastI", "E 環境", "廢棄物密集度", n(i.revenueMillion) === 0 ? NaN : n(i.wasteT) / n(i.revenueMillion), "噸／百萬營收", "產生量÷營收", "GRI 306-3（密集度實務）"),
+    M("ghge", "E 環境", "範疇一＋二每人排放", n(i.headcountAvg) === 0 ? NaN : ghg12 / n(i.headcountAvg), "tCO2e／人", "(S1+S2)÷平均員工數", "GRI 305-4（分母為人數）"),
+    M("csp", "S 權益", "公益與基礎設施支出占營收", n(i.revenueMillion) === 0 ? NaN : (n(i.communitySpend) * 100) / n(i.revenueMillion) * 100, "%", "支出(億)×100÷營收(百萬)×100%", "GRI 203-1（占比實務）"),
     M("grn", "E 環境", "氣候／環保資本支出占比", greenRatio, "%", "相關Capex÷購置不動產廠房設備", "金管會氣候資訊（實務比）"),
     M("turn", "S 人力", "員工離職率", turnover, "%", "離職÷平均員工數", "GRI 401-1"),
     M("hire", "S 人力", "新進員工率", hireRate, "%", "新進÷平均員工數", "GRI 401-1"),
@@ -509,6 +556,8 @@ export function compute(raw: Inputs) {
     M("dis", "S 人力", "身心障礙者占結束日員工", disPct, "%", "身障÷結束日員工總數", "GRI 405-1；身權法"),
     M("tr", "S 人力", "平均每位員工受訓時數", trainPer, "小時", "總時數÷平均員工數", "GRI 404-1"),
     M("trf", "S 人力", "女性平均受訓時數", trainF, "小時", "女性時數÷女性員工數", "GRI 404-1"),
+    M("trhit", "S 人力", "平均受訓時數達標率", n(i.trainingHoursTarget) === 0 || !Number.isFinite(trainPer) ? NaN : (trainPer / n(i.trainingHoursTarget)) * 100, "%", "實際平均時數÷內部目標", "內部目標（非準則專名）"),
+    M("male", "S 人力", "男性占結束日員工", n(i.headcountEnd) === 0 ? NaN : ((n(i.headcountEnd) - n(i.headcountFemale)) / n(i.headcountEnd)) * 100, "%", "(結束日總數−女性)÷結束日總數", "GRI 405-1"),
     M("fr", "S 職安", "失能傷害頻率", fr, "／百萬工時", "失能次數×10^6÷總經歷工時", "勞動部職災統計"),
     M("sr", "S 職安", "失能傷害嚴重率", sr, "／百萬工時", "損失日×10^6÷總經歷工時", "勞動部職災統計"),
     M("trir", "S 職安", "可記錄職業傷害率（OSHA TRIR）", trir, "／百萬工時", "可記錄傷害×10^6÷工時", "GRI 403-9；OSHA（非職安法專名）"),
@@ -542,7 +591,88 @@ export function compute(raw: Inputs) {
   if (n(i.esgWeight) < 10) checks.push({ id: "w", level: "注意", title: "高階薪酬中永續權重偏低", detail: `目前 ${i.esgWeight}%。`, basis: "GRI 2-19" });
   if (!intensityHit && Number.isFinite(intensity)) checks.push({ id: "intw", level: "注意", title: "密集度未達目標", detail: `實際 ${fmt(intensity, 4)}。`, basis: "氣候目標" });
   if (n(i.fatalities) > 0) checks.push({ id: "fat", level: "異常", title: "有職災死亡", detail: "必須在報告書重大事件揭露。", basis: "GRI 403-9" });
+  if (prevGhg12 === 0 && prevRev === 0) {
+    checks.push({ id: "yoy", level: "注意", title: "未填上年排放／營收", detail: "金管會作業辦法要最近兩年排放量與密集度。沒有上年就只出當年圖。", basis: "金管會作業辦法" });
+  }
   if (checks.length === 0) checks.push({ id: "ok", level: "通過", title: "勾稽未發現異常", detail: "可進入覆核；係數仍應對當期公告。", basis: "底稿" });
 
-  return { scope1, scope2, ghg12, intensity, renewPct, metrics, checks };
+  const maleN = Math.max(0, n(i.headcountEnd) - n(i.headcountFemale));
+  const yoyFigures: ReportFigure[] = [];
+  if (prevGhg12 > 0 || ghg12 > 0) {
+    yoyFigures.push(
+      fig("yoyGhg", "圖　範疇一＋二　最近兩年", "bar", "tCO2e", [
+        { label: `${prevYearLabel}年`, value: prevGhg12, color: FIG.ink },
+        { label: `${yearLabel}年`, value: ghg12, color: FIG.brown },
+      ]),
+    );
+  }
+  if (Number.isFinite(prevIntensity) && Number.isFinite(intensity)) {
+    yoyFigures.push(
+      fig("yoyInt", "圖　排放密集度　最近兩年", "bar", "tCO2e／百萬營收", [
+        { label: `${prevYearLabel}年`, value: prevIntensity, color: FIG.ink },
+        { label: `${yearLabel}年`, value: intensity, color: FIG.teal },
+      ]),
+    );
+  }
+  const figures: ReportFigure[] = [
+    ...yoyFigures,
+    fig("ghg", "圖　溫室氣體排放結構", "pie", "tCO2e", [
+      { label: "範疇一", value: scope1, color: FIG.brown },
+      { label: "範疇二", value: scope2, color: FIG.teal },
+      { label: "範疇三", value: n(i.scope3), color: FIG.ink },
+    ]),
+    fig("energy", "圖　組織內能源消耗", "bar", "GJ", [
+      { label: "電力", value: elecGj, color: FIG.ink },
+      { label: "蒸汽", value: n(i.steamGj), color: FIG.teal },
+      { label: "柴油", value: dieselGj, color: FIG.brown },
+      { label: "汽油", value: gasGj, color: FIG.gold },
+      { label: "天然氣", value: lngGj, color: FIG.olive },
+    ]),
+    fig("elec", "圖　外購電力結構", "pie", "kWh", [
+      { label: "再生能源", value: n(i.renewableKwh), color: FIG.olive },
+      { label: "非再生電力", value: Math.max(0, n(i.electricityKwh) - n(i.renewableKwh)), color: FIG.ink },
+    ]),
+    fig("water", "圖　取水／放流／耗水", "bar", "千噸", [
+      { label: "取水", value: n(i.waterKt), color: FIG.teal },
+      { label: "放流", value: n(i.wastewaterKt), color: FIG.ink },
+      { label: "耗水", value: waterUse, color: FIG.brown },
+    ]),
+    fig("waste", "圖　廢棄物", "bar", "噸", [
+      { label: "產生", value: n(i.wasteT), color: FIG.ink },
+      { label: "回收再利用", value: n(i.wasteRecycledT), color: FIG.olive },
+      { label: "有害", value: n(i.wasteHazardT), color: FIG.brown },
+    ]),
+    fig("air", "圖　空氣污染物", "bar", "噸", [
+      { label: "NOx", value: n(i.noxT), color: FIG.brown },
+      { label: "SOx", value: n(i.soxT), color: FIG.ink },
+    ]),
+    fig("capex", "圖　資本支出", "pie", "億元", [
+      { label: "氣候／環保", value: n(i.greenCapex), color: FIG.olive },
+      { label: "其他購置", value: Math.max(0, n(i.totalCapex) - n(i.greenCapex)), color: FIG.ink },
+    ]),
+    fig("gender", "圖　員工性別結構", "pie", "人", [
+      { label: "女性", value: n(i.headcountFemale), color: FIG.teal },
+      { label: "男性", value: maleN, color: FIG.ink },
+    ]),
+    fig("hr", "圖　人力比率", "bar", "%", [
+      { label: "女性占比", value: femalePct, color: FIG.teal },
+      { label: "新進率", value: hireRate, color: FIG.olive },
+      { label: "離職率", value: turnover, color: FIG.brown },
+      { label: "女性主管占比", value: femMgr, color: FIG.ink },
+    ]),
+    fig("osh", "圖　職業傷害頻率", "bar", "／百萬工時", [
+      { label: "FR", value: fr, color: FIG.brown },
+      { label: "SR", value: sr, color: FIG.ink },
+      { label: "TRIR", value: trir, color: FIG.teal },
+    ]),
+    fig("gov", "圖　治理與供應鏈比率", "bar", "%", [
+      { label: "獨董席次比", value: indPct, color: FIG.ink },
+      { label: "董事會出席率", value: attend, color: FIG.teal },
+      { label: "反貪腐訓練", value: anti, color: FIG.olive },
+      { label: "供應商篩選", value: supp, color: FIG.gold },
+      { label: "績效考核", value: reviewPct, color: FIG.brown },
+    ]),
+  ];
+
+  return { scope1, scope2, ghg12, intensity, renewPct, metrics, checks, figures };
 }

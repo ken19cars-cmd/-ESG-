@@ -238,6 +238,11 @@ export function Dashboard() {
       />
       <div className="scanline absolute inset-x-0 top-0 h-40" />
 
+      <div className="relative z-10 px-5 pt-8 text-center">
+        <h1 className="text-3xl font-semibold tracking-[0.14em] md:text-5xl">企業ESG永續管理系統</h1>
+        <p className="mt-3 text-base tracking-[0.32em] text-cyan md:text-2xl">規範檢索，計算應用</p>
+      </div>
+
       <header className="relative z-10 mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-5 py-5">
         <div>
           <p className="flex items-center gap-2 text-[11px] tracking-[0.32em] text-cyan uppercase">
@@ -247,9 +252,9 @@ export function Dashboard() {
               會計師工作底稿
             </Link>
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-wide md:text-4xl">
+          <h2 className="mt-1 text-2xl font-semibold tracking-wide md:text-4xl">
             ESG財務狀況報告表板
-          </h1>
+          </h2>
           <p className="mt-1 max-w-3xl text-sm leading-6 text-mute">
             {clientMeta.name} · {clientMeta.ticker} · {clientMeta.industry} · {year}
             <br />

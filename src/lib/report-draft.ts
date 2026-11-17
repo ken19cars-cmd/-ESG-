@@ -31,12 +31,12 @@ export function reportDraft(inputs: Inputs, metrics: Metric[]): ReportBlock[] {
     {
       chapter: "5 環境—能源與溫室氣體",
       gri: "GRI 302、305；金管會排放量／密集度",
-      rows: take("s1", "s2", "s12", "s3", "int", "ren", "en", "eni"),
+      rows: take("s1", "s2", "s3o", "s12", "s3", "int", "p12", "pint", "gyoy", "iyoy", "ghge", "ren", "en", "eni"),
     },
     {
       chapter: "5 環境—水與廢棄物",
       gri: "GRI 303、306、305-7",
-      rows: take("wint", "wuse", "rec", "haz"),
+      rows: take("wint", "wuse", "rec", "haz", "wastI"),
     },
     {
       chapter: "5 環境—綠色投資",
@@ -46,7 +46,7 @@ export function reportDraft(inputs: Inputs, metrics: Metric[]): ReportBlock[] {
     {
       chapter: "6 社會—人力結構與訓練",
       gri: "GRI 2-7、401、404、405",
-      rows: take("turn", "hire", "fem", "dis", "tr", "trf"),
+      rows: take("turn", "hire", "fem", "male", "dis", "tr", "trf", "trhit"),
     },
     {
       chapter: "6 社會—職業安全",
@@ -56,7 +56,7 @@ export function reportDraft(inputs: Inputs, metrics: Metric[]): ReportBlock[] {
     {
       chapter: "6 社會—權益與供應鏈",
       gri: "GRI 401-3、2-30、2-24、308、414",
-      rows: take("par", "fm", "un", "hrt", "sup"),
+      rows: take("par", "fm", "un", "hrt", "sup", "csp"),
     },
     {
       chapter: "4 治理—董事會與誠信",

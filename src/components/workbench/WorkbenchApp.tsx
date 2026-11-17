@@ -12,7 +12,7 @@ import {
   preResults,
   regulationCatalog,
   type Inputs,
-  type Metric,
+  type ReportFigure,
 } from "@/lib/esg-engine";
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
@@ -404,7 +404,7 @@ export function WorkbenchApp() {
             </div>
           )}
 
-          {sheet === "chart" && <ChartPreview metrics={result.metrics} />}
+          {sheet === "chart" && <ChartPreview figures={result.figures} />}
 
           {sheet === "why" && (
             <div>
@@ -606,25 +606,33 @@ export function WorkbenchApp() {
   );
 }
 
-function BarChart({ title, rows }: { title: string; rows: [string, number][] }) {
-  const h = Math.max(120, rows.length * 22 + 16);
-  const max = Math.max(1, ...rows.map((r) => (Number.isFinite(r[1]) ? r[1] : 0)));
+function fmtChart(v: number) {
+  if (!Number.isFinite(v)) return "—";
+  const abs = Math.abs(v);
+  const d = abs >= 100 ? 0 : abs >= 10 ? 1 : 2;
+  return v.toLocaleString("zh-TW", { maximumFractionDigits: d, minimumFractionDigits: 0 });
+}
+
+function BarFigure({ fig }: { fig: ReportFigure }) {
+  const h = Math.max(120, fig.rows.length * 28 + 20);
+  const max = Math.max(1, ...fig.rows.map((r) => (Number.isFinite(r.value) ? r.value : 0)));
   return (
-    <div className="mb-3 border border-[#ccc] p-3">
-      <b>{title}</b>
-      <svg viewBox={`0 0 560 ${h}`} className="mt-1 h-auto w-full bg-white">
-        {rows.map((row, i) => {
-          const v = Number.isFinite(row[1]) ? row[1] : 0;
+    <div className="mb-3 border border-[#ccc] bg-white p-3">
+      <b className="text-[#2c3b4e]">{fig.title}</b>
+      <span className="ml-2 text-[11px] text-[#666]">（{fig.unit}）</span>
+      <svg viewBox={`0 0 560 ${h}`} className="mt-1 h-auto w-full">
+        {fig.rows.map((row, i) => {
+          const v = Number.isFinite(row.value) ? row.value : 0;
           const w = (v / max) * 360;
           return (
-            <g key={row[0]}>
-              <text x="4" y={16 + i * 22} fontSize="10" fill="#222">
-                {row[0]}
+            <g key={row.label}>
+              <text x="4" y={20 + i * 28} fontSize="11" fill="#222">
+                {row.label}
               </text>
-              <rect x="148" y={6 + i * 22} width="360" height="12" fill="#eee" stroke="#999" />
-              <rect x="148" y={6 + i * 22} width={w} height="12" fill="#4a6b8a" />
-              <text x="514" y={16 + i * 22} fontSize="10" fill="#111">
-                {Number.isFinite(row[1]) ? row[1].toFixed(1) : "—"}
+              <rect x="148" y={8 + i * 28} width="360" height="16" fill="#eee" />
+              <rect x="148" y={8 + i * 28} width={w} height="16" fill={`#${row.color}`} />
+              <text x="514" y={20 + i * 28} fontSize="11" fill="#111">
+                {fmtChart(row.value)}
               </text>
             </g>
           );
@@ -634,70 +642,57 @@ function BarChart({ title, rows }: { title: string; rows: [string, number][] }) 
   );
 }
 
-function ChartPreview({ metrics }: { metrics: Metric[] }) {
-  const pick = (id: string) => metrics.find((m) => m.id === id)?.raw ?? NaN;
-  const pct = metrics.filter((m) => m.unit === "%").map((m) => [m.name, m.raw] as [string, number]);
-  const s1 = pick("s1");
-  const s2 = pick("s2");
-  const s3 = pick("s3") - (Number.isFinite(s1) ? s1 : 0) - (Number.isFinite(s2) ? s2 : 0);
-  const tot = (s1 || 0) + (s2 || 0) || 1;
+function PieFigure({ fig }: { fig: ReportFigure }) {
+  const parts = fig.rows.filter((r) => Number.isFinite(r.value) && r.value > 0);
+  const total = parts.reduce((s, r) => s + r.value, 0) || 1;
+  const cx = 90;
+  const cy = 90;
+  const r = 72;
+  let acc = 0;
+  const slices = parts.map((row) => {
+    const start = acc;
+    const frac = row.value / total;
+    acc += frac;
+    const a0 = start * Math.PI * 2 - Math.PI / 2;
+    const a1 = acc * Math.PI * 2 - Math.PI / 2;
+    const x0 = cx + r * Math.cos(a0);
+    const y0 = cy + r * Math.sin(a0);
+    const x1 = cx + r * Math.cos(a1);
+    const y1 = cy + r * Math.sin(a1);
+    const large = frac > 0.5 ? 1 : 0;
+    return { row, d: `M ${cx} ${cy} L ${x0} ${y0} A ${r} ${r} 0 ${large} 1 ${x1} ${y1} Z` };
+  });
+  return (
+    <div className="mb-3 border border-[#ccc] bg-white p-3">
+      <b className="text-[#2c3b4e]">{fig.title}</b>
+      <span className="ml-2 text-[11px] text-[#666]">（{fig.unit}）</span>
+      <div className="mt-1 flex flex-wrap items-center gap-4">
+        <svg viewBox="0 0 180 180" className="h-40 w-40">
+          {slices.map((s) => (
+            <path key={s.row.label} d={s.d} fill={`#${s.row.color}`} />
+          ))}
+          <circle cx={cx} cy={cy} r="38" fill="white" />
+        </svg>
+        <ul className="text-[12px] leading-6">
+          {fig.rows.map((row) => (
+            <li key={row.label}>
+              <span className="mr-2 inline-block h-2.5 w-2.5 align-middle" style={{ background: `#${row.color}` }} />
+              {row.label}　{fmtChart(row.value)}　
+              {total ? `${((Number.isFinite(row.value) ? row.value : 0) / total * 100).toFixed(1)}%` : "—"}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function ChartPreview({ figures }: { figures: ReportFigure[] }) {
   return (
     <div className="text-[13px]">
-      <p className="mb-2">
-        依目前輸入重算。
-      </p>
-      <BarChart title="全部比率指標（%）" rows={pct} />
-      <BarChart
-        title="環境絕對值"
-        rows={[
-          ["Scope 1 tCO2e", pick("s1")],
-          ["Scope 2 tCO2e", pick("s2")],
-          ["密集度", pick("int")],
-          ["能源 GJ", pick("en")],
-          ["用水密集度", pick("wint")],
-          ["耗水 千噸", pick("wuse")],
-        ]}
-      />
-      <BarChart
-        title="社會／職安"
-        rows={[
-          ["離職率%", pick("turn")],
-          ["新進率%", pick("hire")],
-          ["平均受訓 h", pick("tr")],
-          ["FR", pick("fr")],
-          ["SR", pick("sr")],
-          ["TRIR", pick("trir")],
-          ["育嬰復職%", pick("par")],
-          ["女性主管%", pick("fm")],
-        ]}
-      />
-      <BarChart
-        title="治理／薪酬"
-        rows={[
-          ["獨董比%", pick("ind")],
-          ["出席率%", pick("att")],
-          ["反貪腐%", pick("ac")],
-          ["考核覆蓋%", pick("rev")],
-          ["ESG KPI員工%", pick("ek")],
-          ["業務達成%", pick("biz")],
-          ["ESG達成%", pick("eh")],
-          ["最高薪倍數", pick("pay")],
-          ["女男薪酬比", pick("gp")],
-        ]}
-      />
-      <div className="border border-[#ccc] p-3">
-        <b>Scope 1 / 2 結構（tCO2e）</b>
-        <p className="mt-1 text-[12px]">
-          S1 {s1.toFixed(0)}　S2 {s2.toFixed(0)}　S3 彙總差額 {Number.isFinite(s3) ? s3.toFixed(0) : "—"}
-        </p>
-        <div className="mt-2 flex h-6 w-full max-w-[520px] overflow-hidden border border-[#888]">
-          <div className="bg-[#6b4a3a] text-center text-[11px] text-white" style={{ width: `${(s1 / tot) * 100}%` }}>
-            S1
-          </div>
-          <div className="bg-[#3a5a6b] text-center text-[11px] text-white" style={{ width: `${(s2 / tot) * 100}%` }}>
-            S2
-          </div>
-        </div>
+      <p className="mb-2 text-[#333]">依目前輸入即時重算，圖式對應報告書常見績效圖（無文字論述）。</p>
+      <div className="grid gap-2 md:grid-cols-2">
+        {figures.map((f) => (f.kind === "pie" ? <PieFigure key={f.id} fig={f} /> : <BarFigure key={f.id} fig={f} />))}
       </div>
     </div>
   );
