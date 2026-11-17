@@ -240,7 +240,7 @@ export function Dashboard() {
 
       <div className="relative z-10 px-5 pt-8 text-center">
         <h1 className="text-3xl font-semibold tracking-[0.14em] md:text-5xl">企業ESG永續應用系統</h1>
-        <p className="mt-3 text-base tracking-[0.32em] text-cyan md:text-2xl">規範檢索，計算應用</p>
+        <p className="mt-3 text-base tracking-[0.32em] text-cyan md:text-2xl">規範 · 檢索 · 計算 · 應用</p>
       </div>
 
       <header className="relative z-10 mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-5 py-5">
