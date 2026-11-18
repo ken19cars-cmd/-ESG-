@@ -324,9 +324,10 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 <tbody>
                   <tr>
                     <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
+                      <div>冷媒種類</div>
                       <button
                         type="button"
-                        className="text-left underline decoration-dotted"
+                        className="mt-0.5 text-[11px] text-[#335577] underline"
                         onClick={(event) =>
                           openSource(event, {
                             label: "冷媒種類",
@@ -335,7 +336,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                           })
                         }
                       >
-                        冷媒種類
+                        查看法條
                       </button>
                     </td>
                     <td className="border border-[#c8c8c8] px-1 py-1">
@@ -394,12 +395,13 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                         className={highlightKeys.includes(f.key) ? "wb-jump" : factorFocus === f.key ? "outline outline-1 outline-[#1f4a7a]" : ""}
                       >
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
+                          <div>{f.label}</div>
                           <button
                             type="button"
-                            className="text-left underline decoration-dotted"
+                            className="mt-0.5 text-[11px] text-[#335577] underline"
                             onClick={(event) => openSource(event, { label: f.label, gri: f.gri, why: f.why })}
                           >
-                            {f.label}
+                            查看法條
                           </button>
                           {locked && (
                             <div className="text-[11px] text-[#666]">
