@@ -1,20 +1,27 @@
 import articles from "./gri-articles.json";
 
+export type ArticleBlock =
+  | { kind: "text"; text: string }
+  | { kind: "table"; rows: string[][] }
+  | { kind: "image"; src: string };
+
 export type FieldSource = {
   originalTitle: string;
   original: string[];
   translation: string[];
   url: string;
+  blocks: ArticleBlock[];
+  english: ArticleBlock[];
 };
 
-const GRI_ARTICLES = articles as Record<string, { file: string; text: string }>;
+const GRI_ARTICLES = articles as Record<string, { zh?: ArticleBlock[]; en?: ArticleBlock[] }>;
 
 const GRI = "https://www.globalreporting.org/standards/";
 const GHG = "https://ghgprotocol.org/standards";
 const FSC = "https://twse-regulation.twse.com.tw/TW/law/DAT08.aspx?FLCODE=FL075209";
 
 function pack(originalTitle: string, original: string[], translation: string[], url = GRI): FieldSource {
-  return { originalTitle, original, translation, url };
+  return { originalTitle, original, translation, url, blocks: [], english: [] };
 }
 
 const FSC_GHG = pack(
@@ -283,25 +290,17 @@ const SOURCES: { test: (gri: string) => boolean; source: FieldSource }[] = [
   },
 ];
 
-function articleText(code: string): string | null {
-  const raw = GRI_ARTICLES[code]?.text;
-  if (!raw) return null;
-  const marker = "報導組織應報導以下資訊";
-  const at = raw.indexOf(marker);
-  if (at > 80 && !raw.slice(0, at).includes("\n要求")) {
-    const heading = raw.match(/^揭露項目\s+\d+-\d+/)?.[0] ?? `揭露項目 ${code}`;
-    return `${heading}\n${raw.slice(at)}`;
-  }
-  return raw;
-}
-
-function citedArticles(gri: string): string[] {
+function citedArticles(gri: string): { zh: ArticleBlock[]; en: ArticleBlock[] } {
   const codes = [...new Set([...gri.matchAll(/\d{1,3}-\d{1,2}/g)].map((match) => match[0]))];
   if (gri.includes("GRI 306") && !codes.some((code) => code.startsWith("306-"))) codes.push("306-3");
-  return codes.flatMap((code) => {
-    const text = articleText(code);
-    return text ? [text] : [];
-  });
+  const zh: ArticleBlock[] = [];
+  const en: ArticleBlock[] = [];
+  for (const code of codes) {
+    const article = GRI_ARTICLES[code];
+    if (article?.zh?.length) zh.push(...article.zh);
+    if (article?.en?.length) en.push(...article.en);
+  }
+  return { zh, en };
 }
 
 export function fieldSource(gri: string, why: string): FieldSource {
@@ -314,7 +313,12 @@ export function fieldSource(gri: string, why: string): FieldSource {
         [why || "請依公司實際資料填寫。確定沒有該項目時填 0。"],
       );
   const full = citedArticles(gri);
-  if (!full.length) return base;
-  const law = base.url === FSC ? base.original : [];
-  return { ...base, original: [...full, ...law] };
+  if (full.zh.length || full.en.length) {
+    return { ...base, blocks: full.zh, english: full.en };
+  }
+  return {
+    ...base,
+    blocks: base.original.map((text) => ({ kind: "text", text })),
+    english: [],
+  };
 }

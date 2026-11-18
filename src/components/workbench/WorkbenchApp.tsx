@@ -14,7 +14,7 @@ import {
   type Inputs,
   type ReportFigure,
 } from "@/lib/esg-engine";
-import { fieldSource } from "@/lib/field-sources";
+import { fieldSource, type ArticleBlock } from "@/lib/field-sources";
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
 import {
@@ -794,6 +794,40 @@ export function WorkbenchApp() {
   );
 }
 
+function ArticleBlocks({ blocks }: { blocks: ArticleBlock[] }) {
+  return (
+    <>
+      {blocks.map((block, index) => {
+        if (block.kind === "image") {
+          return <img key={index} src={block.src} alt="條文表格" className="my-2 h-auto max-w-full border border-[#d5dee8]" />;
+        }
+        if (block.kind === "table") {
+          return (
+            <table key={index} className="my-2 w-full border-collapse text-[12px]">
+              <tbody>
+                {block.rows.map((row, rowIndex) => (
+                  <tr key={rowIndex}>
+                    {row.map((cell, cellIndex) => (
+                      <td key={cellIndex} className="border border-[#b7c3d0] px-1.5 py-1 align-top">
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        }
+        return (
+          <p key={index} className="mt-2 whitespace-pre-wrap">
+            {block.text}
+          </p>
+        );
+      })}
+    </>
+  );
+}
+
 function SourceWindow({
   pop,
   onChange,
@@ -804,6 +838,11 @@ function SourceWindow({
   onClose: () => void;
 }) {
   const source = fieldSource(pop.gri, pop.why);
+  const [showEnglish, setShowEnglish] = useState(false);
+  useEffect(() => {
+    setShowEnglish(false);
+  }, [pop.gri, pop.label]);
+  const blocks = showEnglish && source.english.length ? source.english : source.blocks;
   const popRef = useRef(pop);
   const drag = useRef<{ dx: number; dy: number } | null>(null);
   const resize = useRef<{
@@ -889,6 +928,16 @@ function SourceWindow({
       >
         <b className="truncate">{pop.label}</b>
         <span className="flex shrink-0 gap-1">
+          {source.english.length > 0 && (
+            <button
+              type="button"
+              className="border border-white/40 px-2 text-[12px]"
+              onMouseDown={(event) => event.stopPropagation()}
+              onClick={() => setShowEnglish((value) => !value)}
+            >
+              {showEnglish ? "顯示中文" : "顯示原文"}
+            </button>
+          )}
           <button
             type="button"
             className="border border-white/40 px-2 text-[12px]"
@@ -928,30 +977,7 @@ function SourceWindow({
       {!pop.minimized && (
         <div className="relative min-h-0 flex-1">
           <div className="h-full overflow-auto px-3 py-2">
-            <p className="text-[12px] font-bold">引用項目</p>
-            <p>{pop.gri}</p>
-            <p className="mt-2 text-[12px] font-bold">條文</p>
-            <a
-              href={source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-1 inline-block border border-[#2c3b4e] bg-[#eef3f8] px-2 py-0.5 text-[12px] text-[#243044] underline"
-            >
-              開啟官方原文
-            </a>
-            <p className="mt-1 text-[12px] text-[#555]">{source.originalTitle}</p>
-            {source.original.map((line, index) => (
-              <p key={`${index}-${line.slice(0, 32)}`} className="mt-2 whitespace-pre-wrap">
-                {line}
-              </p>
-            ))}
-            <p className="mt-3 text-[12px] font-bold">中文說明</p>
-            {source.translation.map((line) => (
-              <p key={line} className="mt-1">
-                {line}
-              </p>
-            ))}
-            <p className="mt-3 text-[12px] text-[#555]">本欄填寫提示：{pop.why}</p>
+            <ArticleBlocks blocks={blocks} />
           </div>
         </div>
       )}
