@@ -127,10 +127,10 @@ export function WorkbenchApp() {
     const rect = event.currentTarget.getBoundingClientRect();
     setSourcePop((prev) => ({
       ...item,
-      x: prev?.x ?? Math.min(Math.max(8, rect.left), window.innerWidth - 460),
-      y: prev?.y ?? Math.min(rect.bottom + 6, window.innerHeight - 420),
-      w: prev?.w ?? 440,
-      h: prev?.h ?? 380,
+      x: prev?.x ?? Math.max(8, Math.min(rect.left, window.innerWidth - 620)),
+      y: prev?.y ?? Math.max(8, Math.min(rect.bottom + 6, window.innerHeight - 520)),
+      w: prev?.w ?? 560,
+      h: prev?.h ?? 460,
       minimized: false,
     }));
   }
@@ -801,9 +801,27 @@ function SourceWindow({
             type="button"
             className="border border-white/40 px-2 text-[12px]"
             onMouseDown={(event) => event.stopPropagation()}
+            onClick={() => {
+              const enlarge = pop.w < 700;
+              onChange({
+                ...pop,
+                minimized: false,
+                w: enlarge ? Math.min(980, window.innerWidth - 40) : 560,
+                h: enlarge ? Math.min(720, window.innerHeight - 40) : 460,
+                x: enlarge ? 20 : pop.x,
+                y: enlarge ? 20 : pop.y,
+              });
+            }}
+          >
+            {pop.w >= 700 ? "還原大小" : "放大"}
+          </button>
+          <button
+            type="button"
+            className="border border-white/40 px-2 text-[12px]"
+            onMouseDown={(event) => event.stopPropagation()}
             onClick={() => onChange({ ...pop, minimized: !pop.minimized })}
           >
-            {pop.minimized ? "還原" : "縮小"}
+            {pop.minimized ? "展開" : "縮小"}
           </button>
           <button
             type="button"
@@ -817,7 +835,7 @@ function SourceWindow({
       </div>
       {!pop.minimized && (
         <div className="relative min-h-0 flex-1">
-          <div className="h-full overflow-auto px-3 py-2">
+          <div className="h-full overflow-auto px-3 py-2 pb-8">
             <p className="text-[12px] font-bold">引用項目</p>
             <p>{pop.gri}</p>
             <p className="mt-2 text-[12px] font-bold">原文</p>
@@ -837,13 +855,16 @@ function SourceWindow({
           </div>
           <button
             type="button"
-            aria-label="調整視窗大小"
-            className="absolute right-0 bottom-0 h-4 w-4 cursor-nwse-resize"
+            aria-label="拖曳調整視窗大小"
+            className="absolute right-1 bottom-1 z-10 cursor-nwse-resize border border-[#2c3b4e] bg-[#d9e2ec] px-2 py-0.5 text-[11px] text-[#243044]"
             onMouseDown={(event) => {
+              event.preventDefault();
               event.stopPropagation();
               resize.current = { x: event.clientX, y: event.clientY, w: pop.w, h: pop.h };
             }}
-          />
+          >
+            拉大
+          </button>
         </div>
       )}
     </div>
