@@ -1,4 +1,5 @@
 import articles from "./gri-articles.json";
+import { statuteBlocks } from "./statutes";
 
 export type ArticleBlock =
   | { kind: "text"; text: string }
@@ -313,8 +314,6 @@ export function fieldSource(gri: string, why: string): FieldSource {
         [why || "請依公司實際資料填寫。確定沒有該項目時填 0。"],
       );
   const full = citedArticles(gri);
-  if (full.zh.length || full.en.length) {
-    return { ...base, blocks: full.zh, english: full.en };
-  }
-  return { ...base, blocks: [], english: [] };
+  const law = statuteBlocks(gri);
+  return { ...base, blocks: [...full.zh, ...law], english: full.en };
 }
