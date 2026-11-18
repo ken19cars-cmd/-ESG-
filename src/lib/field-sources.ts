@@ -316,9 +316,5 @@ export function fieldSource(gri: string, why: string): FieldSource {
   if (full.zh.length || full.en.length) {
     return { ...base, blocks: full.zh, english: full.en };
   }
-  return {
-    ...base,
-    blocks: base.original.map((text) => ({ kind: "text", text })),
-    english: [],
-  };
+  return { ...base, blocks: [], english: [] };
 }

@@ -985,7 +985,11 @@ function SourceWindow({
       {!pop.minimized && (
         <div className="relative min-h-0 flex-1">
           <div className="h-full overflow-auto px-3 py-2">
-            <ArticleBlocks blocks={blocks} />
+            {blocks.length > 0 ? (
+              <ArticleBlocks blocks={blocks} />
+            ) : (
+              <p className="mt-2">沒有收錄條文。系統歸屬的法源：{pop.gri}</p>
+            )}
           </div>
         </div>
       )}
