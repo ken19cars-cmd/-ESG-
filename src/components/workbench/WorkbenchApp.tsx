@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   compute,
   defaultInputs,
@@ -562,12 +562,11 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             </div>
           )}
 
-          {sheet === "chart" &&
-            (member.paid ? (
+          {sheet === "chart" && (
+            <PaidFrost locked={!member.paid}>
               <ChartPreview figures={result.figures} />
-            ) : (
-              <p className="border border-[#c8c8c8] bg-[#f7f7f7] p-4 text-[14px]">指標圖預覽需付費會員。請洽翰欣科技開通。計算結果仍可在右側查看。</p>
-            ))}
+            </PaidFrost>
+          )}
 
           {sheet === "why" && (
             <div>
@@ -597,7 +596,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           {sheet === "reg" && (
             <div>
               <p className="mb-2 text-[13px] leading-6 text-[#333]">
-                點各輸入欄的名稱，小視窗會列出該欄所引 GRI 揭露項目的要求與指引。下表是對照用的計算要點。
+                點各輸入欄名稱下方的「查看法條」，小視窗會列出該欄所引 GRI 揭露項目的要求與指引。下表是對照用的計算要點。
               </p>
               <button
                 type="button"
@@ -714,68 +713,80 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                   >
                     {docxBusy ? "匯出中" : "匯出 Word"}
                   </button>
-                  <button type="button" className="border border-[#444] bg-[#eee] px-3 py-1" onClick={() => window.print()}>
+                  <button
+                    type="button"
+                    className="border border-[#444] bg-[#eee] px-3 py-1"
+                    onClick={() => {
+                      if (!member.paid) {
+                        window.alert("列印需付費會員。請洽翰欣科技開通。");
+                        return;
+                      }
+                      window.print();
+                    }}
+                  >
                     列印
                   </button>
                 </div>
               </div>
-              {reportDraft(d, result.metrics).map((block) => (
-                <div key={block.chapter} className="mb-4">
-                  <p className="mb-1 text-[12px] font-bold">
-                    {block.chapter}
-                    <span className="ml-2 font-normal text-[#666]">{block.gri}</span>
-                  </p>
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                        <th className="border border-[#888] px-2 py-1">項目</th>
-                        <th className="border border-[#888] px-2 py-1">數值</th>
-                        <th className="border border-[#888] px-2 py-1">單位</th>
-                        <th className="border border-[#888] px-2 py-1">對應</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {block.rows.map((r) => (
-                        <tr key={r.name}>
-                          <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
-                          <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
-                          <td className="border border-[#c8c8c8] px-2 py-1">{r.unit}</td>
-                          <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+              <PaidFrost locked={!member.paid}>
+                {reportDraft(d, result.metrics).map((block) => (
+                  <div key={block.chapter} className="mb-4">
+                    <p className="mb-1 text-[12px] font-bold">
+                      {block.chapter}
+                      <span className="ml-2 font-normal text-[#666]">{block.gri}</span>
+                    </p>
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                          <th className="border border-[#888] px-2 py-1">項目</th>
+                          <th className="border border-[#888] px-2 py-1">數值</th>
+                          <th className="border border-[#888] px-2 py-1">單位</th>
+                          <th className="border border-[#888] px-2 py-1">對應</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-              <p className="mb-1 text-[12px] font-bold">附錄　GRI 內容索引（績效項）</p>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                    <th className="border border-[#888] px-2 py-1">揭露</th>
-                    <th className="border border-[#888] px-2 py-1">主題</th>
-                    <th className="border border-[#888] px-2 py-1">數值</th>
-                    <th className="border border-[#888] px-2 py-1">章節</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {griIndex(result.metrics).map((r) => (
-                    <tr key={r.topic}>
-                      <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
-                      <td className="border border-[#c8c8c8] px-2 py-1">{r.topic}</td>
-                      <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
-                      <td className="border border-[#c8c8c8] px-2 py-1">{r.chapter}</td>
+                      </thead>
+                      <tbody>
+                        {block.rows.map((r) => (
+                          <tr key={r.name}>
+                            <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
+                            <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
+                            <td className="border border-[#c8c8c8] px-2 py-1">{r.unit}</td>
+                            <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
+                <p className="mb-1 text-[12px] font-bold">附錄　GRI 內容索引（績效項）</p>
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                      <th className="border border-[#888] px-2 py-1">揭露</th>
+                      <th className="border border-[#888] px-2 py-1">主題</th>
+                      <th className="border border-[#888] px-2 py-1">數值</th>
+                      <th className="border border-[#888] px-2 py-1">章節</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {griIndex(result.metrics).map((r) => (
+                      <tr key={r.topic}>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{r.topic}</td>
+                        <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{r.chapter}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </PaidFrost>
             </div>
           )}
         </div>
 
         <aside className="bg-[#f4f4f4] p-3">
           <h2 className="mb-2 text-[14px] font-bold">系統運算結果</h2>
-          {member.paid ? (
-            <table className="mb-3 w-full border-collapse text-[11px]">
+          <PaidFrost locked={!member.paid} className="mb-3">
+            <table className="w-full border-collapse text-[11px]">
               <tbody>
                 {sideMetrics.map((m) => (
                   <tr key={m.id}>
@@ -792,9 +803,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 ))}
               </tbody>
             </table>
-          ) : (
-            <p className="mb-3 border border-[#c8c8c8] bg-white p-2 text-[12px]">系統運算結果需付費會員。請洽翰欣科技開通。</p>
-          )}
+          </PaidFrost>
           <h2 className="mb-2 text-[14px] font-bold">自動勾稽</h2>
           <ul className="space-y-1 text-[12px]">
             {sideChecks.length === 0 && (
@@ -1150,6 +1159,26 @@ function PieFigure({ fig }: { fig: ReportFigure }) {
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+function PaidFrost({
+  locked,
+  className = "",
+  children,
+}: {
+  locked: boolean;
+  className?: string;
+  children: ReactNode;
+}) {
+  if (!locked) return <div className={className}>{children}</div>;
+  return (
+    <div className={`relative overflow-hidden select-none ${className}`}>
+      <div className="pointer-events-none blur-[11px]" aria-hidden="true">
+        {children}
+      </div>
+      <div className="absolute inset-0 bg-white/20" />
     </div>
   );
 }
