@@ -247,7 +247,7 @@ export async function auditOfficialFactors(year: string, refrigerant = "R-134a")
     sourceDoc: `IPCC ${pack.gwpSet}；環境部《溫室氣體排放量盤查作業指引》（113年起改採 AR5）`,
     crawlNote: "",
     detail: `${pack.refrigerant} 依 ${pack.gwpSet}＝${pack.gwpRefrigerant}。`,
-    url: "https://ghgregistry.moenv.gov.tw/",
+    url: "https://gazette2.nat.gov.tw/EG_FileManager/eguploadpub/eg030025/ch07/type3/gov60/num16/Eg.htm",
   });
 
   return {

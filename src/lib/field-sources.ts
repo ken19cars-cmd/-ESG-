@@ -17,9 +17,9 @@ export type FieldSource = {
 
 const GRI_ARTICLES = articles as Record<string, { zh?: ArticleBlock[]; en?: ArticleBlock[] }>;
 
-const GRI = "https://www.globalreporting.org/standards/";
-const GHG = "https://ghgprotocol.org/standards";
-const FSC = "https://twse-regulation.twse.com.tw/TW/law/DAT08.aspx?FLCODE=FL075209";
+const GRI = "https://www.globalreporting.org/how-to-use-the-gri-standards/gri-standards-traditional-chinese-translations/";
+const GHG = "https://ghgprotocol.org/corporate-standard";
+const FSC = "https://twse-regulation.twse.com.tw/TW/law/DAT0201.aspx?FLCODE=FL075209";
 
 function pack(originalTitle: string, original: string[], translation: string[], url = GRI): FieldSource {
   return { originalTitle, original, translation, url, blocks: [], english: [] };

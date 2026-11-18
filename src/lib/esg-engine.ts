@@ -440,12 +440,12 @@ function fig(id: string, title: string, kind: ReportFigure["kind"], unit: string
 }
 
 export const regulationCatalog = [
-  { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會", asOf: "2026-10", point: "依 GRI；溫室氣體最近兩年排放量、密集度（噸CO2e／百萬元）及涵蓋範圍。", url: "https://law.moj.gov.tw/" },
-  { id: "gri-2021", name: "GRI Standards 2021", version: "GRI 1／2／3 及主題準則", asOf: "2026-10", point: "2-7、2-21、2-27、205、302–306、401、403–405、308、414。", url: "https://www.globalreporting.org/" },
-  { id: "ghg", name: "GHG Protocol／ISO 14064-1", version: "邊界對齊合併報表", asOf: "2026-10", point: "活動數據（用量）× 係數＝範疇一／二排放。下方有中文說明。", url: "https://ghgprotocol.org/" },
-  { id: "ef", name: "排放係數／GWP", version: "可覆核參數表", asOf: "2026-10", point: "電力、油氣、冷媒係數以環境部／IPCC 當期為準。", url: "https://www.moenv.gov.tw/" },
-  { id: "osh", name: "職安頻率", version: "每百萬工時", asOf: "2026-10", point: "FR／SR／TRIR＝件數×10^6÷總工時。", url: "https://www.osha.gov.tw/" },
-  { id: "twse-csr", name: "永續發展實務守則 §9", version: "證交所／櫃買", asOf: "2026-10", point: "績效考核宜結合永續政策。", url: "https://twse-regulation.twse.com.tw/" },
+  { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會", asOf: "2026-10", point: "依 GRI；溫室氣體最近兩年排放量、密集度（噸CO2e／百萬元）及涵蓋範圍。", url: "https://twse-regulation.twse.com.tw/TW/law/DAT0201.aspx?FLCODE=FL075209" },
+  { id: "gri-2021", name: "GRI Standards 2021", version: "GRI 1／2／3 及主題準則", asOf: "2026-10", point: "2-7、2-21、2-27、205、302–306、401、403–405、308、414。", url: "https://www.globalreporting.org/how-to-use-the-gri-standards/gri-standards-traditional-chinese-translations/" },
+  { id: "ghg", name: "GHG Protocol／ISO 14064-1", version: "邊界對齊合併報表", asOf: "2026-10", point: "活動數據（用量）× 係數＝範疇一／二排放。下方有中文說明。", url: "https://ghgprotocol.org/corporate-standard" },
+  { id: "ef", name: "排放係數／GWP", version: "可覆核參數表", asOf: "2026-10", point: "電力、油氣、冷媒係數以環境部／IPCC 當期為準。", url: "https://gazette2.nat.gov.tw/EG_FileManager/eguploadpub/eg030025/ch07/type3/gov60/num16/Eg.htm" },
+  { id: "osh", name: "職安頻率", version: "每百萬工時", asOf: "2026-10", point: "FR／SR／TRIR＝件數×10^6÷總工時。", url: "https://law.moj.gov.tw/LawClass/LawSingle.aspx?flno=6&pcode=N0070004" },
+  { id: "twse-csr", name: "永續發展實務守則 §9", version: "證交所／櫃買", asOf: "2026-10", point: "績效考核宜結合永續政策。", url: "https://twse-regulation.twse.com.tw/TW/law/DOC01_print.aspx?FLCODE=FL052368&FLNO=9" },
 ];
 
 function n(v: unknown) {
