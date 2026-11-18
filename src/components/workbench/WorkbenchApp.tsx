@@ -630,7 +630,7 @@ export function WorkbenchApp() {
               </label>
               <div className="mb-3 flex flex-wrap items-center gap-3 text-[13px]">
                 <label className="border border-[#444] bg-[#eee] px-3 py-1">
-                  參考圖
+                  上傳參考圖片
                   <input
                     type="file"
                     accept="image/png,image/jpeg,image/webp"
