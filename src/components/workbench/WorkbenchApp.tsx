@@ -765,11 +765,11 @@ function SourceWindow({
     n: boolean;
     s: boolean;
     e: boolean;
-    w: boolean;
+    west: boolean;
   } | null>(null);
   popRef.current = pop;
 
-  function beginResize(event: React.MouseEvent, edge: { n?: boolean; s?: boolean; e?: boolean; w?: boolean }) {
+  function beginResize(event: React.MouseEvent, edge: { n?: boolean; s?: boolean; e?: boolean; west?: boolean }) {
     event.preventDefault();
     event.stopPropagation();
     resize.current = {
@@ -782,7 +782,7 @@ function SourceWindow({
       n: Boolean(edge.n),
       s: Boolean(edge.s),
       e: Boolean(edge.e),
-      w: Boolean(edge.w),
+      west: Boolean(edge.west),
     };
   }
 
@@ -802,7 +802,7 @@ function SourceWindow({
         let y = start.top;
         if (start.e) w = Math.max(300, start.w + dx);
         if (start.s) h = Math.max(180, start.h + dy);
-        if (start.w) {
+        if (start.west) {
           w = Math.max(300, start.w - dx);
           x = start.left + (start.w - w);
         }
@@ -908,11 +908,11 @@ function SourceWindow({
         <>
           <div className="absolute top-0 right-3 left-3 z-20 h-2 cursor-ns-resize" onMouseDown={(event) => beginResize(event, { n: true })} />
           <div className="absolute right-3 bottom-0 left-3 z-20 h-2 cursor-ns-resize" onMouseDown={(event) => beginResize(event, { s: true })} />
-          <div className="absolute top-3 bottom-3 left-0 z-20 w-2 cursor-ew-resize" onMouseDown={(event) => beginResize(event, { w: true })} />
+          <div className="absolute top-3 bottom-3 left-0 z-20 w-2 cursor-ew-resize" onMouseDown={(event) => beginResize(event, { west: true })} />
           <div className="absolute top-3 right-0 bottom-3 z-20 w-2 cursor-ew-resize" onMouseDown={(event) => beginResize(event, { e: true })} />
-          <div className="absolute top-0 left-0 z-30 h-3 w-3 cursor-nwse-resize" onMouseDown={(event) => beginResize(event, { n: true, w: true })} />
+          <div className="absolute top-0 left-0 z-30 h-3 w-3 cursor-nwse-resize" onMouseDown={(event) => beginResize(event, { n: true, west: true })} />
           <div className="absolute top-0 right-0 z-30 h-3 w-3 cursor-nesw-resize" onMouseDown={(event) => beginResize(event, { n: true, e: true })} />
-          <div className="absolute bottom-0 left-0 z-30 h-3 w-3 cursor-nesw-resize" onMouseDown={(event) => beginResize(event, { s: true, w: true })} />
+          <div className="absolute bottom-0 left-0 z-30 h-3 w-3 cursor-nesw-resize" onMouseDown={(event) => beginResize(event, { s: true, west: true })} />
           <div className="absolute right-0 bottom-0 z-30 h-3 w-3 cursor-nwse-resize" onMouseDown={(event) => beginResize(event, { s: true, e: true })} />
         </>
       )}
