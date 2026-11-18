@@ -839,7 +839,15 @@ function SourceWindow({
             <p className="text-[12px] font-bold">引用項目</p>
             <p>{pop.gri}</p>
             <p className="mt-2 text-[12px] font-bold">原文</p>
-            <p className="text-[12px] text-[#555]">{source.originalTitle}</p>
+            <a
+              href={source.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-block border border-[#2c3b4e] bg-[#eef3f8] px-2 py-0.5 text-[12px] text-[#243044] underline"
+            >
+              開啟官方原文
+            </a>
+            <p className="mt-1 text-[12px] text-[#555]">{source.originalTitle}</p>
             {source.original.map((line) => (
               <p key={line} className="mt-1">
                 {line}
