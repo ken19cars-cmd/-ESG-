@@ -772,23 +772,27 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
         <aside className="bg-[#f4f4f4] p-3">
           <h2 className="mb-2 text-[14px] font-bold">系統運算結果</h2>
-          <table className="mb-3 w-full border-collapse text-[11px]">
-            <tbody>
-              {sideMetrics.map((m) => (
-                <tr key={m.id}>
-                  <td className="border border-[#ccc] px-2 py-1">
-                    <button type="button" className="w-full text-left hover:bg-[#fff3bf]" onClick={() => openMetric(m.id)}>
-                      <span className="underline decoration-[#888]">{m.name}</span>
-                      <div className="text-[10px] text-[#333]">{m.formula}</div>
-                    </button>
-                  </td>
-                  <td className="wb-calc border border-[#ccc] px-2 py-1 text-right">
-                    {m.value} {m.unit}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {member.paid ? (
+            <table className="mb-3 w-full border-collapse text-[11px]">
+              <tbody>
+                {sideMetrics.map((m) => (
+                  <tr key={m.id}>
+                    <td className="border border-[#ccc] px-2 py-1">
+                      <button type="button" className="w-full text-left hover:bg-[#fff3bf]" onClick={() => openMetric(m.id)}>
+                        <span className="underline decoration-[#888]">{m.name}</span>
+                        <div className="text-[10px] text-[#333]">{m.formula}</div>
+                      </button>
+                    </td>
+                    <td className="wb-calc border border-[#ccc] px-2 py-1 text-right">
+                      {m.value} {m.unit}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="mb-3 border border-[#c8c8c8] bg-white p-2 text-[12px]">系統運算結果需付費會員。請洽翰欣科技開通。</p>
+          )}
           <h2 className="mb-2 text-[14px] font-bold">自動勾稽</h2>
           <ul className="space-y-1 text-[12px]">
             {sideChecks.length === 0 && (
