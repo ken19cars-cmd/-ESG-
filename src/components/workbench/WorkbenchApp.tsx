@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   compute,
   defaultInputs,
@@ -14,6 +14,7 @@ import {
   type Inputs,
   type ReportFigure,
 } from "@/lib/esg-engine";
+import { fieldSource } from "@/lib/field-sources";
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
 import {
@@ -111,14 +112,27 @@ export function WorkbenchApp() {
   const [factorFocus, setFactorFocus] = useState<string | null>(null);
   const [docxBusy, setDocxBusy] = useState(false);
   const [highlightKeys, setHighlightKeys] = useState<(keyof Inputs)[]>([]);
-  const [sourcePop, setSourcePop] = useState<{ label: string; gri: string; why: string; x: number; y: number } | null>(null);
+  const [sourcePop, setSourcePop] = useState<{
+    label: string;
+    gri: string;
+    why: string;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    minimized: boolean;
+  } | null>(null);
 
   function openSource(event: React.MouseEvent<HTMLButtonElement>, item: { label: string; gri: string; why: string }) {
     const rect = event.currentTarget.getBoundingClientRect();
-    const width = 320;
-    const x = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
-    const y = Math.min(rect.bottom + 6, window.innerHeight - 200);
-    setSourcePop({ ...item, x, y: Math.max(8, y) });
+    setSourcePop((prev) => ({
+      ...item,
+      x: prev?.x ?? Math.min(Math.max(8, rect.left), window.innerWidth - 460),
+      y: prev?.y ?? Math.min(rect.bottom + 6, window.innerHeight - 420),
+      w: prev?.w ?? 440,
+      h: prev?.h ?? 380,
+      minimized: false,
+    }));
   }
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
@@ -723,23 +737,114 @@ export function WorkbenchApp() {
         </aside>
       </div>
       {sourcePop && (
-        <>
-          <button type="button" className="fixed inset-0 z-40 cursor-default" aria-label="關閉法規來源" onClick={() => setSourcePop(null)} />
-          <div
-            className="fixed z-50 w-[320px] border border-[#2c3b4e] bg-white p-3 text-[13px] leading-6 text-[#243044] shadow-lg"
-            style={{ left: sourcePop.x, top: sourcePop.y }}
+        <SourceWindow pop={sourcePop} onChange={setSourcePop} onClose={() => setSourcePop(null)} />
+      )}
+    </div>
+  );
+}
+
+function SourceWindow({
+  pop,
+  onChange,
+  onClose,
+}: {
+  pop: { label: string; gri: string; why: string; x: number; y: number; w: number; h: number; minimized: boolean };
+  onChange: (next: typeof pop) => void;
+  onClose: () => void;
+}) {
+  const source = fieldSource(pop.gri, pop.why);
+  const popRef = useRef(pop);
+  const drag = useRef<{ dx: number; dy: number } | null>(null);
+  const resize = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  popRef.current = pop;
+
+  useEffect(() => {
+    function move(event: MouseEvent) {
+      const current = popRef.current;
+      if (drag.current) {
+        onChange({ ...current, x: event.clientX - drag.current.dx, y: event.clientY - drag.current.dy });
+      }
+      if (resize.current) {
+        onChange({
+          ...current,
+          w: Math.min(window.innerWidth - 16, Math.max(300, resize.current.w + event.clientX - resize.current.x)),
+          h: Math.min(window.innerHeight - 16, Math.max(180, resize.current.h + event.clientY - resize.current.y)),
+        });
+      }
+    }
+    function up() {
+      drag.current = null;
+      resize.current = null;
+    }
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+    return () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+    };
+  }, [onChange]);
+
+  return (
+    <div
+      className="fixed z-50 flex flex-col border border-[#2c3b4e] bg-white text-[13px] leading-6 text-[#243044] shadow-lg"
+      style={{ left: pop.x, top: pop.y, width: pop.w, height: pop.minimized ? 40 : pop.h }}
+    >
+      <div
+        className="flex h-10 shrink-0 cursor-move items-center justify-between gap-2 bg-[#2c3b4e] px-2 text-white"
+        onMouseDown={(event) => {
+          drag.current = { dx: event.clientX - pop.x, dy: event.clientY - pop.y };
+        }}
+      >
+        <b className="truncate">{pop.label}</b>
+        <span className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            className="border border-white/40 px-2 text-[12px]"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={() => onChange({ ...pop, minimized: !pop.minimized })}
           >
-            <div className="mb-1 flex items-start justify-between gap-3">
-              <b>{sourcePop.label}</b>
-              <button type="button" className="shrink-0 border border-[#888] bg-[#eee] px-2 py-0.5 text-[12px]" onClick={() => setSourcePop(null)}>
-                關閉
-              </button>
-            </div>
-            <p className="text-[12px] font-bold">法規來源</p>
-            <p>{sourcePop.gri}</p>
-            <p className="mt-2">{sourcePop.why}</p>
+            {pop.minimized ? "還原" : "縮小"}
+          </button>
+          <button
+            type="button"
+            className="border border-white/40 px-2 text-[12px]"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={onClose}
+          >
+            關閉
+          </button>
+        </span>
+      </div>
+      {!pop.minimized && (
+        <div className="relative min-h-0 flex-1">
+          <div className="h-full overflow-auto px-3 py-2">
+            <p className="text-[12px] font-bold">引用項目</p>
+            <p>{pop.gri}</p>
+            <p className="mt-2 text-[12px] font-bold">原文</p>
+            <p className="text-[12px] text-[#555]">{source.originalTitle}</p>
+            {source.original.map((line) => (
+              <p key={line} className="mt-1">
+                {line}
+              </p>
+            ))}
+            <p className="mt-3 text-[12px] font-bold">中文說明</p>
+            {source.translation.map((line) => (
+              <p key={line} className="mt-1">
+                {line}
+              </p>
+            ))}
+            <p className="mt-3 text-[12px] text-[#555]">本欄填寫提示：{pop.why}</p>
           </div>
-        </>
+          <button
+            type="button"
+            aria-label="調整視窗大小"
+            className="absolute right-0 bottom-0 h-4 w-4 cursor-nwse-resize"
+            onMouseDown={(event) => {
+              event.stopPropagation();
+              resize.current = { x: event.clientX, y: event.clientY, w: pop.w, h: pop.h };
+            }}
+          />
+        </div>
       )}
     </div>
   );
