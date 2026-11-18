@@ -799,16 +799,24 @@ function ArticleBlocks({ blocks }: { blocks: ArticleBlock[] }) {
     <>
       {blocks.map((block, index) => {
         if (block.kind === "image") {
-          return <img key={index} src={block.src} alt="條文表格" className="my-2 h-auto max-w-full border border-[#d5dee8]" />;
+          return <img key={index} src={block.src} alt="條文表格" className="my-2 h-auto w-auto max-w-none border border-[#d5dee8]" />;
         }
         if (block.kind === "table") {
+          const cols = block.rows[0]?.length ?? 0;
+          const longest = Array.from({ length: cols }, (_, col) =>
+            Math.max(0, ...block.rows.map((row) => (row[col] || "").length)),
+          );
           return (
-            <table key={index} className="my-2 w-full border-collapse text-[12px]">
+            <table key={index} className="my-2 border-collapse text-[12px]" style={{ width: "max-content" }}>
               <tbody>
                 {block.rows.map((row, rowIndex) => (
                   <tr key={rowIndex}>
                     {row.map((cell, cellIndex) => (
-                      <td key={cellIndex} className="border border-[#b7c3d0] px-1.5 py-1 align-top">
+                      <td
+                        key={cellIndex}
+                        className={`border border-[#b7c3d0] px-2 py-1 align-top ${longest[cellIndex] <= 12 ? "whitespace-nowrap" : ""}`}
+                        style={longest[cellIndex] > 12 ? { maxWidth: "22rem" } : undefined}
+                      >
                         {cell}
                       </td>
                     ))}
