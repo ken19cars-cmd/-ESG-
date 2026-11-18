@@ -111,6 +111,7 @@ export function WorkbenchApp() {
   const [factorTick, setFactorTick] = useState(0);
   const [factorFocus, setFactorFocus] = useState<string | null>(null);
   const [docxBusy, setDocxBusy] = useState(false);
+  const [stylePrompt, setStylePrompt] = useState("");
   const [highlightKeys, setHighlightKeys] = useState<(keyof Inputs)[]>([]);
   const [sourcePop, setSourcePop] = useState<{
     label: string;
@@ -168,9 +169,12 @@ export function WorkbenchApp() {
       const res = await fetch("/api/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(inputs),
+        body: JSON.stringify({ ...inputs, stylePrompt }),
       });
-      if (!res.ok) throw new Error("export failed");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(data?.error || "Word 匯出失敗");
+      }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -178,8 +182,8 @@ export function WorkbenchApp() {
       a.download = `${inputs.client}_${inputs.year}_永續報告書底稿.docx`.replace(/[\\/:*?"<>|]/g, "");
       a.click();
       URL.revokeObjectURL(url);
-    } catch {
-      window.alert("Word 匯出失敗");
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Word 匯出失敗");
     } finally {
       setDocxBusy(false);
     }
@@ -614,6 +618,15 @@ export function WorkbenchApp() {
 
           {sheet === "rep" && (
             <div className="text-[13px]">
+              <label className="mb-3 block">
+                美編說明（選填。有填才會呼叫語言模型決定配色與字體，數字仍由系統計算）
+                <textarea
+                  className="mt-1 h-20 w-full border border-[#8aa0b4] p-2 text-[13px]"
+                  value={stylePrompt}
+                  placeholder="例如：深綠細框，標題靠左，圖表用墨綠與米色"
+                  onChange={(event) => setStylePrompt(event.target.value)}
+                />
+              </label>
               <div className="mb-3 flex items-center justify-between">
                 <p>
                   {inputs.client}　{inputs.year}　永續報告書績效表／GRI 索引底稿
