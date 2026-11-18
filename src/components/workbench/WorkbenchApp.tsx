@@ -561,7 +561,7 @@ export function WorkbenchApp() {
           {sheet === "reg" && (
             <div>
               <p className="mb-2 text-[13px] leading-6 text-[#333]">
-                下列為規範重點的中文說明（意譯），方便對照輸入欄。完整條文請開來源連結；GRI／GHG Protocol 原文有著作權，此處不整段照抄。
+                點各輸入欄的名稱，小視窗會列出該欄所引 GRI 揭露項目的要求與指引。下表是對照用的計算要點。
               </p>
               <button
                 type="button"
@@ -930,7 +930,7 @@ function SourceWindow({
           <div className="h-full overflow-auto px-3 py-2">
             <p className="text-[12px] font-bold">引用項目</p>
             <p>{pop.gri}</p>
-            <p className="mt-2 text-[12px] font-bold">原文</p>
+            <p className="mt-2 text-[12px] font-bold">條文</p>
             <a
               href={source.url}
               target="_blank"
@@ -940,8 +940,8 @@ function SourceWindow({
               開啟官方原文
             </a>
             <p className="mt-1 text-[12px] text-[#555]">{source.originalTitle}</p>
-            {source.original.map((line) => (
-              <p key={line} className="mt-1">
+            {source.original.map((line, index) => (
+              <p key={`${index}-${line.slice(0, 32)}`} className="mt-2 whitespace-pre-wrap">
                 {line}
               </p>
             ))}

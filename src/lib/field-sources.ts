@@ -1,9 +1,13 @@
+import articles from "./gri-articles.json";
+
 export type FieldSource = {
   originalTitle: string;
   original: string[];
   translation: string[];
   url: string;
 };
+
+const GRI_ARTICLES = articles as Record<string, { file: string; text: string }>;
 
 const GRI = "https://www.globalreporting.org/standards/";
 const GHG = "https://ghgprotocol.org/standards";
@@ -279,12 +283,38 @@ const SOURCES: { test: (gri: string) => boolean; source: FieldSource }[] = [
   },
 ];
 
+function articleText(code: string): string | null {
+  const raw = GRI_ARTICLES[code]?.text;
+  if (!raw) return null;
+  const marker = "報導組織應報導以下資訊";
+  const at = raw.indexOf(marker);
+  if (at > 80 && !raw.slice(0, at).includes("\n要求")) {
+    const heading = raw.match(/^揭露項目\s+\d+-\d+/)?.[0] ?? `揭露項目 ${code}`;
+    return `${heading}\n${raw.slice(at)}`;
+  }
+  return raw;
+}
+
+function citedArticles(gri: string): string[] {
+  const codes = [...new Set([...gri.matchAll(/\d{1,3}-\d{1,2}/g)].map((match) => match[0]))];
+  if (gri.includes("GRI 306") && !codes.some((code) => code.startsWith("306-"))) codes.push("306-3");
+  return codes.flatMap((code) => {
+    const text = articleText(code);
+    return text ? [text] : [];
+  });
+}
+
 export function fieldSource(gri: string, why: string): FieldSource {
   const found = SOURCES.find((item) => item.test(gri));
-  if (found) return found.source;
-  return pack(
-    gri || "本欄對應說明",
-    ["此欄沒有另段公開法規全文可引用。"],
-    [why || "請依公司實際資料填寫。確定沒有該項目時填 0。"],
-  );
+  const base = found
+    ? found.source
+    : pack(
+        gri || "本欄對應說明",
+        ["此欄沒有另段公開法規全文可引用。"],
+        [why || "請依公司實際資料填寫。確定沒有該項目時填 0。"],
+      );
+  const full = citedArticles(gri);
+  if (!full.length) return base;
+  const law = base.url === FSC ? base.original : [];
+  return { ...base, original: [...full, ...law] };
 }
