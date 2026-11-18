@@ -14,7 +14,12 @@ import {
   type Inputs,
   type ReportFigure,
 } from "@/lib/esg-engine";
-import { fieldSource, type ArticleBlock } from "@/lib/field-sources";
+type ArticleBlock =
+  | { kind: "text"; text: string }
+  | { kind: "table"; rows: string[][] }
+  | { kind: "image"; src: string };
+
+type MemberView = { username: string; company: string; paid: boolean; role: "admin" | "member" };
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
 import {
@@ -102,7 +107,7 @@ function inputStep(unit: string) {
   return INT_UNITS.has(unit) ? 1 : 0.1;
 }
 
-export function WorkbenchApp() {
+export function WorkbenchApp({ member }: { member: MemberView }) {
   const [sheet, setSheet] = useState<Sheet>("pre");
   const [inputs, setInputs] = useState<Inputs>(defaultInputs);
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
@@ -126,6 +131,10 @@ export function WorkbenchApp() {
   } | null>(null);
 
   function openSource(event: React.MouseEvent<HTMLButtonElement>, item: { label: string; gri: string; why: string }) {
+    if (!member.paid) {
+      window.alert("法規條文需付費會員。請洽翰欣科技開通。");
+      return;
+    }
     const rect = event.currentTarget.getBoundingClientRect();
     setSourcePop((prev) => ({
       ...item,
@@ -165,6 +174,10 @@ export function WorkbenchApp() {
   }
 
   async function exportWord() {
+    if (!member.paid) {
+      window.alert("匯出 Word 需付費會員。請洽翰欣科技開通。");
+      return;
+    }
     setDocxBusy(true);
     try {
       const res = await fetch("/api/report", {
@@ -239,8 +252,24 @@ export function WorkbenchApp() {
         </div>
         <div className="flex items-center gap-3">
           <span>
-            指標 {result.metrics.length}　異常 {fail}　注意 {warn}
+            {member.company}　{member.paid ? "付費會員" : "免費會員"}　指標 {result.metrics.length}　異常 {fail}　注意 {warn}
           </span>
+          {member.role === "admin" && (
+            <Link href="/admin" className="underline">
+              會員管理
+            </Link>
+          )}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              void fetch("/api/auth/logout", { method: "POST" }).then(() => {
+                window.location.href = "/login";
+              });
+            }}
+          >
+            登出
+          </button>
           <Link href="/" className="underline">
             回儀表板
           </Link>
@@ -531,7 +560,12 @@ export function WorkbenchApp() {
             </div>
           )}
 
-          {sheet === "chart" && <ChartPreview figures={result.figures} />}
+          {sheet === "chart" &&
+            (member.paid ? (
+              <ChartPreview figures={result.figures} />
+            ) : (
+              <p className="border border-[#c8c8c8] bg-[#f7f7f7] p-4 text-[14px]">指標圖預覽需付費會員。請洽翰欣科技開通。計算結果仍可在右側查看。</p>
+            ))}
 
           {sheet === "why" && (
             <div>
@@ -845,12 +879,32 @@ function SourceWindow({
   onChange: (next: typeof pop) => void;
   onClose: () => void;
 }) {
-  const source = fieldSource(pop.gri, pop.why);
   const [showEnglish, setShowEnglish] = useState(false);
+  const [loaded, setLoaded] = useState<{ blocks: ArticleBlock[]; english: ArticleBlock[] } | null>(null);
+  const [sourceError, setSourceError] = useState("");
   useEffect(() => {
-    setShowEnglish(false);
-  }, [pop.gri, pop.label]);
-  const blocks = showEnglish && source.english.length ? source.english : source.blocks;
+    const timer = setTimeout(() => {
+      setShowEnglish(false);
+      setLoaded(null);
+      setSourceError("");
+    }, 0);
+    const ac = new AbortController();
+    fetch(`/api/source?gri=${encodeURIComponent(pop.gri)}&why=${encodeURIComponent(pop.why)}`, { signal: ac.signal })
+      .then(async (res) => {
+        const data = (await res.json().catch(() => null)) as { error?: string; blocks?: ArticleBlock[]; english?: ArticleBlock[] } | null;
+        if (!res.ok) throw new Error(data?.error || "無法讀取條文");
+        setLoaded({ blocks: data?.blocks || [], english: data?.english || [] });
+      })
+      .catch((error: unknown) => {
+        if (ac.signal.aborted) return;
+        setSourceError(error instanceof Error ? error.message : "無法讀取條文");
+      });
+    return () => {
+      clearTimeout(timer);
+      ac.abort();
+    };
+  }, [pop.gri, pop.label, pop.why]);
+  const blocks = showEnglish && loaded?.english.length ? loaded.english : loaded?.blocks || [];
   const popRef = useRef(pop);
   const drag = useRef<{ dx: number; dy: number } | null>(null);
   const resize = useRef<{
@@ -936,7 +990,7 @@ function SourceWindow({
       >
         <b className="truncate">{pop.label}</b>
         <span className="flex shrink-0 gap-1">
-          {source.english.length > 0 && (
+          {(loaded?.english.length ?? 0) > 0 && (
             <button
               type="button"
               className="border border-white/40 px-2 text-[12px]"
@@ -985,7 +1039,11 @@ function SourceWindow({
       {!pop.minimized && (
         <div className="relative min-h-0 flex-1">
           <div className="h-full overflow-auto px-3 py-2">
-            {blocks.length > 0 ? (
+            {sourceError ? (
+              <p className="mt-2">{sourceError}</p>
+            ) : !loaded ? (
+              <p className="mt-2">讀取條文中。</p>
+            ) : blocks.length > 0 ? (
               <ArticleBlocks blocks={blocks} />
             ) : (
               <p className="mt-2">沒有收錄條文。系統歸屬的法源：{pop.gri}</p>

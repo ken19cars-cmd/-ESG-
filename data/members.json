@@ -1,0 +1,29 @@
+[
+  {
+    "username": "admin",
+    "passwordHash": "scrypt$f482cac0436e12c5fa451ddad1e3f492$040baee86802049813cdc15eebfc4ad2c2f580013d9bd224615ecdac6194d493",
+    "company": "翰欣科技",
+    "taxId": "",
+    "role": "admin",
+    "plan": "paid",
+    "paidUntil": "2027-12-31"
+  },
+  {
+    "username": "firm-free",
+    "passwordHash": "scrypt$28a5d6f0df4739e282c0ad542f5acc45$5b8663fc32288bb6442ceb929be5907c482654b980d0917d86e23168a47d03fd",
+    "company": "試用事務所",
+    "taxId": "00000000",
+    "role": "member",
+    "plan": "free",
+    "paidUntil": ""
+  },
+  {
+    "username": "firm-paid",
+    "passwordHash": "scrypt$15125e1e65c0a564df04657bca2aa920$5681ede3078825c45b3bd59439d59a8e72747186c2be2c43ac9c99b831e816f5",
+    "company": "付費事務所",
+    "taxId": "12345678",
+    "role": "member",
+    "plan": "paid",
+    "paidUntil": "2027-12-31"
+  }
+]

@@ -1,0 +1,144 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
+type Row = {
+  username: string;
+  company: string;
+  taxId: string;
+  role: string;
+  plan: "free" | "paid";
+  paidUntil: string;
+  paid: boolean;
+};
+
+export default function AdminPage() {
+  const router = useRouter();
+  const [members, setMembers] = useState<Row[]>([]);
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({ username: "", password: "", company: "", taxId: "", plan: "free", paidUntil: "" });
+
+  async function load() {
+    const res = await fetch("/api/admin/members", { cache: "no-store" });
+    if (res.status === 401) {
+      router.push("/login?next=/admin");
+      return;
+    }
+    const data = (await res.json()) as { members?: Row[]; error?: string };
+    if (!res.ok) {
+      setError(data.error || "無法讀取會員");
+      return;
+    }
+    setMembers(data.members || []);
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void load();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  async function create(event: React.FormEvent) {
+    event.preventDefault();
+    setError("");
+    const res = await fetch("/api/admin/members", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (!res.ok) {
+      setError(data?.error || "無法建立帳號");
+      return;
+    }
+    setForm({ username: "", password: "", company: "", taxId: "", plan: "free", paidUntil: "" });
+    await load();
+  }
+
+  async function save(row: Row) {
+    setError("");
+    const res = await fetch("/api/admin/members", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: row.username, plan: row.plan, paidUntil: row.paidUntil }),
+    });
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (!res.ok) setError(data?.error || "無法更新");
+    await load();
+  }
+
+  return (
+    <div className="min-h-screen bg-[#eef2f5] p-6 text-[14px] text-[#243044]">
+      <div className="mx-auto max-w-4xl bg-white p-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[18px] font-bold">會員與付費開通</h1>
+          <a href="/workbench" className="underline">
+            回計算系統
+          </a>
+        </div>
+        <p className="mt-1 text-[12px] text-[#555]">付費到期日用西元，例如 2027-12-31。到期當天起，法規視窗、Word、指標圖會關閉。</p>
+        {error && <p className="mt-2 text-[#a40000]">{error}</p>}
+        <form onSubmit={create} className="mt-4 grid gap-2 border border-[#ccc] p-3 md:grid-cols-3">
+          <input placeholder="帳號" className="border px-2 py-1" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+          <input placeholder="密碼（至少 8 碼）" className="border px-2 py-1" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          <input placeholder="公司名稱" className="border px-2 py-1" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} />
+          <input placeholder="統編" className="border px-2 py-1" value={form.taxId} onChange={(e) => setForm({ ...form, taxId: e.target.value })} />
+          <select className="border px-2 py-1" value={form.plan} onChange={(e) => setForm({ ...form, plan: e.target.value })}>
+            <option value="free">免費</option>
+            <option value="paid">付費</option>
+          </select>
+          <input type="date" className="border px-2 py-1" value={form.paidUntil} onChange={(e) => setForm({ ...form, paidUntil: e.target.value })} />
+          <button className="border border-[#2c3b4e] bg-[#2c3b4e] px-3 py-1 text-white" type="submit">
+            建立帳號
+          </button>
+        </form>
+        <table className="mt-4 w-full border-collapse text-[13px]">
+          <thead>
+            <tr className="bg-[#2c3b4e] text-white">
+              <th className="border px-2 py-1 text-left">帳號</th>
+              <th className="border px-2 py-1 text-left">公司</th>
+              <th className="border px-2 py-1 text-left">方案</th>
+              <th className="border px-2 py-1 text-left">到期日</th>
+              <th className="border px-2 py-1" />
+            </tr>
+          </thead>
+          <tbody>
+            {members.filter((row) => row.role !== "admin").map((row) => (
+              <tr key={row.username}>
+                <td className="border px-2 py-1">{row.username}</td>
+                <td className="border px-2 py-1">{row.company}</td>
+                <td className="border px-2 py-1">
+                  <select
+                    value={row.plan}
+                    onChange={(e) =>
+                      setMembers((list) => list.map((item) => (item.username === row.username ? { ...item, plan: e.target.value as Row["plan"] } : item)))
+                    }
+                  >
+                    <option value="free">免費</option>
+                    <option value="paid">付費</option>
+                  </select>
+                </td>
+                <td className="border px-2 py-1">
+                  <input
+                    type="date"
+                    value={row.paidUntil}
+                    onChange={(e) =>
+                      setMembers((list) => list.map((item) => (item.username === row.username ? { ...item, paidUntil: e.target.value } : item)))
+                    }
+                  />
+                </td>
+                <td className="border px-2 py-1">
+                  <button type="button" className="underline" onClick={() => void save(row)}>
+                    儲存
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
