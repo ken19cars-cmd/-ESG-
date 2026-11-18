@@ -112,6 +112,7 @@ export function WorkbenchApp() {
   const [factorFocus, setFactorFocus] = useState<string | null>(null);
   const [docxBusy, setDocxBusy] = useState(false);
   const [stylePrompt, setStylePrompt] = useState("");
+  const [styleImage, setStyleImage] = useState("");
   const [highlightKeys, setHighlightKeys] = useState<(keyof Inputs)[]>([]);
   const [sourcePop, setSourcePop] = useState<{
     label: string;
@@ -169,7 +170,7 @@ export function WorkbenchApp() {
       const res = await fetch("/api/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...inputs, stylePrompt }),
+        body: JSON.stringify({ ...inputs, stylePrompt, styleImage }),
       });
       if (!res.ok) {
         const data = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -619,14 +620,51 @@ export function WorkbenchApp() {
           {sheet === "rep" && (
             <div className="text-[13px]">
               <label className="mb-3 block">
-                美編說明（選填。有填才會呼叫語言模型決定配色與字體，數字仍由系統計算）
+                美編說明（選填。有文字或參考圖才會呼叫語言模型決定配色與字體，數字仍由系統計算）
                 <textarea
                   className="mt-1 h-20 w-full border border-[#8aa0b4] p-2 text-[13px]"
                   value={stylePrompt}
-                  placeholder="例如：深綠細框，標題靠左，圖表用墨綠與米色"
+                  placeholder="例如：依參考圖配色，細框，標題靠左"
                   onChange={(event) => setStylePrompt(event.target.value)}
                 />
               </label>
+              <div className="mb-3 flex flex-wrap items-center gap-3 text-[13px]">
+                <label className="border border-[#444] bg-[#eee] px-3 py-1">
+                  參考圖
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const img = new Image();
+                        img.onload = () => {
+                          const scale = Math.min(1, 1024 / Math.max(img.width, img.height));
+                          const canvas = document.createElement("canvas");
+                          canvas.width = Math.max(1, Math.round(img.width * scale));
+                          canvas.height = Math.max(1, Math.round(img.height * scale));
+                          canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+                          setStyleImage(canvas.toDataURL("image/jpeg", 0.7));
+                        };
+                        img.src = String(reader.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </label>
+                {styleImage && (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={styleImage} alt="參考圖預覽" className="h-14 border border-[#ccc]" />
+                    <button type="button" className="underline" onClick={() => setStyleImage("")}>
+                      移除參考圖
+                    </button>
+                  </>
+                )}
+              </div>
               <div className="mb-3 flex items-center justify-between">
                 <p>
                   {inputs.client}　{inputs.year}　永續報告書績效表／GRI 索引底稿
