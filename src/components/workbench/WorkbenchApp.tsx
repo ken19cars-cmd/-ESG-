@@ -111,6 +111,15 @@ export function WorkbenchApp() {
   const [factorFocus, setFactorFocus] = useState<string | null>(null);
   const [docxBusy, setDocxBusy] = useState(false);
   const [highlightKeys, setHighlightKeys] = useState<(keyof Inputs)[]>([]);
+  const [sourcePop, setSourcePop] = useState<{ label: string; gri: string; why: string; x: number; y: number } | null>(null);
+
+  function openSource(event: React.MouseEvent<HTMLButtonElement>, item: { label: string; gri: string; why: string }) {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const width = 320;
+    const x = Math.min(Math.max(8, rect.left), window.innerWidth - width - 8);
+    const y = Math.min(rect.bottom + 6, window.innerHeight - 200);
+    setSourcePop({ ...item, x, y: Math.max(8, y) });
+  }
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
 
@@ -266,7 +275,21 @@ export function WorkbenchApp() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">冷媒種類</td>
+                    <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
+                      <button
+                        type="button"
+                        className="text-left underline decoration-dotted"
+                        onClick={(event) =>
+                          openSource(event, {
+                            label: "冷媒種類",
+                            gri: "IPCC；盤查作業指引",
+                            why: "依設備使用的冷媒代碼帶入暖化潛勢（GWP）。逸散公斤數再乘 GWP，得到範疇一排放。",
+                          })
+                        }
+                      >
+                        冷媒種類
+                      </button>
+                    </td>
                     <td className="border border-[#c8c8c8] px-1 py-1">
                       <select
                         className="h-[26px] w-full border border-[#8aa0b4] bg-white px-1"
@@ -323,7 +346,13 @@ export function WorkbenchApp() {
                         className={highlightKeys.includes(f.key) ? "wb-jump" : factorFocus === f.key ? "outline outline-1 outline-[#1f4a7a]" : ""}
                       >
                         <td className="border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1 text-[13px]">
-                          {f.label}
+                          <button
+                            type="button"
+                            className="text-left underline decoration-dotted"
+                            onClick={(event) => openSource(event, { label: f.label, gri: f.gri, why: f.why })}
+                          >
+                            {f.label}
+                          </button>
                           {locked && (
                             <div className="text-[11px] text-[#666]">
                               {isOfficial ? "依公告帶入" : "依底稿帶入"}
@@ -693,6 +722,25 @@ export function WorkbenchApp() {
           </ul>
         </aside>
       </div>
+      {sourcePop && (
+        <>
+          <button type="button" className="fixed inset-0 z-40 cursor-default" aria-label="關閉法規來源" onClick={() => setSourcePop(null)} />
+          <div
+            className="fixed z-50 w-[320px] border border-[#2c3b4e] bg-white p-3 text-[13px] leading-6 text-[#243044] shadow-lg"
+            style={{ left: sourcePop.x, top: sourcePop.y }}
+          >
+            <div className="mb-1 flex items-start justify-between gap-3">
+              <b>{sourcePop.label}</b>
+              <button type="button" className="shrink-0 border border-[#888] bg-[#eee] px-2 py-0.5 text-[12px]" onClick={() => setSourcePop(null)}>
+                關閉
+              </button>
+            </div>
+            <p className="text-[12px] font-bold">法規來源</p>
+            <p>{sourcePop.gri}</p>
+            <p className="mt-2">{sourcePop.why}</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
