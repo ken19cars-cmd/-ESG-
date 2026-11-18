@@ -1178,7 +1178,12 @@ function PaidFrost({
       <div className="pointer-events-none blur-[11px]" aria-hidden="true">
         {children}
       </div>
-      <div className="absolute inset-0 bg-white/20" />
+      <div className="absolute inset-0 z-10 bg-white/20" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex h-[min(100%,72vh)] items-center justify-center">
+        <span className="border border-[#8a8a8a] bg-white px-5 py-2 text-[18px] font-bold tracking-wide text-[#1b3a4b] shadow">
+          存取權不足
+        </span>
+      </div>
     </div>
   );
 }
