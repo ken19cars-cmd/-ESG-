@@ -149,6 +149,11 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
   const result = useMemo(() => compute(inputs), [inputs]);
 
   useEffect(() => {
+    if (!member.paid) {
+      setFactorAudit(null);
+      setFactorBusy(false);
+      return;
+    }
     const ac = new AbortController();
     setFactorBusy(true);
     fetch(
@@ -166,7 +171,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
         if (!ac.signal.aborted) setFactorBusy(false);
       });
     return () => ac.abort();
-  }, [inputs.year, inputs.refrigerantCode, factorTick]);
+  }, [member.paid, inputs.year, inputs.refrigerantCode, factorTick]);
 
   function set<K extends keyof Inputs>(key: K, value: Inputs[K]) {
     if (isLockedKey(key)) return;
@@ -434,15 +439,19 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                                 <button
                                   type="button"
                                   className="wb-check-btn"
-                                  disabled={factorBusy}
+                                  disabled={member.paid && factorBusy}
                                   onClick={() => {
+                                    if (!member.paid) {
+                                      window.alert("檢查最新需付費會員。請洽翰欣科技開通。");
+                                      return;
+                                    }
                                     setFactorFocus(String(f.key));
                                     setFactorTick((n) => n + 1);
                                   }}
                                 >
-                                  {factorBusy && factorFocus === f.key ? "連線公告中…" : "檢查最新"}
+                                  {member.paid && factorBusy && factorFocus === f.key ? "連線公告中…" : "檢查最新"}
                                 </button>
-                                {factorCheck && (
+                                {member.paid && factorCheck && (
                                   <div
                                     className={`mt-1 text-[11px] leading-4 ${
                                       factorCheck.level === "異常"
@@ -489,16 +498,22 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             <div className="mb-3 text-[12px]">
               <p className="mb-2 leading-6">
                 係數依案件年度對應公告文件帶入並鎖定。核對結果與來源文件見各列。
-                {factorBusy ? "　正在連線公告頁…" : factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
+                {member.paid && factorBusy ? "　正在連線公告頁…" : member.paid && factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
               </p>
               <button
                 type="button"
                 className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
-                onClick={() => setFactorTick((n) => n + 1)}
+                onClick={() => {
+                  if (!member.paid) {
+                    window.alert("檢查最新需付費會員。請洽翰欣科技開通。");
+                    return;
+                  }
+                  setFactorTick((n) => n + 1);
+                }}
               >
                 重新向公告頁核對
               </button>
-              {factorAudit && (
+              {member.paid && factorAudit && (
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
@@ -602,9 +617,13 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
               <button
                 type="button"
                 className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
-                onClick={() =>
-                  setRegStamp(`已核對內建法規庫 ${new Date().toLocaleString("zh-TW", { hour12: false })}`)
-                }
+                onClick={() => {
+                  if (!member.paid) {
+                    window.alert("核對法規版本需付費會員。請洽翰欣科技開通。");
+                    return;
+                  }
+                  setRegStamp(`已核對內建法規庫 ${new Date().toLocaleString("zh-TW", { hour12: false })}`);
+                }}
               >
                 核對法規版本
               </button>

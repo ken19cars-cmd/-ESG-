@@ -78,7 +78,7 @@ export default function AdminPage() {
             回計算系統
           </a>
         </div>
-        <p className="mt-1 text-[12px] text-[#555]">付費到期日用西元，例如 2027-12-31。到期當天起，運算結果、勾稽、指標圖、法規視窗及 Word 會關閉。</p>
+        <p className="mt-1 text-[12px] text-[#555]">付費到期日用西元，例如 2027-12-31。到期當天起，運算結果、勾稽、檢查最新、指標圖、法規視窗及 Word 會關閉。</p>
         {error && <p className="mt-2 text-[#a40000]">{error}</p>}
         <form onSubmit={create} className="mt-4 grid gap-2 border border-[#ccc] p-3 md:grid-cols-3">
           <input placeholder="帳號" className="border px-2 py-1" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
