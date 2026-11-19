@@ -1,8 +1,13 @@
 import { OFFICIAL_FACTOR_KEYS, officialValues } from "@/lib/official-factors";
+import type { IndustryId } from "@/lib/industry-rules";
 
 export type Inputs = {
   client: string;
   year: string;
+  industry: IndustryId;
+  capitalBillion: number;
+  diningRevenuePct: number;
+  moenvRegulated: boolean;
   refrigerantCode: string;
   revenueMillion: number;
   rdExpense: number;
@@ -88,11 +93,42 @@ export type Inputs = {
   capexOtherGreen: number;
   prevGhg12: number;
   prevRevenueMillion: number;
+  eWasteTon: number;
+  eWasteRecyclePct: number;
+  antitrustLossWan: number;
+  mainProductOutput: number;
+  fuelGj: number;
+  coalFuelPct: number;
+  gasFuelPct: number;
+  renewableFuelPct: number;
+  selfGenGj: number;
+  refineriesDense: number;
+  foodSafetyAssessPct: number;
+  healthSafetyIncidents: number;
+  productRecallTimes: number;
+  productRecallTon: number;
+  responsibleSourcingPct: number;
+  certifiedPlantProductPct: number;
+  supplierAuditedCount: number;
+  traceableProductPct: number;
+  foodLabSpendThousand: number;
+  soldProductTon: number;
+  plantCount: number;
+  dataBreaches: number;
+  personalDataBreachPct: number;
+  customersAffected: number;
+  smeLoanCount: number;
+  smeLoanBalanceMillion: number;
+  financialEduPeople: number;
 };
 
 export const defaultInputs: Inputs = {
   client: "綠能精密股份有限公司（示範）",
   year: "2025",
+  industry: "other_electronic",
+  capitalBillion: 50,
+  diningRevenuePct: 0,
+  moenvRegulated: false,
   refrigerantCode: "R-134a",
   revenueMillion: 12840,
   rdExpense: 4.8,
@@ -178,6 +214,33 @@ export const defaultInputs: Inputs = {
   capexOtherGreen: 0.1,
   prevGhg12: 11240,
   prevRevenueMillion: 12110,
+  eWasteTon: 12,
+  eWasteRecyclePct: 86,
+  antitrustLossWan: 0,
+  mainProductOutput: 0,
+  fuelGj: 0,
+  coalFuelPct: 0,
+  gasFuelPct: 0,
+  renewableFuelPct: 0,
+  selfGenGj: 0,
+  refineriesDense: 0,
+  foodSafetyAssessPct: 0,
+  healthSafetyIncidents: 0,
+  productRecallTimes: 0,
+  productRecallTon: 0,
+  responsibleSourcingPct: 0,
+  certifiedPlantProductPct: 0,
+  supplierAuditedCount: 0,
+  traceableProductPct: 0,
+  foodLabSpendThousand: 0,
+  soldProductTon: 0,
+  plantCount: 0,
+  dataBreaches: 0,
+  personalDataBreachPct: 0,
+  customersAffected: 0,
+  smeLoanCount: 0,
+  smeLoanBalanceMillion: 0,
+  financialEduPeople: 0,
 };
 
 export type FieldDef = {
@@ -189,6 +252,7 @@ export type FieldDef = {
   why: string;
   gri: string;
   fromPre?: boolean;
+  industryIds?: IndustryId[];
 };
 
 export const fieldCatalog: FieldDef[] = [
@@ -213,6 +277,33 @@ export const fieldCatalog: FieldDef[] = [
   { key: "scope3", sheet: "env", section: "能源與排放", label: "範疇三（其他間接排放）", unit: "tCO2e", why: "GHG Protocol／GRI 305-3。請填已盤查彙總值，非本系統由活動數據推算。", gri: "GRI 305-3；GHG Protocol" },
   { key: "prevGhg12", sheet: "env", section: "上年對照（金管會兩年比較）", label: "上年範疇一＋二", unit: "tCO2e", why: "非必要。抄上年報告書已揭露之範疇一加範疇二。沒有上年就填 0，系統只出當年。", gri: "金管會作業辦法（最近兩年排放量）" },
   { key: "prevRevenueMillion", sheet: "env", section: "上年對照（金管會兩年比較）", label: "上年合併營收", unit: "百萬元", why: "非必要。與上年排放同一報導邊界。系統用它算出上年密集度，不必手填密集度。", gri: "金管會作業辦法（最近兩年密集度）" },
+  { key: "eWasteTon", sheet: "ind", section: "附表一產業指標", label: "報廢產品及電子廢棄物重量", unit: "公噸", why: "作業辦法附表一之八至十四編號五。含下腳料賣出或其他回收處理者，應於報告書說明。", gri: "作業辦法第4條附表一之八至十四" },
+  { key: "eWasteRecyclePct", sheet: "ind", section: "附表一產業指標", label: "電子廢棄物再循環百分比", unit: "%", why: "作業辦法附表一之八至十四編號五。", gri: "作業辦法第4條附表一之八至十四" },
+  { key: "antitrustLossWan", sheet: "ind", section: "附表一產業指標", label: "反競爭行為訴訟之金錢損失", unit: "萬元", why: "作業辦法附表一之八至十四編號七。無事件填 0。", gri: "作業辦法第4條附表一之八至十四" },
+  { key: "mainProductOutput", sheet: "ind", section: "附表一產業指標", label: "主要產品產量", unit: "依產品", why: "各產業附表一「依產品類別之主要產品產量」。單位依產品類型於報告書敘明。", gri: "作業辦法第4條附表一" },
+  { key: "fuelGj", sheet: "ind", section: "附表一產業指標", label: "消耗燃料總量", unit: "GJ", why: "鋼鐵工業附表一之六編號二。", gri: "作業辦法第4條附表一之六" },
+  { key: "coalFuelPct", sheet: "ind", section: "附表一產業指標", label: "燃料中煤炭百分比", unit: "%", why: "鋼鐵工業附表一之六編號二。", gri: "作業辦法第4條附表一之六" },
+  { key: "gasFuelPct", sheet: "ind", section: "附表一產業指標", label: "燃料中天然氣百分比", unit: "%", why: "鋼鐵工業附表一之六編號二。", gri: "作業辦法第4條附表一之六" },
+  { key: "renewableFuelPct", sheet: "ind", section: "附表一產業指標", label: "再生燃料百分比", unit: "%", why: "鋼鐵工業附表一之六編號二。", gri: "作業辦法第4條附表一之六" },
+  { key: "selfGenGj", sheet: "ind", section: "附表一產業指標", label: "自發自用能源總量", unit: "GJ", why: "化學、塑膠、鋼鐵附表一。定義依再生能源發展條例或再生能源憑證實施辦法。", gri: "作業辦法第4條附表一" },
+  { key: "refineriesDense", sheet: "ind", section: "附表一產業指標", label: "人口密集地區煉油廠數量", unit: "座", why: "油電燃氣業附表一之七編號一。", gri: "作業辦法第4條附表一之七" },
+  { key: "foodSafetyAssessPct", sheet: "ind", section: "附表一產業指標", label: "食安評估改進所影響產品百分比", unit: "%", why: "食品工業附表一之一編號一。", gri: "作業辦法第4條附表一之一" },
+  { key: "healthSafetyIncidents", sheet: "ind", section: "附表一產業指標", label: "健康安全／標示法規事件次數", unit: "次", why: "食品工業附表一之一編號二。", gri: "作業辦法第4條附表一之一" },
+  { key: "productRecallTimes", sheet: "ind", section: "附表一產業指標", label: "產品下架次數", unit: "次", why: "食品工業附表一之一編號二。", gri: "作業辦法第4條附表一之一" },
+  { key: "productRecallTon", sheet: "ind", section: "附表一產業指標", label: "下架產品總重量", unit: "公噸", why: "食品工業附表一之一編號二。", gri: "作業辦法第4條附表一之一" },
+  { key: "responsibleSourcingPct", sheet: "ind", section: "附表一產業指標", label: "符合產品責任標準之採購百分比", unit: "%", why: "食品工業附表一之一編號三。", gri: "作業辦法第4條附表一之一" },
+  { key: "certifiedPlantProductPct", sheet: "ind", section: "附表一產業指標", label: "通過食安驗證廠房所生產產品百分比", unit: "%", why: "食品工業附表一之一編號四。", gri: "作業辦法第4條附表一之一" },
+  { key: "supplierAuditedCount", sheet: "ind", section: "附表一產業指標", label: "供應商稽核家數", unit: "家", why: "食品工業附表一之一編號五。", gri: "作業辦法第4條附表一之一" },
+  { key: "traceableProductPct", sheet: "ind", section: "附表一產業指標", label: "可追溯追蹤產品百分比", unit: "%", why: "食品工業附表一之一編號六。", gri: "作業辦法第4條附表一之一" },
+  { key: "foodLabSpendThousand", sheet: "ind", section: "附表一產業指標", label: "食品安全實驗室相關支出", unit: "仟元", why: "食品工業附表一之一編號七。系統另以營收計算占比。", gri: "作業辦法第4條附表一之一" },
+  { key: "soldProductTon", sheet: "ind", section: "附表一產業指標", label: "售出產品重量", unit: "公噸", why: "食品工業附表一之一編號十。", gri: "作業辦法第4條附表一之一" },
+  { key: "plantCount", sheet: "ind", section: "附表一產業指標", label: "生產設施場所數量", unit: "處", why: "食品工業附表一之一編號十。", gri: "作業辦法第4條附表一之一" },
+  { key: "dataBreaches", sheet: "ind", section: "附表一產業指標", label: "資訊外洩事件數量", unit: "件", why: "金融保險業附表一之三編號一。", gri: "作業辦法第4條附表一之三" },
+  { key: "personalDataBreachPct", sheet: "ind", section: "附表一產業指標", label: "與個資相關之外洩事件占比", unit: "%", why: "金融保險業附表一之三編號一。", gri: "作業辦法第4條附表一之三" },
+  { key: "customersAffected", sheet: "ind", section: "附表一產業指標", label: "因資訊外洩受影響顧客數", unit: "人", why: "金融保險業附表一之三編號一。", gri: "作業辦法第4條附表一之三" },
+  { key: "smeLoanCount", sheet: "ind", section: "附表一產業指標", label: "促進小型企業及社區發展之貸放件數", unit: "件", why: "金融保險業附表一之三編號二。", gri: "作業辦法第4條附表一之三" },
+  { key: "smeLoanBalanceMillion", sheet: "ind", section: "附表一產業指標", label: "上述貸放餘額", unit: "百萬元", why: "金融保險業附表一之三編號二。", gri: "作業辦法第4條附表一之三" },
+  { key: "financialEduPeople", sheet: "ind", section: "附表一產業指標", label: "弱勢族群金融教育參與人數", unit: "人", why: "金融保險業附表一之三編號三。", gri: "作業辦法第4條附表一之三" },
   { key: "intensityTarget", sheet: "env", section: "能源與排放", label: "溫室氣體排放密集度（公司目標）", unit: "tCO2e／百萬營收", why: "GRI 305-4 為密集度本身；目標值由組織自訂，非準則規定之法定數字。", gri: "GRI 305-4；TCFD 指標與目標" },
   { key: "waterKt", sheet: "env", section: "水與廢棄物", label: "取水量", unit: "千噸", why: "用水密集度分子；耗水＝取水−放流。", gri: "GRI 303-3" },
   { key: "wastewaterKt", sheet: "env", section: "水與廢棄物", label: "放流水量", unit: "千噸", why: "耗水計算減項。", gri: "GRI 303-4、303-5" },
@@ -440,7 +531,8 @@ function fig(id: string, title: string, kind: ReportFigure["kind"], unit: string
 }
 
 export const regulationCatalog = [
-  { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會", asOf: "2026-10", point: "依 GRI；溫室氣體最近兩年排放量、密集度（噸CO2e／百萬元）及涵蓋範圍。", url: "https://twse-regulation.twse.com.tw/TW/law/DAT0201.aspx?FLCODE=FL075209" },
+  { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會／證交所／櫃買", asOf: "2026-05", point: "第3條全體依 GRI；第4條產業別附表一（參採 SASB）；第4條之1氣候專章附表二（參採 TCFD）。", url: "https://twse-regulation.twse.com.tw/TW/law/DAT0201.aspx?FLCODE=FL075209" },
+  { id: "ifrs-s1s2", name: "公開發行公司年報應行記載事項準則（IFRS S1／S2）", version: "金管會", asOf: "2026-09", point: "自115會計年度起分三階段於年報「永續相關財務資訊」專章適用 IFRS S1、S2。", url: "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=G0400033" },
   { id: "gri-2021", name: "GRI Standards 2021", version: "GRI 1／2／3 及主題準則", asOf: "2026-10", point: "2-7、2-21、2-27、205、302–306、401、403–405、308、414。", url: "https://www.globalreporting.org/how-to-use-the-gri-standards/gri-standards-traditional-chinese-translations/" },
   { id: "ghg", name: "GHG Protocol／ISO 14064-1", version: "邊界對齊合併報表", asOf: "2026-10", point: "活動數據（用量）× 係數＝範疇一／二排放。下方有中文說明。", url: "https://ghgprotocol.org/corporate-standard" },
   { id: "ef", name: "排放係數／GWP", version: "可覆核參數表", asOf: "2026-10", point: "電力、油氣、冷媒係數以環境部／IPCC 當期為準。", url: "https://gazette2.nat.gov.tw/EG_FileManager/eguploadpub/eg030025/ch07/type3/gov60/num16/Eg.htm" },
@@ -540,7 +632,10 @@ export function compute(raw: Inputs) {
     M("gyoy", "E 環境", "範疇一＋二較上年", ghgYoy, "%", "(本年−上年)÷上年", "金管會兩年比較"),
     M("iyoy", "E 環境", "密集度較上年", intYoy, "%", "(本年密集度−上年)÷上年", "金管會兩年比較"),
     M("ren", "E 環境", "再生能源占外購電力", renewPct, "%", "再生kWh÷外購電力", "GRI 302-1"),
+    M("elecShare", "E 環境", "外購電力占能源總量", energyGj === 0 ? NaN : (elecGj / energyGj) * 100, "%", "外購電力GJ÷能源總量", "作業辦法附表一"),
     M("en", "E 環境", "組織內能源消耗", energyGj, "GJ", "電／蒸汽／油氣熱值加總", "GRI 302-1"),
+    M("foodlab", "E 產業", "食安實驗室支出占營收", n(i.revenueMillion) === 0 ? NaN : n(i.foodLabSpendThousand) / (n(i.revenueMillion) * 10), "%", "支出(仟元)÷營收(百萬元×1,000)×100", "作業辦法附表一之一"),
+    M("saudit", "S 產業", "供應商稽核百分比", n(i.supplierCount) === 0 ? NaN : (n(i.supplierAuditedCount) / n(i.supplierCount)) * 100, "%", "稽核家數÷供應商總數", "作業辦法附表一之一"),
     M("eni", "E 環境", "能源密集度", energyInt, "GJ／百萬營收", "能源GJ÷營收", "GRI 302-3"),
     M("wint", "E 環境", "取水密集度", waterInt, "千噸／百萬營收", "取水÷營收", "GRI 303-3"),
     M("wuse", "E 環境", "耗水（取水減放流，簡化）", waterUse, "千噸", "取水−放流，非完整水平衡", "GRI 303-5（簡化）"),
@@ -594,6 +689,9 @@ export function compute(raw: Inputs) {
   if (n(i.fatalities) > 0) checks.push({ id: "fat", level: "異常", title: "有職災死亡", detail: "必須在報告書重大事件揭露。", basis: "GRI 403-9" });
   if (prevGhg12 === 0 && prevRev === 0) {
     checks.push({ id: "yoy", level: "注意", title: "未填上年排放／營收", detail: "金管會作業辦法要最近兩年排放量與密集度。沒有上年就只出當年圖。", basis: "金管會作業辦法" });
+  }
+  if (i.industry === "steel" && n(i.coalFuelPct) + n(i.gasFuelPct) + n(i.renewableFuelPct) > 100.05) {
+    checks.push({ id: "fuel", level: "異常", title: "鋼鐵燃料占比合計超過100%", detail: "煤炭、天然氣、再生燃料百分比應為燃料結構，合計不可超過100%。", basis: "作業辦法附表一之六" });
   }
   if (checks.length === 0) checks.push({ id: "ok", level: "通過", title: "勾稽未發現異常", detail: "可進入覆核；係數仍應對當期公告。", basis: "底稿" });
 

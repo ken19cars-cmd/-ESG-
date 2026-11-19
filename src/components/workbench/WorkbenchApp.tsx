@@ -8,10 +8,12 @@ import {
   derived,
   fieldCatalog,
   isLockedKey,
+  labelOf,
   missingOnRow,
   preResults,
   regulationCatalog,
   type Inputs,
+  type Metric,
   type ReportFigure,
 } from "@/lib/esg-engine";
 type ArticleBlock =
@@ -23,13 +25,23 @@ type MemberView = { username: string; company: string; paid: boolean; role: "adm
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
 import {
+  INDUSTRIES,
+  annexApplies,
+  annexItems,
+  assuranceRequired,
+  frameworkCards,
+  industryMeta,
+  type AnnexItem,
+  type IndustryId,
+} from "@/lib/industry-rules";
+import {
   OFFICIAL_FACTOR_KEYS,
   REFRIGERANTS,
   officialValues,
   type FactorAudit,
 } from "@/lib/official-factors";
 
-type Sheet = "pre" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg" | "rep";
+type Sheet = "pre" | "ind" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg" | "rep";
 
 const metricLink: Record<string, { sheet: Sheet; keys: (keyof Inputs)[] }> = {
   s1: { sheet: "env", keys: ["dieselLiter", "gasolineLiter", "lngM3", "refrigerantKg"] },
@@ -80,10 +92,12 @@ const metricLink: Record<string, { sheet: Sheet; keys: (keyof Inputs)[] }> = {
   ind: { sheet: "gov", keys: ["independentSeats", "boardSeats"] },
   att: { sheet: "gov", keys: ["boardAttend", "boardSeats", "boardMeetings"] },
   ac: { sheet: "gov", keys: ["antiCorruptDone", "antiCorruptDue"] },
+  elecShare: { sheet: "env", keys: ["electricityKwh"] },
 };
 
 const sheets: { id: Sheet; label: string }[] = [
   { id: "pre", label: "0.接案前置底稿" },
+  { id: "ind", label: "產業指標" },
   { id: "fin", label: "1.財務分母" },
   { id: "env", label: "2.環境E" },
   { id: "hr", label: "3.社會S" },
@@ -104,10 +118,20 @@ function num(e: React.ChangeEvent<HTMLInputElement>) {
 
 const UPGRADE_ALERT = "需升級為訂閱會員。";
 
-const INT_UNITS = new Set(["人", "次", "日", "件", "席", "家", "張", "kWh", "小時", "人次"]);
+const INT_UNITS = new Set(["人", "次", "日", "件", "席", "家", "張", "kWh", "小時", "人次", "座", "處"]);
 
 function inputStep(unit: string) {
   return INT_UNITS.has(unit) ? 1 : 0.1;
+}
+
+function annexDerivedIds(item: AnnexItem): string[] {
+  if (item.key === "en") return ["en", "elecShare", "ren"];
+  if (item.key === "wuse") return ["wuse"];
+  if (item.key === "haz") return ["haz", "rec"];
+  if (item.key === "fr") return ["fr", "sr"];
+  if (item.key === "foodLabSpendThousand") return ["foodlab"];
+  if (item.key === "supplierAuditedCount") return ["saudit"];
+  return [];
 }
 
 export function WorkbenchApp({ member }: { member: MemberView }) {
@@ -238,6 +262,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
     w: "kpi",
     b1: "gov",
     indw: "gov",
+    fuel: "ind",
   };
   const sideMetrics = result.metrics.filter((m) => metricLink[m.id]?.sheet === (sheet === "chart" ? "env" : sheet));
   const sideChecks = result.checks.filter((c) => checkSheet[c.id] === (sheet === "chart" ? "env" : sheet));
@@ -298,6 +323,31 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           <label className="flex items-center gap-2">
             年度
             <input className="w-[80px]" value={inputs.year} onChange={(e) => set("year", e.target.value)} />
+          </label>
+          <label className="flex items-center gap-2">
+            產業
+            <select
+              className="h-[26px] min-w-[180px] border border-[#8aa0b4] bg-white px-1"
+              value={inputs.industry}
+              onChange={(e) => set("industry", e.target.value as IndustryId)}
+            >
+              {INDUSTRIES.map((ind) => (
+                <option key={ind.id} value={ind.id}>
+                  {ind.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex items-center gap-2">
+            實收資本額
+            <input
+              type="number"
+              step={0.1}
+              className="w-[88px]"
+              value={inputs.capitalBillion}
+              onChange={(e) => set("capitalBillion", num(e))}
+            />
+            億元
           </label>
         </div>
       </div>
@@ -455,6 +505,61 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {sheet === "pre" && (
+            <div className="mb-3 text-[12px] text-[#333]">
+              <p className="mb-2 leading-6">
+                先選產業別與實收資本額。系統依作業辦法第3條、第4條、第4條之1及年報準則，判斷 GRI、氣候專章、附表一產業指標、IFRS S1／S2 何者適用，並在「產業指標」頁帶出該產業欄位。
+              </p>
+              <div className="mb-3 grid gap-2 md:grid-cols-2">
+                {frameworkCards({
+                  industry: inputs.industry,
+                  capitalBillion: inputs.capitalBillion,
+                  diningRevenuePct: inputs.diningRevenuePct,
+                  moenvRegulated: inputs.moenvRegulated,
+                }).map((card) => (
+                  <div key={card.title} className="border border-[#c8c8c8] bg-[#f7f9fb] p-2 leading-5">
+                    <div className="flex items-center justify-between gap-2">
+                      <b>{card.title}</b>
+                      <span className="border border-[#2f6f86] px-1.5 text-[11px] text-[#2f6f86]">{card.status}</span>
+                    </div>
+                    <p className="mt-1 text-[#333]">{card.detail}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mb-3 flex flex-wrap items-end gap-4">
+                <label className="flex items-center gap-2">
+                  餐飲收入占營收
+                  <input
+                    type="number"
+                    step={0.1}
+                    className="w-[80px]"
+                    value={inputs.diningRevenuePct}
+                    onChange={(e) => set("diningRevenuePct", num(e))}
+                  />
+                  %
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={inputs.moenvRegulated}
+                    onChange={(e) => set("moenvRegulated", e.target.checked)}
+                  />
+                  環境部納管應盤查及查驗
+                </label>
+              </div>
+            </div>
+          )}
+
+          {sheet === "ind" && (
+            <IndustryAnnexSheet
+              inputs={inputs}
+              metrics={result.metrics}
+              paid={member.paid}
+              onChange={set}
+              onOpenSource={openSource}
+            />
           )}
 
           {["pre", "fin", "env", "hr", "gov", "kpi", "par"].includes(sheet) &&
@@ -1217,6 +1322,148 @@ function PieFigure({ fig }: { fig: ReportFigure }) {
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+function annexInputKeys(item: AnnexItem): (keyof Inputs)[] {
+  const keys: string[] = [];
+  if (item.fill === "input" && item.key) keys.push(item.key);
+  if (item.extraKeys) keys.push(...item.extraKeys);
+  return [...new Set(keys)] as (keyof Inputs)[];
+}
+
+function IndustryAnnexSheet({
+  inputs,
+  metrics,
+  paid,
+  onChange,
+  onOpenSource,
+}: {
+  inputs: Inputs;
+  metrics: Metric[];
+  paid: boolean;
+  onChange: <K extends keyof Inputs>(key: K, value: Inputs[K]) => void;
+  onOpenSource: (event: React.MouseEvent<HTMLButtonElement>, item: { label: string; gri: string; why: string }) => void;
+}) {
+  const annex = annexApplies(inputs.industry, inputs.capitalBillion, inputs.diningRevenuePct);
+  const items = annexItems(inputs.industry, inputs.diningRevenuePct);
+  const meta = industryMeta(annex.id);
+  const diningNote = inputs.diningRevenuePct >= 50 && inputs.industry !== "food";
+  return (
+    <div className="mb-4 text-[12px] text-[#333]">
+      <p className="mb-2 leading-6">
+        {diningNote ? "餐飲收入達百分之五十，改依食品工業附表一之一。" : ""}
+        {annex.applies
+          ? `本案件適用作業辦法${meta.annex}。${assuranceRequired(inputs.industry, inputs.diningRevenuePct) ? " 附表一應取得會計師確信。" : " 本產業附表一未強制會計師確信。"}`
+          : annex.reason}
+      </p>
+      {items.length === 0 ? (
+        <p className="leading-6">非第4條列名產業，無附表一強制欄位。仍須依第3條 GRI 及第4條之1 氣候專章編製。</p>
+      ) : (
+        items.map((item) => {
+          const derivedIds = annexDerivedIds(item);
+          const inputKeys = annexInputKeys(item);
+          return (
+            <div key={item.no} className="mb-3 border border-[#c8c8c8]">
+              <div className="flex items-start justify-between gap-3 bg-[#f0f3f6] px-2 py-1.5">
+                <div>
+                  <b className="mr-2">{item.no}</b>
+                  {item.text}
+                  <button
+                    type="button"
+                    className="ml-2 text-[11px] text-[#335577] underline"
+                    onClick={(event) =>
+                      onOpenSource(event, {
+                        label: `${meta.annex} ${item.no}`,
+                        gri: `作業辦法第4條${meta.annex}`,
+                        why: item.text,
+                      })
+                    }
+                  >
+                    查看法條
+                  </button>
+                </div>
+                <span className="shrink-0 border border-[#2f6f86] px-1.5 text-[11px] text-[#2f6f86]">
+                  {item.fill === "qual" ? "質化" : item.fill === "derived" ? "系統帶入" : "產業專屬"}
+                </span>
+              </div>
+              {item.fill === "qual" && (
+                <p className="px-2 py-2 text-[#555]">質化敘述，本系統不計算。請於報告書以文字揭露。</p>
+              )}
+              {derivedIds.length > 0 && (
+                <PaidFrost locked={!paid}>
+                  <table className="w-full border-collapse">
+                    <tbody>
+                      {derivedIds.map((id) => {
+                        const m = metrics.find((row) => row.id === id);
+                        if (!m) return null;
+                        return (
+                          <tr key={id}>
+                            <td className="w-[280px] border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1">{m.name}</td>
+                            <td className="wb-calc w-[120px] border border-[#c8c8c8] px-2 py-1">{m.value}</td>
+                            <td className="w-[90px] border border-[#c8c8c8] px-2 py-1">{m.unit}</td>
+                            <td className="border border-[#c8c8c8] px-2 py-1 text-[#444]">
+                              {m.formula}
+                              <div className="text-[11px] text-[#777]">{m.basis}</div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </PaidFrost>
+              )}
+              {inputKeys.length > 0 && (
+                <table className="w-full border-collapse">
+                  <tbody>
+                    {inputKeys.map((key) => {
+                      const f = fieldCatalog.find((row) => row.key === key);
+                      const unit = f?.unit ?? "";
+                      const raw = inputs[key];
+                      return (
+                        <tr key={String(key)} id={`wb-field-${String(key)}`}>
+                          <td className="w-[280px] border border-[#c8c8c8] bg-[#f7f7f7] px-2 py-1">
+                            {f?.label ?? labelOf(key)}
+                            <div>
+                              <button
+                                type="button"
+                                className="text-[11px] text-[#335577] underline"
+                                onClick={(event) =>
+                                  onOpenSource(event, {
+                                    label: f?.label ?? labelOf(key),
+                                    gri: f?.gri ?? `作業辦法第4條${meta.annex}`,
+                                    why: f?.why ?? item.text,
+                                  })
+                                }
+                              >
+                                查看法條
+                              </button>
+                            </div>
+                          </td>
+                          <td className="w-[120px] border border-[#c8c8c8] px-1 py-1">
+                            <input
+                              type="number"
+                              step={inputStep(unit)}
+                              value={typeof raw === "number" ? raw : 0}
+                              onChange={(e) => onChange(key, num(e) as never)}
+                            />
+                          </td>
+                          <td className="w-[90px] border border-[#c8c8c8] px-2 py-1">{unit}</td>
+                          <td className="border border-[#c8c8c8] px-2 py-1 text-[#444]">
+                            {f?.why ?? item.text}
+                            <div className="text-[11px] text-[#777]">{f?.gri}</div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
