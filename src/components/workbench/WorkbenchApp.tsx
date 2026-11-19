@@ -252,7 +252,8 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
         </div>
         <div className="flex items-center gap-3">
           <span>
-            {member.company}　{member.paid ? "付費會員" : "免費會員"}　指標 {result.metrics.length}　異常 {fail}　注意 {warn}
+            {member.company}　{member.paid ? "付費會員" : "免費會員"}
+            {member.paid ? `　指標 ${result.metrics.length}　異常 ${fail}　注意 ${warn}` : ""}
           </span>
           {member.role === "admin" && (
             <Link href="/admin" className="underline">
@@ -805,35 +806,37 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             </table>
           </PaidFrost>
           <h2 className="mb-2 text-[14px] font-bold">自動勾稽</h2>
-          <ul className="space-y-1 text-[12px]">
-            {sideChecks.length === 0 && (
-              <li className="border border-[#2d6a2d] bg-[#e7f5e7] px-2 py-1">
-                <b>[通過] 本頁勾稽未發現異常</b>
-                <div>
-                  {sheet === "fin"
-                    ? "已核對合併營收，以及氣候／環保資本支出未大於購置不動產廠房及設備。"
-                    : "本頁已核對的項目彼此沒有對不上。"}
-                </div>
-              </li>
-            )}
-            {sideChecks.map((c) => (
-              <li
-                key={c.id}
-                className={`border px-2 py-1 ${
-                  c.level === "異常"
-                    ? "border-red-800 bg-[#fde8e8]"
-                    : c.level === "注意"
-                      ? "border-[#8a6d00] bg-[#fff4cc]"
-                      : "border-[#2d6a2d] bg-[#e7f5e7]"
-                }`}
-              >
-                <b>
-                  [{c.level}] {c.title}
-                </b>
-                <div>{c.detail}</div>
-              </li>
-            ))}
-          </ul>
+          <PaidFrost locked={!member.paid}>
+            <ul className="space-y-1 text-[12px]">
+              {sideChecks.length === 0 && (
+                <li className="border border-[#2d6a2d] bg-[#e7f5e7] px-2 py-1">
+                  <b>[通過] 本頁勾稽未發現異常</b>
+                  <div>
+                    {sheet === "fin"
+                      ? "已核對合併營收，以及氣候／環保資本支出未大於購置不動產廠房及設備。"
+                      : "本頁已核對的項目彼此沒有對不上。"}
+                  </div>
+                </li>
+              )}
+              {sideChecks.map((c) => (
+                <li
+                  key={c.id}
+                  className={`border px-2 py-1 ${
+                    c.level === "異常"
+                      ? "border-red-800 bg-[#fde8e8]"
+                      : c.level === "注意"
+                        ? "border-[#8a6d00] bg-[#fff4cc]"
+                        : "border-[#2d6a2d] bg-[#e7f5e7]"
+                  }`}
+                >
+                  <b>
+                    [{c.level}] {c.title}
+                  </b>
+                  <div>{c.detail}</div>
+                </li>
+              ))}
+            </ul>
+          </PaidFrost>
         </aside>
       </div>
       {sourcePop && (
