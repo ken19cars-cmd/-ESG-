@@ -313,7 +313,55 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="border-r border-[#bbb] bg-white p-3">
           {sheet === "par" && (
-            <div className="mb-4">
+            <div className="mb-4 text-[12px]">
+              <p className="mb-2 leading-6">
+                係數依案件年度對應公告文件帶入並鎖定。核對結果與來源文件見下表。
+                {member.paid && factorBusy ? "　正在連線公告頁…" : member.paid && factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
+              </p>
+              <button
+                type="button"
+                className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
+                onClick={() => {
+                  if (!member.paid) {
+                    window.alert("檢查最新需付費會員。請洽翰欣科技開通。");
+                    return;
+                  }
+                  setFactorTick((n) => n + 1);
+                }}
+              >
+                重新向公告頁核對
+              </button>
+              {member.paid && factorAudit && (
+                <table className="mb-4 w-full border-collapse">
+                  <thead>
+                    <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                      <th className="border border-[#888] px-2 py-1">項目</th>
+                      <th className="border border-[#888] px-2 py-1">帶入值</th>
+                      <th className="border border-[#888] px-2 py-1">來源文件</th>
+                      <th className="border border-[#888] px-2 py-1">驗證</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {factorAudit.checks.map((c) => (
+                      <tr key={c.key}>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{c.title}</td>
+                        <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{c.expected ?? "—"}</td>
+                        <td className="border border-[#c8c8c8] px-2 py-1">{c.sourceDoc}</td>
+                        <td
+                          className={`border border-[#c8c8c8] px-2 py-1 ${
+                            c.level === "異常" ? "bg-[#fde8e8]" : c.level === "注意" ? "bg-[#fff4cc]" : "bg-[#e7f5e7]"
+                          }`}
+                        >
+                          <b>[{c.level}]</b> {c.crawlNote} {c.detail}{" "}
+                          <a className="text-[#003399] underline" href={c.url} target="_blank" rel="noreferrer">
+                            來源
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               <p className="mb-1 text-[12px] font-bold">
                 <span className="wb-tag">輸入</span>冷媒
               </p>
@@ -493,59 +541,6 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 </table>
               </div>
             ))}
-
-          {sheet === "par" && (
-            <div className="mb-3 text-[12px]">
-              <p className="mb-2 leading-6">
-                係數依案件年度對應公告文件帶入並鎖定。核對結果與來源文件見各列。
-                {member.paid && factorBusy ? "　正在連線公告頁…" : member.paid && factorAudit ? `　最近核對 ${new Date(factorAudit.crawledAt).toLocaleString("zh-TW", { hour12: false })}` : ""}
-              </p>
-              <button
-                type="button"
-                className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
-                onClick={() => {
-                  if (!member.paid) {
-                    window.alert("檢查最新需付費會員。請洽翰欣科技開通。");
-                    return;
-                  }
-                  setFactorTick((n) => n + 1);
-                }}
-              >
-                重新向公告頁核對
-              </button>
-              {member.paid && factorAudit && (
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                      <th className="border border-[#888] px-2 py-1">項目</th>
-                      <th className="border border-[#888] px-2 py-1">帶入值</th>
-                      <th className="border border-[#888] px-2 py-1">來源文件</th>
-                      <th className="border border-[#888] px-2 py-1">驗證</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {factorAudit.checks.map((c) => (
-                      <tr key={c.key}>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{c.title}</td>
-                        <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{c.expected ?? "—"}</td>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{c.sourceDoc}</td>
-                        <td
-                          className={`border border-[#c8c8c8] px-2 py-1 ${
-                            c.level === "異常" ? "bg-[#fde8e8]" : c.level === "注意" ? "bg-[#fff4cc]" : "bg-[#e7f5e7]"
-                          }`}
-                        >
-                          <b>[{c.level}]</b> {c.crawlNote} {c.detail}{" "}
-                          <a className="text-[#003399] underline" href={c.url} target="_blank" rel="noreferrer">
-                            來源
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
 
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
