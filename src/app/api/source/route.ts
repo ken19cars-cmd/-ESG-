@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const session = await currentSession();
   const member = session ? findMember(session.username) : null;
   if (!member || !isPaid(member)) {
-    return Response.json({ error: "此功能需付費會員。" }, { status: 402 });
+    return Response.json({ error: "需升級為訂閱會員。" }, { status: 402 });
   }
   const gri = new URL(req.url).searchParams.get("gri") ?? "";
   const why = new URL(req.url).searchParams.get("why") ?? "";

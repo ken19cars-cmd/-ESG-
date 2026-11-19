@@ -102,6 +102,8 @@ function num(e: React.ChangeEvent<HTMLInputElement>) {
   return Number(v);
 }
 
+const UPGRADE_ALERT = "需升級為訂閱會員。";
+
 const INT_UNITS = new Set(["人", "次", "日", "件", "席", "家", "張", "kWh", "小時", "人次"]);
 
 function inputStep(unit: string) {
@@ -133,7 +135,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
   function openSource(event: React.MouseEvent<HTMLButtonElement>, item: { label: string; gri: string; why: string }) {
     if (!member.paid) {
-      window.alert("法規條文需付費會員。請洽翰欣科技開通。");
+      window.alert(UPGRADE_ALERT);
       return;
     }
     const rect = event.currentTarget.getBoundingClientRect();
@@ -185,7 +187,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
   async function exportWord() {
     if (!member.paid) {
-      window.alert("匯出 Word 需付費會員。請洽翰欣科技開通。");
+      window.alert(UPGRADE_ALERT);
       return;
     }
     setDocxBusy(true);
@@ -328,7 +330,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
                 onClick={() => {
                   if (!member.paid) {
-                    window.alert("檢查最新需付費會員。請洽翰欣科技開通。");
+                    window.alert(UPGRADE_ALERT);
                     return;
                   }
                   setFactorTick((n) => n + 1);
@@ -529,7 +531,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                                   disabled={member.paid && factorBusy}
                                   onClick={() => {
                                     if (!member.paid) {
-                                      window.alert("檢查最新需付費會員。請洽翰欣科技開通。");
+                                      window.alert(UPGRADE_ALERT);
                                       return;
                                     }
                                     setFactorFocus(String(f.key));
@@ -653,7 +655,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
                 onClick={() => {
                   if (!member.paid) {
-                    window.alert("核對法規版本需付費會員。請洽翰欣科技開通。");
+                    window.alert(UPGRADE_ALERT);
                     return;
                   }
                   setRegStamp(`已核對內建法規庫 ${new Date().toLocaleString("zh-TW", { hour12: false })}`);
@@ -772,7 +774,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                     className="border border-[#444] bg-[#eee] px-3 py-1"
                     onClick={() => {
                       if (!member.paid) {
-                        window.alert("列印需付費會員。請洽翰欣科技開通。");
+                        window.alert(UPGRADE_ALERT);
                         return;
                       }
                       window.print();

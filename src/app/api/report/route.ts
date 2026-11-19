@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const session = await currentSession();
   const member = session ? findMember(session.username) : null;
   if (!member || !isPaid(member)) {
-    return Response.json({ error: "匯出 Word 需付費會員。" }, { status: 402 });
+    return Response.json({ error: "需升級為訂閱會員。" }, { status: 402 });
   }
   const body = (await req.json().catch(() => ({}))) as Partial<Inputs> & { stylePrompt?: string; styleImage?: string };
   const stylePrompt = typeof body.stylePrompt === "string" ? body.stylePrompt.trim() : "";

@@ -6,7 +6,7 @@ export async function GET(req: Request) {
   const session = await currentSession();
   const member = session ? findMember(session.username) : null;
   if (!member || !isPaid(member)) {
-    return Response.json({ error: "檢查最新需付費會員。" }, { status: 402 });
+    return Response.json({ error: "需升級為訂閱會員。" }, { status: 402 });
   }
   const url = new URL(req.url);
   const year = url.searchParams.get("year") || "2025";
