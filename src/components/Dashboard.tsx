@@ -259,7 +259,7 @@ export function Dashboard() {
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d7e6ee] bg-white px-5 py-4">
         <div>
           <h1 className="text-2xl font-semibold tracking-wide text-[#243044] md:text-3xl">企業ESG永續應用系統</h1>
-          <p className="mt-1 text-sm text-[#3e4e5a] md:text-base">規範 · 檢索 · 計算 · 應用</p>
+          <p className="mt-1 text-sm text-[#3e4e5a] md:text-base">— 規範 · 計算 · 檢索 · 稽核 —</p>
         </div>
         <div className="flex gap-1 lg:hidden">
           {years.map((y) => (
