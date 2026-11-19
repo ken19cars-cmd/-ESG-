@@ -25,6 +25,7 @@ import { regulationArticles } from "@/lib/regulation-library";
 import {
   OFFICIAL_FACTOR_KEYS,
   REFRIGERANTS,
+  officialValues,
   type FactorAudit,
 } from "@/lib/official-factors";
 
@@ -147,6 +148,10 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
   }
   const d = useMemo(() => derived(inputs), [inputs]);
   const result = useMemo(() => compute(inputs), [inputs]);
+  const factorPack = useMemo(
+    () => officialValues(inputs.year, inputs.refrigerantCode),
+    [inputs.year, inputs.refrigerantCode],
+  );
 
   useEffect(() => {
     if (!member.paid) {
@@ -331,37 +336,69 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
               >
                 重新向公告頁核對
               </button>
-              {member.paid && factorAudit && (
-                <table className="mb-4 w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                      <th className="border border-[#888] px-2 py-1">項目</th>
-                      <th className="border border-[#888] px-2 py-1">帶入值</th>
-                      <th className="border border-[#888] px-2 py-1">來源文件</th>
-                      <th className="border border-[#888] px-2 py-1">驗證</th>
+              <table className="mb-4 w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                    <th className="border border-[#888] px-2 py-1">項目</th>
+                    <th className="border border-[#888] px-2 py-1">帶入值</th>
+                    <th className="border border-[#888] px-2 py-1">來源文件</th>
+                    <th className="border border-[#888] px-2 py-1">驗證</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(member.paid && factorAudit
+                    ? factorAudit.checks
+                    : OFFICIAL_FACTOR_KEYS.map((key) => {
+                        const field = fieldCatalog.find((f) => f.key === key);
+                        return {
+                          key,
+                          title: field?.label ?? key,
+                          expected: factorPack[key],
+                          sourceDoc:
+                            key === "efElectricity"
+                              ? factorPack.electricityMeta.label
+                              : key === "gwpRefrigerant"
+                                ? `IPCC ${factorPack.gwpSet}`
+                                : factorPack.fuelMeta.sourceDoc,
+                          level: "通過" as const,
+                          crawlNote: "",
+                          detail: "",
+                          url: key === "efElectricity" ? factorPack.electricityMeta.url : factorPack.fuelMeta.url,
+                        };
+                      })
+                  ).map((c) => (
+                    <tr key={c.key}>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{c.title}</td>
+                      <td className="wb-calc border border-[#c8c8c8] px-2 py-1">
+                        <FactorBlur locked={!member.paid}>{c.expected ?? "—"}</FactorBlur>
+                      </td>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{c.sourceDoc}</td>
+                      <td
+                        className={`border border-[#c8c8c8] px-2 py-1 ${
+                          !member.paid
+                            ? "bg-[#e7f5e7]"
+                            : c.level === "異常"
+                              ? "bg-[#fde8e8]"
+                              : c.level === "注意"
+                                ? "bg-[#fff4cc]"
+                                : "bg-[#e7f5e7]"
+                        }`}
+                      >
+                        {member.paid ? (
+                          <>
+                            <b>[{c.level}]</b> {c.crawlNote} {c.detail}{" "}
+                            <a className="text-[#003399] underline" href={c.url} target="_blank" rel="noreferrer">
+                              來源
+                            </a>
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {factorAudit.checks.map((c) => (
-                      <tr key={c.key}>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{c.title}</td>
-                        <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{c.expected ?? "—"}</td>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{c.sourceDoc}</td>
-                        <td
-                          className={`border border-[#c8c8c8] px-2 py-1 ${
-                            c.level === "異常" ? "bg-[#fde8e8]" : c.level === "注意" ? "bg-[#fff4cc]" : "bg-[#e7f5e7]"
-                          }`}
-                        >
-                          <b>[{c.level}]</b> {c.crawlNote} {c.detail}{" "}
-                          <a className="text-[#003399] underline" href={c.url} target="_blank" rel="noreferrer">
-                            來源
-                          </a>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
+                  ))}
+                </tbody>
+              </table>
               <p className="mb-1 text-[12px] font-bold">
                 <span className="wb-tag">輸入</span>冷媒
               </p>
@@ -465,7 +502,9 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                         </td>
                         <td className={`border border-[#c8c8c8] px-1 py-1 ${locked ? "wb-calc" : ""}`}>
                           {locked ? (
-                            <div className="px-1 py-0.5 text-[13px]">{Number(shown)}</div>
+                            <FactorBlur locked={!member.paid && isOfficial}>
+                              <div className="px-1 py-0.5 text-[13px]">{Number(shown)}</div>
+                            </FactorBlur>
                           ) : (
                             <input
                               type="number"
@@ -1176,6 +1215,15 @@ function PieFigure({ fig }: { fig: ReportFigure }) {
           ))}
         </ul>
       </div>
+    </div>
+  );
+}
+
+function FactorBlur({ locked, children }: { locked: boolean; children: ReactNode }) {
+  if (!locked) return children;
+  return (
+    <div className="select-none blur-[8px]" aria-hidden="true">
+      {children}
     </div>
   );
 }
