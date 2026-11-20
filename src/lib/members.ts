@@ -9,6 +9,12 @@ export type Member = {
   role: "admin" | "member";
   plan: "free" | "paid";
   paidUntil: string;
+  boundCase?: {
+    client: string;
+    industry: string;
+    capitalBillion: number;
+    at: number;
+  } | null;
 };
 
 const file = path.join(process.cwd(), "data", "members.json");
@@ -53,5 +59,6 @@ export function publicMember(member: Member) {
     plan: member.plan,
     paidUntil: member.paidUntil,
     paid: isPaid(member),
+    boundClient: member.boundCase?.client || "",
   };
 }

@@ -23,6 +23,7 @@ type ArticleBlock =
   | { kind: "image"; src: string };
 
 type MemberView = { username: string; company: string; paid: boolean; role: "admin" | "member" };
+type BoundCaseView = { client: string; industry: IndustryId; capitalBillion: number };
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
 import {
@@ -145,10 +146,21 @@ function annexDerivedIds(item: AnnexItem): string[] {
   return [];
 }
 
-export function WorkbenchApp({ member }: { member: MemberView }) {
+export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundCase?: BoundCaseView | null }) {
   const [sheet, setSheet] = useState<Sheet>("pre");
-  const [inputs, setInputs] = useState<Inputs>(defaultInputs);
-  const [caseLocked, setCaseLocked] = useState(false);
+  const [inputs, setInputs] = useState<Inputs>(() =>
+    boundCase
+      ? {
+          ...defaultInputs,
+          client: boundCase.client,
+          industry: boundCase.industry,
+          capitalBillion: boundCase.capitalBillion,
+        }
+      : defaultInputs,
+  );
+  const [caseLocked, setCaseLocked] = useState(Boolean(boundCase));
+  const [bindBusy, setBindBusy] = useState(false);
+  const [bindError, setBindError] = useState("");
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
   const [factorAudit, setFactorAudit] = useState<FactorAudit | null>(null);
   const [factorBusy, setFactorBusy] = useState(false);
@@ -232,13 +244,35 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
     }));
   }
 
-  function confirmCase() {
+  async function confirmCase() {
     if (!caseReady(inputs.client, inputs.year, inputs.capitalBillion, inputs.industry)) {
       window.alert("請先填入公司名稱、選擇產業、輸入資本額（大於 0）。");
       return;
     }
-    setCaseLocked(true);
-    setSheet("reg");
+    setBindBusy(true);
+    setBindError("");
+    try {
+      const res = await fetch("/api/case/bind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client: inputs.client,
+          industry: inputs.industry,
+          capitalBillion: inputs.capitalBillion,
+        }),
+      });
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      if (!res.ok) {
+        setBindError(data?.error || "無法綁定受評公司。");
+        return;
+      }
+      setCaseLocked(true);
+      setSheet("reg");
+    } catch {
+      setBindError("無法綁定受評公司。");
+    } finally {
+      setBindBusy(false);
+    }
   }
 
   async function exportWord() {
@@ -433,14 +467,18 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           ) : (
             <button
               type="button"
-              disabled={!canConfirm}
-              onClick={confirmCase}
+              disabled={!canConfirm || bindBusy}
+              onClick={() => void confirmCase()}
               className="h-[26px] border border-[#1a2a3a] bg-[#2c3b4e] px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:border-[#888] disabled:bg-[#9aa4ad]"
             >
-              確定
+              {bindBusy ? "綁定中" : "確定"}
             </button>
           )}
         </div>
+        {bindError ? <p className="mt-2 text-[12px] text-[#a40000]">{bindError}</p> : null}
+        {caseLocked ? (
+          <p className="mt-2 text-[12px] text-[#1f4a3a]">本帳號已綁定受評公司，重新整理後仍維持鎖定；如需改綁請由管理者解除鎖定。</p>
+        ) : null}
         {inputs.industry ? (
           <StandardChipBar
             cards={frameworkCards({
@@ -450,7 +488,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
               moenvRegulated: inputs.moenvRegulated,
             })}
           />
-        ) : (
+        ) : caseLocked ? null : (
           <p className="mt-2 text-[12px] text-[#444]">
             公司名稱輸入二字以上，將自上市櫃公開資訊及經濟部商工登記帶出公司清單；選定後帶入公司名稱、實收資本額及產業別（上市櫃依證交所／櫃買產業分類）。請核對後按「確定」。
           </p>

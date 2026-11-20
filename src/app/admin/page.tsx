@@ -11,6 +11,7 @@ type Row = {
   plan: "free" | "paid";
   paidUntil: string;
   paid: boolean;
+  boundClient?: string;
 };
 
 export default function AdminPage() {
@@ -69,9 +70,21 @@ export default function AdminPage() {
     await load();
   }
 
+  async function unlockCase(row: Row) {
+    setError("");
+    const res = await fetch("/api/admin/members", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username: row.username, clearBoundCase: true }),
+    });
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    if (!res.ok) setError(data?.error || "無法解除鎖定");
+    await load();
+  }
+
   return (
     <div className="min-h-screen bg-[#eef2f5] p-6 text-[14px] text-[#243044]">
-      <div className="mx-auto max-w-4xl bg-white p-4">
+      <div className="mx-auto max-w-5xl bg-white p-4">
         <div className="flex items-center justify-between">
           <h1 className="text-[18px] font-bold">會員與付費開通</h1>
           <a href="/workbench" className="underline">
@@ -98,7 +111,8 @@ export default function AdminPage() {
           <thead>
             <tr className="bg-[#2c3b4e] text-white">
               <th className="border px-2 py-1 text-left">帳號</th>
-              <th className="border px-2 py-1 text-left">公司</th>
+              <th className="border px-2 py-1 text-left">事務所</th>
+              <th className="border px-2 py-1 text-left">受評公司</th>
               <th className="border px-2 py-1 text-left">方案</th>
               <th className="border px-2 py-1 text-left">到期日</th>
               <th className="border px-2 py-1" />
@@ -109,6 +123,7 @@ export default function AdminPage() {
               <tr key={row.username}>
                 <td className="border px-2 py-1">{row.username}</td>
                 <td className="border px-2 py-1">{row.company}</td>
+                <td className="border px-2 py-1">{row.boundClient || "尚未鎖定"}</td>
                 <td className="border px-2 py-1">
                   <select
                     value={row.plan}
@@ -129,10 +144,15 @@ export default function AdminPage() {
                     }
                   />
                 </td>
-                <td className="border px-2 py-1">
+                <td className="border px-2 py-1 whitespace-nowrap">
                   <button type="button" className="underline" onClick={() => void save(row)}>
                     儲存
                   </button>
+                  {row.boundClient ? (
+                    <button type="button" className="ml-2 underline" onClick={() => void unlockCase(row)}>
+                      解除鎖定
+                    </button>
+                  ) : null}
                 </td>
               </tr>
             ))}

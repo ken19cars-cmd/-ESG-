@@ -1,5 +1,6 @@
 import { hashPassword } from "@/lib/auth";
 import { currentSession } from "@/lib/auth";
+import { clearBoundCase, getBoundCase } from "@/lib/bound-case";
 import { findMember, listMembers, publicMember, saveMembers, type Member } from "@/lib/members";
 
 async function requireAdmin() {
@@ -11,7 +12,12 @@ async function requireAdmin() {
 
 export async function GET() {
   if (!(await requireAdmin())) return Response.json({ error: "需要管理者登入。" }, { status: 401 });
-  return Response.json({ members: listMembers().map(publicMember) });
+  return Response.json({
+    members: listMembers().map((member) => ({
+      ...publicMember(member),
+      boundClient: getBoundCase(member.username)?.client || "",
+    })),
+  });
 }
 
 export async function POST(req: Request) {
@@ -46,12 +52,23 @@ export async function POST(req: Request) {
 
 export async function PATCH(req: Request) {
   if (!(await requireAdmin())) return Response.json({ error: "需要管理者登入。" }, { status: 401 });
-  const body = (await req.json().catch(() => null)) as { username?: string; plan?: string; paidUntil?: string } | null;
+  const body = (await req.json().catch(() => null)) as {
+    username?: string;
+    plan?: string;
+    paidUntil?: string;
+    clearBoundCase?: boolean;
+  } | null;
   const username = body?.username?.trim() ?? "";
   const members = listMembers();
   const index = members.findIndex((item) => item.username === username);
   if (index < 0) return Response.json({ error: "找不到這個帳號。" }, { status: 404 });
   const current = members[index];
+  if (body?.clearBoundCase) {
+    clearBoundCase(username);
+    return Response.json({
+      member: { ...publicMember(findMember(username) ?? current), boundClient: "" },
+    });
+  }
   if (current.role === "admin") return Response.json({ error: "不能改管理者自己的方案。" }, { status: 400 });
   const plan = body?.plan === "paid" ? "paid" : "free";
   members[index] = {

@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# live bound 受評公司（勿把客戶資料提交進版控）
+/data/bound-cases.json
