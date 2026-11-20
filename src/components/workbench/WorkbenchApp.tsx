@@ -200,6 +200,10 @@ export function WorkbenchApp({
   const [caseLocked, setCaseLocked] = useState(Boolean(boundCase));
   const [bindBusy, setBindBusy] = useState(false);
   const [bindError, setBindError] = useState("");
+  const [finder, setFinder] = useState("");
+  const [finderOpen, setFinderOpen] = useState(false);
+  const [regQuery, setRegQuery] = useState("");
+  const [issueCursor, setIssueCursor] = useState(0);
   const [boundList, setBoundList] = useState<BoundCaseView[]>(initialCases || (boundCase ? [boundCase] : []));
   const quota = member.companyQuota ?? 1;
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
@@ -386,22 +390,25 @@ export function WorkbenchApp({
     return acc;
   }, {});
 
-  const checkSheet: Record<string, Sheet> = {
-    rev0: "fin",
-    capex: "fin",
-    w1: "env",
-    re: "env",
-    intw: "env",
-    yoy: "env",
-    f1: "hr",
-    a1: "hr",
-    fat: "hr",
-    r1: "kpi",
-    w: "kpi",
-    b1: "gov",
-    indw: "gov",
-    fuel: "ind",
+  const checkJump: Record<string, { sheet: Sheet; keys: (keyof Inputs)[] }> = {
+    rev0: { sheet: "fin", keys: ["revenueMillion"] },
+    capex: { sheet: "fin", keys: ["greenCapex", "totalCapex", "capexEnergySave"] },
+    w1: { sheet: "env", keys: ["wasteRecycledT", "wasteT"] },
+    re: { sheet: "env", keys: ["renewableKwh", "electricityKwh"] },
+    intw: { sheet: "env", keys: ["intensityTarget"] },
+    yoy: { sheet: "env", keys: ["prevGhg12", "prevRevenueMillion"] },
+    f1: { sheet: "hr", keys: ["headcountFemale", "headcountEnd"] },
+    a1: { sheet: "hr", keys: ["headcountAvg"] },
+    fat: { sheet: "hr", keys: ["fatalities"] },
+    r1: { sheet: "kpi", keys: ["doneReview", "dueReview"] },
+    w: { sheet: "kpi", keys: ["execEsgPoints"] },
+    b1: { sheet: "gov", keys: ["independentSeats", "boardSeats"] },
+    indw: { sheet: "gov", keys: ["independentSeats", "boardSeats"] },
+    fuel: { sheet: "ind", keys: ["coalFuelPct", "gasFuelPct", "renewableFuelPct"] },
   };
+  const checkSheet: Record<string, Sheet> = Object.fromEntries(
+    Object.entries(checkJump).map(([id, item]) => [id, item.sheet]),
+  ) as Record<string, Sheet>;
   const sideMetrics = result.metrics.filter((m) => {
     const link = metricLink[m.id];
     if (link?.sheet !== (sheet === "chart" ? "env" : sheet)) return false;
@@ -430,11 +437,78 @@ export function WorkbenchApp({
     document.getElementById(`wb-field-${String(key)}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
   }, [highlightKeys, sheet]);
 
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f" && sourcePop && !sourcePop.minimized) {
+        event.preventDefault();
+        document.querySelector<HTMLInputElement>(".wb-src-search input")?.focus();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        document.getElementById("wb-field-finder")?.focus();
+        setFinderOpen(true);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sourcePop]);
+
   function openMetric(id: string) {
     const link = metricLink[id];
     if (!link) return;
     setSheet(link.sheet);
     setHighlightKeys(link.keys);
+  }
+
+  function goField(key: keyof Inputs, nextSheet?: Sheet) {
+    const def = fieldCatalog.find((item) => item.key === key);
+    const target = nextSheet || (def?.sheet as Sheet | undefined);
+    if (target) setSheet(target);
+    setHighlightKeys([key]);
+    setFinderOpen(false);
+  }
+
+  function openCheck(id: string) {
+    const jump = checkJump[id];
+    if (!jump) return;
+    setSheet(jump.sheet);
+    setHighlightKeys(jump.keys);
+  }
+
+  const missingRequired = visibleFields.filter((item) => missingOnRow(inputs, item.key).length > 0);
+  const finderHits =
+    finder.trim().length < 1
+      ? []
+      : visibleFields
+          .filter((item) => `${item.label} ${item.section} ${item.why} ${item.gri}`.toLowerCase().includes(finder.trim().toLowerCase()))
+          .slice(0, 8);
+  const sheetIndex = visibleSheets.findIndex((item) => item.id === sheet);
+  const prevSheet = sheetIndex > 0 ? visibleSheets[sheetIndex - 1] : null;
+  const nextSheetItem = sheetIndex >= 0 && sheetIndex < visibleSheets.length - 1 ? visibleSheets[sheetIndex + 1] : null;
+  const issueList = (level: "異常" | "注意") => result.checks.filter((item) => item.level === level && checkJump[item.id]);
+
+  function jumpMissing() {
+    if (!missingRequired.length) return;
+    const current = missingRequired.findIndex((item) => highlightKeys[0] === item.key);
+    const next = missingRequired[(current + 1) % missingRequired.length] ?? missingRequired[0];
+    goField(next.key, next.sheet as Sheet);
+  }
+
+  function jumpIssues(level: "異常" | "注意") {
+    const list = issueList(level);
+    if (!list.length) return;
+    const next = list[issueCursor % list.length];
+    setIssueCursor((n) => n + 1);
+    openCheck(next.id);
+  }
+
+  function focusNextInput(current: HTMLInputElement) {
+    const list = Array.from(document.querySelectorAll('.wb-root tbody input[type="number"]:not(:disabled)')) as HTMLInputElement[];
+    const index = list.indexOf(current);
+    const next = list[index + 1];
+    next?.focus();
+    next?.select();
   }
 
   return (
@@ -448,7 +522,17 @@ export function WorkbenchApp({
           <span>
             {member.displayName ? `${member.displayName}　` : ""}
             {member.company}　{member.paid ? "付費會員" : "免費會員"}　開通 {boundList.length}/{quota}
-            {member.paid ? `　指標 ${result.metrics.length}　異常 ${fail}　注意 ${warn}` : ""}
+            {member.paid ? `　指標 ${result.metrics.length}` : ""}
+            {member.paid ? (
+              <>
+                <button type="button" className="ml-2 underline" onClick={() => jumpIssues("異常")}>
+                  異常 {fail}
+                </button>
+                <button type="button" className="ml-2 underline" onClick={() => jumpIssues("注意")}>
+                  注意 {warn}
+                </button>
+              </>
+            ) : null}
           </span>
           {member.role === "admin" && (
             <Link href="/admin" className="underline">
@@ -618,6 +702,89 @@ export function WorkbenchApp({
           </button>
         ))}
       </div>
+      {ready ? (
+        <div className="wb-toolbar text-[12px]">
+          <div className="relative min-w-[240px] flex-1">
+            <input
+              id="wb-field-finder"
+              type="text"
+              className="wb-case-input w-full"
+              placeholder="搜尋欄位、法源（Ctrl+K）"
+              value={finder}
+              onChange={(e) => {
+                setFinder(e.target.value);
+                setFinderOpen(true);
+              }}
+              onFocus={() => setFinderOpen(true)}
+              onBlur={() => window.setTimeout(() => setFinderOpen(false), 180)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && finderHits[0]) {
+                  e.preventDefault();
+                  goField(finderHits[0].key, finderHits[0].sheet as Sheet);
+                }
+                if (e.key === "Escape") {
+                  setFinder("");
+                  setFinderOpen(false);
+                }
+              }}
+            />
+            {finderOpen && finderHits.length > 0 ? (
+              <div className="wb-suggest">
+                {finderHits.map((item) => (
+                  <button
+                    key={String(item.key)}
+                    type="button"
+                    className="wb-suggest-item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => goField(item.key, item.sheet as Sheet)}
+                  >
+                    <span className="wb-suggest-name">{item.label}</span>
+                    <span className="wb-suggest-meta">
+                      {sheets.find((s) => s.id === item.sheet)?.label}　{item.gri}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <button
+            type="button"
+            className="h-[26px] border border-[#1a2a3a] bg-white px-2 disabled:text-[#888]"
+            disabled={!missingRequired.length}
+            onClick={jumpMissing}
+          >
+            待填 {missingRequired.length}
+          </button>
+          {member.paid ? (
+            <>
+              <button type="button" className="h-[26px] border border-[#a40000] bg-[#fde8e8] px-2 disabled:opacity-40" disabled={!fail} onClick={() => jumpIssues("異常")}>
+                異常 {fail}
+              </button>
+              <button type="button" className="h-[26px] border border-[#8a6d00] bg-[#fff4cc] px-2 disabled:opacity-40" disabled={!warn} onClick={() => jumpIssues("注意")}>
+                注意 {warn}
+              </button>
+            </>
+          ) : null}
+          <span className="ml-auto flex gap-2">
+            <button
+              type="button"
+              className="h-[26px] border border-[#888] bg-white px-2 disabled:text-[#888]"
+              disabled={!prevSheet}
+              onClick={() => prevSheet && setSheet(prevSheet.id)}
+            >
+              上一分頁
+            </button>
+            <button
+              type="button"
+              className="h-[26px] border border-[#1a2a3a] bg-[#2c3b4e] px-2 text-white disabled:border-[#888] disabled:bg-[#9aa4ad]"
+              disabled={!nextSheetItem}
+              onClick={() => nextSheetItem && setSheet(nextSheetItem.id)}
+            >
+              {nextSheetItem ? `下一分頁：${nextSheetItem.label.replace(/^\d+\./, "")}` : "已是最後一步"}
+            </button>
+          </span>
+        </div>
+      ) : null}
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="border-r border-[#bbb] bg-white p-3">
@@ -772,7 +939,7 @@ export function WorkbenchApp({
                 </b>
                 <p className="mt-1 text-[12px] leading-5">
                   {ready
-                    ? `已展開 ${moduleCount} 個欄位。請先看「2.法規庫」，再依分頁填入各分類項目。`
+                    ? `已展開 ${moduleCount} 個欄位。請先看「2.法規庫」，再依分頁填入。上方可搜尋欄位（Ctrl+K）；右側勾稽可點擊跳到對應欄；查看法條視窗可用 Ctrl+F 搜條文。`
                     : "請在上方填入公司名稱、選擇產業、輸入資本額（大於 0），再按「確定」。未按確定不會出現後續分頁。"}
                 </p>
               </div>
@@ -924,6 +1091,12 @@ export function WorkbenchApp({
                               step={inputStep(f.unit)}
                               value={Number(shown)}
                               onChange={(e) => set(f.key, num(e) as never)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  focusNextInput(e.currentTarget);
+                                }
+                              }}
                             />
                           )}
                           {miss.length > 0 && (
@@ -1062,10 +1235,20 @@ export function WorkbenchApp({
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleFields.map((f) => (
-                    <tr key={String(f.key)}>
+                  {visibleFields
+                    .filter((f) => {
+                      const q = finder.trim().toLowerCase();
+                      if (!q) return true;
+                      return `${f.label} ${f.section} ${f.why} ${f.gri}`.toLowerCase().includes(q);
+                    })
+                    .map((f) => (
+                    <tr
+                      key={String(f.key)}
+                      className="cursor-pointer hover:bg-[#fff3bf]"
+                      onClick={() => goField(f.key, f.sheet as Sheet)}
+                    >
                       <td className="border border-[#ccc] px-2 py-1">{f.section}</td>
-                      <td className="border border-[#ccc] px-2 py-1">{f.label}</td>
+                      <td className="border border-[#ccc] px-2 py-1 underline">{f.label}</td>
                       <td className="border border-[#ccc] px-2 py-1">{f.why}</td>
                       <td className="border border-[#ccc] px-2 py-1">{f.gri}</td>
                     </tr>
@@ -1078,8 +1261,15 @@ export function WorkbenchApp({
           {sheet === "reg" && (
             <div>
               <p className="mb-2 text-[13px] leading-6 text-[#333]">
-                點各輸入欄名稱下方的「查看法條」，小視窗會列出該欄所引 GRI 揭露項目的要求與指引。下表是對照用的計算要點。
+                先對照本頁規範與計算要點；填寫各分類時，點欄位下方「查看法條」可開條文小視窗，視窗內可搜尋文字。
               </p>
+              <input
+                type="text"
+                className="wb-case-input mb-2 w-full max-w-[420px]"
+                placeholder="搜尋法規庫（規範名稱、計算要點）"
+                value={regQuery}
+                onChange={(e) => setRegQuery(e.target.value)}
+              />
               <button
                 type="button"
                 className="mb-2 border border-[#444] bg-[#eee] px-3 py-1 text-[13px]"
@@ -1103,7 +1293,13 @@ export function WorkbenchApp({
                   </tr>
                 </thead>
                 <tbody>
-                  {regulationCatalog.map((r) => (
+                  {regulationCatalog
+                    .filter((r) => {
+                      const q = regQuery.trim().toLowerCase();
+                      if (!q) return true;
+                      return `${r.name} ${r.point} ${r.version}`.toLowerCase().includes(q);
+                    })
+                    .map((r) => (
                     <tr key={r.id}>
                       <td className="border px-2 py-1">
                         <a className="text-[#003399] underline" href={r.url} target="_blank">
@@ -1118,7 +1314,13 @@ export function WorkbenchApp({
                   ))}
                 </tbody>
               </table>
-              {regulationArticles.map((a) => (
+              {regulationArticles
+                .filter((a) => {
+                  const q = regQuery.trim().toLowerCase();
+                  if (!q) return true;
+                  return `${a.topic} ${a.source} ${a.cite} ${a.fill} ${a.plain.join(" ")}`.toLowerCase().includes(q);
+                })
+                .map((a) => (
                 <div key={a.id} className="mt-4 border border-[#c8c8c8] bg-[#f7f7f7] p-3 text-[13px] leading-6">
                   <p className="font-bold text-[#1b3a4b]">{a.topic}</p>
                   <p className="text-[12px] text-[#555]">
@@ -1253,20 +1455,24 @@ export function WorkbenchApp({
                 </li>
               )}
               {sideChecks.map((c) => (
-                <li
-                  key={c.id}
-                  className={`border px-2 py-1 ${
-                    c.level === "異常"
-                      ? "border-red-800 bg-[#fde8e8]"
-                      : c.level === "注意"
-                        ? "border-[#8a6d00] bg-[#fff4cc]"
-                        : "border-[#2d6a2d] bg-[#e7f5e7]"
-                  }`}
-                >
-                  <b>
-                    [{c.level}] {c.title}
-                  </b>
-                  <div>{c.detail}</div>
+                <li key={c.id}>
+                  <button
+                    type="button"
+                    className={`wb-check-hit w-full border px-2 py-1 text-left ${
+                      c.level === "異常"
+                        ? "border-red-800 bg-[#fde8e8]"
+                        : c.level === "注意"
+                          ? "border-[#8a6d00] bg-[#fff4cc]"
+                          : "border-[#2d6a2d] bg-[#e7f5e7]"
+                    }`}
+                    onClick={() => openCheck(c.id)}
+                  >
+                    <b>
+                      [{c.level}] {c.title}
+                    </b>
+                    <div>{c.detail}</div>
+                    {checkJump[c.id] ? <div className="mt-0.5 text-[11px] text-[#335577]">點此跳到對應欄位</div> : null}
+                  </button>
                 </li>
               ))}
             </ul>
@@ -1280,7 +1486,57 @@ export function WorkbenchApp({
   );
 }
 
-function ArticleBlocks({ blocks }: { blocks: ArticleBlock[] }) {
+function countQueryHits(text: string, query: string) {
+  if (!query) return 0;
+  const q = query.toLowerCase();
+  const src = text.toLowerCase();
+  let n = 0;
+  let i = 0;
+  while (i < src.length) {
+    const found = src.indexOf(q, i);
+    if (found < 0) break;
+    n += 1;
+    i = found + q.length;
+  }
+  return n;
+}
+
+function highlightText(text: string, query: string, counter: { n: number }, current: number) {
+  if (!query) return text;
+  const q = query.toLowerCase();
+  const src = text.toLowerCase();
+  const nodes: ReactNode[] = [];
+  let i = 0;
+  while (i < text.length) {
+    const found = src.indexOf(q, i);
+    if (found < 0) {
+      nodes.push(text.slice(i));
+      break;
+    }
+    if (found > i) nodes.push(text.slice(i, found));
+    const idx = counter.n;
+    counter.n += 1;
+    nodes.push(
+      <mark key={idx} data-src-hit={idx} className={idx === current ? "wb-hit-current" : "wb-hit"}>
+        {text.slice(found, found + query.length)}
+      </mark>,
+    );
+    i = found + query.length;
+  }
+  return nodes;
+}
+
+function ArticleBlocks({
+  blocks,
+  query,
+  current,
+}: {
+  blocks: ArticleBlock[];
+  query?: string;
+  current?: number;
+}) {
+  const q = (query || "").trim();
+  const counter = { n: 0 };
   return (
     <>
       {blocks.map((block, index) => {
@@ -1303,7 +1559,7 @@ function ArticleBlocks({ blocks }: { blocks: ArticleBlock[] }) {
                         className={`border border-[#b7c3d0] px-2 py-1 align-top ${longest[cellIndex] <= 12 ? "whitespace-nowrap" : ""}`}
                         style={longest[cellIndex] > 12 ? { maxWidth: "22rem" } : undefined}
                       >
-                        {cell}
+                        {highlightText(cell, q, counter, current ?? 0)}
                       </td>
                     ))}
                   </tr>
@@ -1314,7 +1570,7 @@ function ArticleBlocks({ blocks }: { blocks: ArticleBlock[] }) {
         }
         return (
           <p key={index} className="mt-2 whitespace-pre-wrap">
-            {block.text}
+            {highlightText(block.text, q, counter, current ?? 0)}
           </p>
         );
       })}
@@ -1334,6 +1590,10 @@ function SourceWindow({
   const [showEnglish, setShowEnglish] = useState(false);
   const [loaded, setLoaded] = useState<{ blocks: ArticleBlock[]; english: ArticleBlock[] } | null>(null);
   const [sourceError, setSourceError] = useState("");
+  const [query, setQuery] = useState("");
+  const [hitIndex, setHitIndex] = useState(0);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowEnglish(false);
@@ -1357,6 +1617,17 @@ function SourceWindow({
     };
   }, [pop.gri, pop.label, pop.why]);
   const blocks = showEnglish && loaded?.english.length ? loaded.english : loaded?.blocks || [];
+  const hitTotal = useMemo(() => {
+    const q = query.trim();
+    if (!q) return 0;
+    return blocks.reduce((sum, block) => {
+      if (block.kind === "text") return sum + countQueryHits(block.text, q);
+      if (block.kind === "table") {
+        return sum + block.rows.reduce((n, row) => n + row.reduce((m, cell) => m + countQueryHits(cell, q), 0), 0);
+      }
+      return sum;
+    }, 0);
+  }, [blocks, query]);
   const popRef = useRef(pop);
   const drag = useRef<{ dx: number; dy: number } | null>(null);
   const resize = useRef<{
@@ -1372,6 +1643,20 @@ function SourceWindow({
     west: boolean;
   } | null>(null);
   popRef.current = pop;
+
+  useEffect(() => {
+    setHitIndex(0);
+  }, [query, showEnglish, pop.label]);
+
+  useEffect(() => {
+    const el = bodyRef.current?.querySelector(`[data-src-hit="${hitIndex}"]`);
+    el?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [hitIndex, query, showEnglish, loaded]);
+
+  function moveHit(delta: number) {
+    if (hitTotal <= 0) return;
+    setHitIndex((n) => (n + delta + hitTotal) % hitTotal);
+  }
 
   function beginResize(event: React.MouseEvent, edge: { n?: boolean; s?: boolean; e?: boolean; west?: boolean }) {
     event.preventDefault();
@@ -1433,6 +1718,19 @@ function SourceWindow({
     <div
       className="fixed z-50 flex flex-col border border-[#2c3b4e] bg-white text-[13px] leading-6 text-[#243044] shadow-lg"
       style={{ left: pop.x, top: pop.y, width: pop.w, height: pop.minimized ? 40 : pop.h }}
+      onKeyDown={(event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
+          event.preventDefault();
+          event.stopPropagation();
+          searchRef.current?.focus();
+          searchRef.current?.select();
+        }
+        if (event.key === "Escape") {
+          event.stopPropagation();
+          if (query) setQuery("");
+          else onClose();
+        }
+      }}
     >
       <div
         className="flex h-10 shrink-0 cursor-move items-center justify-between gap-2 bg-[#2c3b4e] px-2 text-white"
@@ -1489,14 +1787,40 @@ function SourceWindow({
         </span>
       </div>
       {!pop.minimized && (
+        <div className="wb-src-search" onMouseDown={(event) => event.stopPropagation()}>
+          <input
+            ref={searchRef}
+            type="search"
+            placeholder="搜尋條文（Ctrl+F）"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                moveHit(e.shiftKey ? -1 : 1);
+              }
+            }}
+          />
+          <span className="whitespace-nowrap text-[12px] text-[#335]">
+            {query.trim() ? `${hitTotal ? hitIndex + 1 : 0}/${hitTotal}` : "—"}
+          </span>
+          <button type="button" className="border border-[#2c3b4e] px-2 text-[12px]" disabled={hitTotal <= 0} onClick={() => moveHit(-1)}>
+            上一個
+          </button>
+          <button type="button" className="border border-[#2c3b4e] px-2 text-[12px]" disabled={hitTotal <= 0} onClick={() => moveHit(1)}>
+            下一個
+          </button>
+        </div>
+      )}
+      {!pop.minimized && (
         <div className="relative min-h-0 flex-1">
-          <div className="h-full overflow-auto px-3 py-2">
+          <div ref={bodyRef} className="h-full overflow-auto px-3 py-2">
             {sourceError ? (
               <p className="mt-2">{sourceError}</p>
             ) : !loaded ? (
               <p className="mt-2">讀取條文中。</p>
             ) : blocks.length > 0 ? (
-              <ArticleBlocks blocks={blocks} />
+              <ArticleBlocks blocks={blocks} query={query.trim()} current={hitIndex} />
             ) : (
               <p className="mt-2">沒有收錄條文。系統歸屬的法源：{pop.gri}</p>
             )}

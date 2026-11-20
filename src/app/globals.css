@@ -293,6 +293,59 @@ body {
   box-shadow: inset 0 0 0 2px #8a6d00;
 }
 
+.wb-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #b0b0b0;
+  background: #f4f7fa;
+  padding: 6px 12px;
+}
+
+.wb-hit {
+  background: #ffe08a;
+  color: inherit;
+  padding: 0 1px;
+}
+
+.wb-hit-current {
+  background: #ffb347;
+  color: #111;
+  box-shadow: 0 0 0 1px #8a4b00;
+  padding: 0 1px;
+}
+
+.wb-check-hit {
+  cursor: pointer;
+}
+
+.wb-check-hit:hover {
+  filter: brightness(0.97);
+}
+
+.wb-src-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-bottom: 1px solid #d5dee8;
+  background: #eef3f8;
+  padding: 6px 10px;
+}
+
+.wb-src-search input {
+  height: 26px;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #8aa0b4;
+  background: #fff;
+  padding: 0 8px;
+  color: #111;
+}
+
 .wb-calc {
   background: #fff8c4;
   font-family: var(--font-mono), ui-monospace, Consolas, monospace;
@@ -340,7 +393,9 @@ body {
 
 @media print {
   .wb-root aside,
-  .wb-root a[href="/"] {
+  .wb-root a[href="/"],
+  .wb-toolbar,
+  .wb-src-search {
     display: none !important;
   }
 }
