@@ -31,9 +31,11 @@ import {
   annexItems,
   assuranceRequired,
   caseReady,
+  diningGateRelevant,
   frameworkCards,
   industryMeta,
   industryOptionHint,
+  moenvGateRelevant,
   topicFlags,
   type AnnexItem,
   type FrameworkCard,
@@ -585,27 +587,39 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                   ))}
                 </div>
               ) : null}
-              <div className="mb-3 flex flex-wrap items-end gap-4">
-                <label className="flex items-center gap-2">
-                  餐飲收入占營收
-                  <input
-                    type="number"
-                    step={0.1}
-                    className="w-[80px]"
-                    value={inputs.diningRevenuePct}
-                    onChange={(e) => set("diningRevenuePct", num(e))}
-                  />
-                  %
-                </label>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={inputs.moenvRegulated}
-                    onChange={(e) => set("moenvRegulated", e.target.checked)}
-                  />
-                  環境部納管應盤查及查驗
-                </label>
-              </div>
+              {diningGateRelevant(inputs.industry) || moenvGateRelevant(inputs.capitalBillion) ? (
+                <div className="mb-3 flex flex-wrap items-end gap-x-6 gap-y-2">
+                  {diningGateRelevant(inputs.industry) ? (
+                    <label className="flex flex-wrap items-center gap-2">
+                      餐飲收入占營收
+                      <input
+                        type="number"
+                        step={0.1}
+                        className="w-[80px]"
+                        value={inputs.diningRevenuePct}
+                        onChange={(e) => set("diningRevenuePct", num(e))}
+                      />
+                      %
+                      <span className="text-[11px] text-[#666]">
+                        作業辦法第4條第1項第2款：餐飲收入達全部營收百分之五十者，改依食品工業附表一之一加強揭露。本業非食品／化學／金融保險時才需判斷。
+                      </span>
+                    </label>
+                  ) : null}
+                  {moenvGateRelevant(inputs.capitalBillion) ? (
+                    <label className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={inputs.moenvRegulated}
+                        onChange={(e) => set("moenvRegulated", e.target.checked)}
+                      />
+                      環境部納管應盤查及查驗
+                      <span className="text-[11px] text-[#666]">
+                        金管會 IFRS S1／S2 第三階段（115年9月調整）：資本額未達二十億元時，環境部納管者仍納入年報永續揭露準則。非化學工業附表一項目。
+                      </span>
+                    </label>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           )}
 

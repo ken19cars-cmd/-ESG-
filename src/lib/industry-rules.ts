@@ -152,8 +152,19 @@ export function industryMeta(id: IndustryId | "") {
 }
 
 export function effectiveIndustry(industry: IndustryId | "", diningRevenuePct: number): IndustryId {
+  if (industry === "food" || industry === "chemical" || industry === "finance") return industry;
   if (diningRevenuePct >= 50) return "food";
   return industry || "other";
+}
+
+/** 作業辦法第4條第1項第2款：餐飲收入達50%才改走食品附表一。食品／化學／金融保險本業已強制，不必再填。 */
+export function diningGateRelevant(industry: IndustryId | "") {
+  return industry !== "" && industry !== "food" && industry !== "chemical" && industry !== "finance";
+}
+
+/** 年報 IFRS S1／S2 第三階段：資本額已達20億即納入，環境部納管只在未達20億時才改變時程。 */
+export function moenvGateRelevant(capitalBillion: number) {
+  return !(Number.isFinite(capitalBillion) && capitalBillion >= 20);
 }
 
 export function annexApplies(industry: IndustryId | "", capitalBillion: number, diningRevenuePct: number) {
@@ -163,7 +174,17 @@ export function annexApplies(industry: IndustryId | "", capitalBillion: number, 
   }
   const id = effectiveIndustry(industry, diningRevenuePct);
   const meta = industryMeta(id);
-  if (meta.gate === "always") return { applies: true, id, meta, reason: "作業辦法第4條第1項：食品、化學、金融保險業，及餐飲收入達百分之五十者，應依附表一加強揭露。" };
+  if (meta.gate === "always") {
+    const reason =
+      id === "chemical"
+        ? "作業辦法第4條第1項第1款：化學工業應依附表一之二加強揭露，並應取得會計師確信。"
+        : id === "finance"
+          ? "作業辦法第4條第1項第1款：金融保險業應依附表一之三加強揭露，並應取得會計師確信。"
+          : industry === "food"
+            ? "作業辦法第4條第1項第1款：食品工業應依附表一之一加強揭露，並應取得會計師確信。"
+            : "作業辦法第4條第1項第2款：餐飲收入占全部營業收入達百分之五十者，應依附表一之一加強揭露，並應取得會計師確信。";
+    return { applies: true, id, meta, reason };
+  }
   if (meta.gate === "capital20" && capitalBillion >= 20) {
     return { applies: true, id, meta, reason: "作業辦法第4條第3項：實收資本額二十億元以上之水泥、塑膠、鋼鐵、油電燃氣及電子相關產業，應依附表一加強揭露。" };
   }
