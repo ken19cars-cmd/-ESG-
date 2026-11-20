@@ -4,7 +4,7 @@ import { annexInputKeys, topicFlags, type IndustryId } from "@/lib/industry-rule
 export type Inputs = {
   client: string;
   year: string;
-  industry: IndustryId;
+  industry: IndustryId | "";
   capitalBillion: number;
   diningRevenuePct: number;
   moenvRegulated: boolean;
@@ -123,10 +123,10 @@ export type Inputs = {
 };
 
 export const defaultInputs: Inputs = {
-  client: "綠能精密股份有限公司（示範）",
+  client: "",
   year: "2025",
-  industry: "other_electronic",
-  capitalBillion: 50,
+  industry: "",
+  capitalBillion: 0,
   diningRevenuePct: 0,
   moenvRegulated: false,
   refrigerantCode: "R-134a",
@@ -256,16 +256,16 @@ export type FieldDef = {
 };
 
 export const fieldCatalog: FieldDef[] = [
-  { key: "execFinPoints", sheet: "pre", section: "高階薪酬與永續連結（公司考核設計）", label: "財務／營運績效配分", unit: "%", why: "GRI 2-19 要求說明薪酬政策如何與目標連結；配分百分比是公司考核表上的權重，不是準則專名。", gri: "GRI 2-19" },
-  { key: "execEsgPoints", sheet: "pre", section: "高階薪酬與永續連結（公司考核設計）", label: "永續績效配分", unit: "%", why: "同上。用來算出高階薪酬中與永續相關之權重。", gri: "GRI 2-19" },
-  { key: "execOtherPoints", sheet: "pre", section: "高階薪酬與永續連結（公司考核設計）", label: "其他配分", unit: "%", why: "職能等其餘權重。權重＝永續配分÷三項合計。", gri: "GRI 2-19" },
-  { key: "capexEnergySave", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "節能設備資本支出", unit: "億元", why: "帳載固定資產增加。金管會氣候資訊要求揭露因應氣候之資本支出，準則未規定此分項名稱。", gri: "金管會氣候相關資訊" },
-  { key: "capexRenewable", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "再生能源設備資本支出", unit: "億元", why: "同上。再生能源設備投資屬氣候減緩相關資本支出之常見分項，非 GRI 專名。", gri: "金管會氣候相關資訊" },
-  { key: "capexPollution", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "污染防治設備資本支出", unit: "億元", why: "環保設備投資。非 GRI 專名；年報／報告書常見揭露。", gri: "年報環保支出實務" },
-  { key: "capexOtherGreen", sheet: "pre", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "其他氣候／環保資本支出", unit: "億元", why: "其餘可歸入氣候減緩、調適或污染防治之資本支出。加總名稱由本系統設定，非法規專名。", gri: "金管會氣候相關資訊" },
+  { key: "execFinPoints", sheet: "kpi", section: "高階薪酬與永續連結（公司考核設計）", label: "財務／營運績效配分", unit: "%", why: "GRI 2-19 要求說明薪酬政策如何與目標連結；配分百分比是公司考核表上的權重，不是準則專名。", gri: "GRI 2-19" },
+  { key: "execEsgPoints", sheet: "kpi", section: "高階薪酬與永續連結（公司考核設計）", label: "永續績效配分", unit: "%", why: "同上。用來算出高階薪酬中與永續相關之權重。", gri: "GRI 2-19" },
+  { key: "execOtherPoints", sheet: "kpi", section: "高階薪酬與永續連結（公司考核設計）", label: "其他配分", unit: "%", why: "職能等其餘權重。權重＝永續配分÷三項合計。", gri: "GRI 2-19" },
+  { key: "capexEnergySave", sheet: "fin", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "節能設備資本支出", unit: "億元", why: "帳載固定資產增加。金管會氣候資訊要求揭露因應氣候之資本支出，準則未規定此分項名稱。", gri: "金管會氣候相關資訊" },
+  { key: "capexRenewable", sheet: "fin", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "再生能源設備資本支出", unit: "億元", why: "同上。再生能源設備投資屬氣候減緩相關資本支出之常見分項，非 GRI 專名。", gri: "金管會氣候相關資訊" },
+  { key: "capexPollution", sheet: "fin", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "污染防治設備資本支出", unit: "億元", why: "環保設備投資。非 GRI 專名；年報／報告書常見揭露。", gri: "年報環保支出實務" },
+  { key: "capexOtherGreen", sheet: "fin", section: "氣候／環保相關資本支出（實務加總，非法規專名）", label: "其他氣候／環保資本支出", unit: "億元", why: "其餘可歸入氣候減緩、調適或污染防治之資本支出。加總名稱由本系統設定，非法規專名。", gri: "金管會氣候相關資訊" },
   { key: "revenueMillion", sheet: "fin", section: "財務分母", label: "合併營收", unit: "百萬元", why: "必要。合併綜合損益表之營業收入。金管會永續報告書作業辦法及 GRI 305-4 密集度可選營收作分母。", gri: "金管會作業辦法；GRI 305-4" },
   { key: "totalCapex", sheet: "fin", section: "財務分母", label: "購置不動產廠房及設備", unit: "億元", why: "現金流量表投資活動「購置不動產、廠房及設備」之數。本系統用作資本支出占比分母。", gri: "IAS 7／現金流量表" },
-  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "氣候／環保相關資本支出合計", unit: "億元", why: "前置頁四項加總。非法規專名「綠色資本支出」；對應氣候資訊中之相關資本支出加總。", gri: "金管會氣候相關資訊", fromPre: true },
+  { key: "greenCapex", sheet: "fin", section: "財務分母", label: "氣候／環保相關資本支出合計", unit: "億元", why: "本頁四項加總。非法規專名「綠色資本支出」；對應氣候資訊中之相關資本支出加總。", gri: "金管會氣候相關資訊", fromPre: true },
   { key: "communitySpend", sheet: "fin", section: "財務分母", label: "基礎設施投資與公益捐贈", unit: "億元", why: "GRI 203-1 為基礎設施投資與支援服務；捐贈常一併揭露，準則未強制使用「公益支出」一詞。", gri: "GRI 203-1" },
   { key: "electricityKwh", sheet: "env", section: "能源與排放", label: "外購電力", unit: "kWh", why: "電費單度數。屬範疇二用量；系統再×電力係數得到排放。詳見法規庫。", gri: "GRI 302-1、305-2" },
   { key: "renewableKwh", sheet: "env", section: "能源與排放", label: "再生能源電力", unit: "kWh", why: "綠電或憑證度數，用來算占外購電力的比例。詳見法規庫。", gri: "GRI 302-1" },
@@ -352,7 +352,7 @@ export const fieldCatalog: FieldDef[] = [
   { key: "dueReview", sheet: "kpi", section: "績效薪酬", label: "應接受定期績效考核之人數", unit: "人", why: "非必要。有人資考核資料再填。對應 GRI 404-3。", gri: "GRI 404-3" },
   { key: "doneReview", sheet: "kpi", section: "績效薪酬", label: "已接受定期績效考核之人數", unit: "人", why: "非必要。有考核完成人數再填。", gri: "GRI 404-3" },
   { key: "withEsgKpi", sheet: "kpi", section: "績效薪酬", label: "績效指標含永續項目之人數", unit: "人", why: "非必要。公司自己的考核設計，金管會未規定此欄。沒有就填 0。", gri: "永續發展實務守則（非專名）" },
-  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階薪酬中永續相關權重", unit: "%", why: "非必要。由前置配分算出。沒做永續連動薪酬可為 0。", gri: "GRI 2-19", fromPre: true },
+  { key: "esgWeight", sheet: "kpi", section: "績效薪酬", label: "高階薪酬中永續相關權重", unit: "%", why: "非必要。由本頁配分算出。沒做永續連動薪酬可為 0。", gri: "GRI 2-19", fromPre: true },
   { key: "businessTarget", sheet: "kpi", section: "績效薪酬", label: "財務／營運目標（內部）", unit: "億元", why: "非必要。內部預算，不是永續報告書法定欄。沒有就填 0。", gri: "內部考核（非準則專名）" },
   { key: "businessActual", sheet: "kpi", section: "績效薪酬", label: "財務／營運實際（內部）", unit: "億元", why: "非必要。對應內部目標。沒有就填 0。", gri: "內部考核（非準則專名）" },
   { key: "esgTargetScore", sheet: "kpi", section: "績效薪酬", label: "永續績效目標分數（內部）", unit: "分", why: "非必要。公司自訂分數。沒有就填 0。", gri: "內部考核（非準則專名）" },
@@ -447,6 +447,7 @@ export function labelOf(key: keyof Inputs) {
 }
 
 export function fieldVisible(f: FieldDef, i: Pick<Inputs, "industry" | "capitalBillion" | "diningRevenuePct">) {
+  if (!i.industry) return f.sheet !== "ind";
   const flags = topicFlags(i.industry, i.capitalBillion, i.diningRevenuePct);
   if (f.sheet === "ind") {
     if (!flags.annex) return false;

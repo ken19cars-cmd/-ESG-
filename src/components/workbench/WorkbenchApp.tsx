@@ -11,7 +11,6 @@ import {
   isLockedKey,
   labelOf,
   missingOnRow,
-  preResults,
   regulationCatalog,
   visibleCatalog,
   type Inputs,
@@ -102,18 +101,18 @@ const metricLink: Record<string, { sheet: Sheet; keys: (keyof Inputs)[] }> = {
 };
 
 const sheets: { id: Sheet; label: string }[] = [
-  { id: "pre", label: "0.接案前置底稿" },
-  { id: "ind", label: "產業指標" },
-  { id: "fin", label: "1.財務分母" },
-  { id: "env", label: "2.環境E" },
-  { id: "hr", label: "3.社會S" },
-  { id: "gov", label: "4.治理G" },
-  { id: "kpi", label: "5.績效薪酬" },
-  { id: "par", label: "6.係數參數" },
-  { id: "chart", label: "7.指標圖預覽" },
-  { id: "why", label: "8.欄位對照" },
-  { id: "reg", label: "9.法規庫" },
-  { id: "rep", label: "10.報告書底稿" },
+  { id: "pre", label: "1.案件設定" },
+  { id: "reg", label: "2.法規庫" },
+  { id: "fin", label: "3.財務分母" },
+  { id: "env", label: "4.環境E" },
+  { id: "hr", label: "5.社會S" },
+  { id: "gov", label: "6.治理G" },
+  { id: "kpi", label: "7.績效薪酬" },
+  { id: "par", label: "8.係數參數" },
+  { id: "why", label: "9.欄位對照" },
+  { id: "ind", label: "10.產業指標" },
+  { id: "chart", label: "11.指標圖預覽" },
+  { id: "rep", label: "12.輸出報告書" },
 ];
 
 function num(e: React.ChangeEvent<HTMLInputElement>) {
@@ -248,11 +247,13 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
   const fail = result.checks.filter((c) => c.level === "異常").length;
   const warn = result.checks.filter((c) => c.level === "注意").length;
   const flags = topicFlags(inputs.industry, inputs.capitalBillion, inputs.diningRevenuePct);
-  const ready = caseReady(inputs.client, inputs.year, inputs.capitalBillion);
+  const ready = caseReady(inputs.client, inputs.year, inputs.capitalBillion, inputs.industry);
   const visibleFields = visibleCatalog(inputs);
   const fields = visibleFields.filter((f) => f.sheet === sheet);
   const moduleCount = visibleFields.length;
-  const visibleSheets = sheets.filter((s) => (s.id === "ind" ? flags.annex : true));
+  const visibleSheets = ready
+    ? sheets.filter((s) => (s.id === "ind" ? flags.annex : true))
+    : sheets.filter((s) => s.id === "pre");
 
   useEffect(() => {
     if (!ready && sheet !== "pre") setSheet("pre");
@@ -364,8 +365,9 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             <select
               className="h-[26px] min-w-[280px] border border-[#8aa0b4] bg-white px-1"
               value={inputs.industry}
-              onChange={(e) => set("industry", e.target.value as IndustryId)}
+              onChange={(e) => set("industry", e.target.value as IndustryId | "")}
             >
+              <option value="">請選擇產業</option>
               {INDUSTRIES.map((ind) => (
                 <option key={ind.id} value={ind.id}>
                   {ind.name}　{industryOptionHint(ind.id)}
@@ -379,43 +381,39 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
               type="number"
               step={0.1}
               className="w-[88px]"
-              value={inputs.capitalBillion}
+              value={inputs.capitalBillion || ""}
               onChange={(e) => set("capitalBillion", num(e))}
             />
             億元
           </label>
         </div>
-        <StandardChipBar
-          cards={frameworkCards({
-            industry: inputs.industry,
-            capitalBillion: inputs.capitalBillion,
-            diningRevenuePct: inputs.diningRevenuePct,
-            moenvRegulated: inputs.moenvRegulated,
-          })}
-        />
+        {inputs.industry ? (
+          <StandardChipBar
+            cards={frameworkCards({
+              industry: inputs.industry,
+              capitalBillion: inputs.capitalBillion,
+              diningRevenuePct: inputs.diningRevenuePct,
+              moenvRegulated: inputs.moenvRegulated,
+            })}
+          />
+        ) : (
+          <p className="mt-2 text-[12px] text-[#444]">選完產業別並填入公司名稱、資本額後，才會展開法規庫與各分類底稿。</p>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-0 border-b border-[#aaa] bg-[#dedede] px-2 pt-1">
-        {visibleSheets.map((s) => {
-          const locked = s.id !== "pre" && !ready;
-          return (
+        {visibleSheets.map((s) => (
           <button
             key={s.id}
             type="button"
-            disabled={locked}
             onClick={() => setSheet(s.id)}
             className={`mr-1 border border-b-0 px-2 py-1 text-[12px] ${
-              locked
-                ? "cursor-not-allowed border-transparent bg-[#cfd6dd] text-[#888]"
-                : sheet === s.id
-                  ? "border-[#888] bg-white font-semibold"
-                  : "border-transparent bg-[#cfd6dd] text-[#333]"
+              sheet === s.id ? "border-[#888] bg-white font-semibold" : "border-transparent bg-[#cfd6dd] text-[#333]"
             }`}
           >
             {s.label}
           </button>
-          );
-        })}
+        ))}
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -561,29 +559,32 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                請先填案件名稱、年度、產業別與實收資本額。系統只展開該產業模組要揭露的欄位；其他產業的附表一項目會隱藏，避免一張萬用表。GRI 與 TCFD 氣候專章仍是全體上市櫃都要。
+                第一步只填公司名稱、產業別、實收資本額（及年度）。三項齊全後才顯示法規庫，再填財務、環境、社會、治理等分類，接著產業指標、指標圖預覽，最後輸出報告書。
               </p>
               <div className="mb-3 border border-[#2c3b4e] bg-[#2c3b4e] px-3 py-2 text-white">
                 <b className="text-[15px]">
-                  本產業模組：{industryMeta(inputs.industry).name}
-                  {flags.annex ? `　SASB ${flags.annexCode}` : "　無附表一強制"}
+                  {ready
+                    ? `本產業模組：${industryMeta(inputs.industry).name}${flags.annex ? `　SASB ${flags.annexCode}` : "　無附表一強制"}`
+                    : "尚未完成案件設定"}
                 </b>
                 <p className="mt-1 text-[12px] leading-5">
                   {ready
-                    ? `已展開 ${moduleCount} 個輸入／帶入欄位。切換產業後欄位會跟著改，不會把食品、金融、鋼鐵的專屬項混在同一張表。`
-                    : "公司名稱、年度、資本額填完後，才開啟其他底稿分頁。"}
+                    ? `已展開 ${moduleCount} 個欄位。請先看「2.法規庫」，再依分頁填入各分類項目。`
+                    : "請在上方填入公司名稱、選擇產業、輸入資本額（大於 0）。完成後才會出現後續分頁。"}
                 </p>
               </div>
-              <div className="mb-3 grid gap-2 md:grid-cols-2">
-                {frameworkCards({
-                  industry: inputs.industry,
-                  capitalBillion: inputs.capitalBillion,
-                  diningRevenuePct: inputs.diningRevenuePct,
-                  moenvRegulated: inputs.moenvRegulated,
-                }).map((card) => (
-                  <StandardDetailCard key={card.code} card={card} />
-                ))}
-              </div>
+              {inputs.industry ? (
+                <div className="mb-3 grid gap-2 md:grid-cols-2">
+                  {frameworkCards({
+                    industry: inputs.industry,
+                    capitalBillion: inputs.capitalBillion,
+                    diningRevenuePct: inputs.diningRevenuePct,
+                    moenvRegulated: inputs.moenvRegulated,
+                  }).map((card) => (
+                    <StandardDetailCard key={card.code} card={card} />
+                  ))}
+                </div>
+              ) : null}
               <div className="mb-3 flex flex-wrap items-end gap-4">
                 <label className="flex items-center gap-2">
                   餐飲收入占營收
@@ -618,7 +619,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             />
           )}
 
-          {["pre", "fin", "env", "hr", "gov", "kpi", "par"].includes(sheet) &&
+          {["fin", "env", "hr", "gov", "kpi", "par"].includes(sheet) &&
             Object.entries(grouped).map(([section, rows]) => (
               <div key={section} className="mb-4">
                 <p className="mb-1 text-[12px] font-bold">
@@ -744,40 +745,59 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
               </div>
             ))}
 
-          {sheet === "pre" && (
-            <div className="mb-3 text-[12px] text-[#333]">
-              <p className="mb-2 leading-6">
-                高階薪酬中永續相關權重、氣候／環保相關資本支出合計，由本頁運算後帶入主表。這兩項是公司考核與氣候資訊實務加總，不是 GRI 條文上的專有名詞。
-              </p>
+          {sheet === "chart" && (
+            <PaidFrost locked={!member.paid}>
+              <ChartPreview figures={chartFigures} />
+              <p className="mb-2 mt-4 text-[13px] font-bold text-[#2c3b4e]">報告書績效表</p>
+              {reportDraft(d, result.metrics).map((block) => (
+                <div key={block.chapter} className="mb-4">
+                  <p className="mb-1 text-[12px] font-bold">
+                    {block.chapter}
+                    <span className="ml-2 font-normal text-[#666]">{block.gri}</span>
+                  </p>
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
+                        <th className="border border-[#888] px-2 py-1">項目</th>
+                        <th className="border border-[#888] px-2 py-1">數值</th>
+                        <th className="border border-[#888] px-2 py-1">單位</th>
+                        <th className="border border-[#888] px-2 py-1">對應</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {block.rows.map((r) => (
+                        <tr key={r.name}>
+                          <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
+                          <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
+                          <td className="border border-[#c8c8c8] px-2 py-1">{r.unit}</td>
+                          <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ))}
+              <p className="mb-1 text-[12px] font-bold">附錄　GRI 內容索引（績效項）</p>
               <table className="w-full border-collapse">
                 <thead>
                   <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                    <th className="border border-[#888] px-2 py-1">主表欄位（系統帶入）</th>
-                    <th className="border border-[#888] px-2 py-1">運算結果</th>
-                    <th className="border border-[#888] px-2 py-1">算式</th>
+                    <th className="border border-[#888] px-2 py-1">揭露</th>
+                    <th className="border border-[#888] px-2 py-1">主題</th>
+                    <th className="border border-[#888] px-2 py-1">數值</th>
+                    <th className="border border-[#888] px-2 py-1">章節</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {preResults(inputs).map((r) => (
-                    <tr key={r.name}>
-                      <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
-                      <td className="wb-calc border border-[#c8c8c8] px-2 py-1">
-                        {r.value}
-                        {r.missing.length > 0 && (
-                          <div className="text-[11px] font-bold text-[#c00000]">{r.missing.join("、")}</div>
-                        )}
-                      </td>
-                      <td className="border border-[#c8c8c8] px-2 py-1">{r.formula}</td>
+                  {griIndex(result.metrics).map((r) => (
+                    <tr key={r.topic}>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.topic}</td>
+                      <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
+                      <td className="border border-[#c8c8c8] px-2 py-1">{r.chapter}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </div>
-          )}
-
-          {sheet === "chart" && (
-            <PaidFrost locked={!member.paid}>
-              <ChartPreview figures={chartFigures} />
             </PaidFrost>
           )}
 
@@ -919,7 +939,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
               </div>
               <div className="mb-3 flex items-center justify-between">
                 <p>
-                  {inputs.client}　{inputs.year}　永續報告書績效表／GRI 索引底稿
+                  {inputs.client}　{inputs.year}　輸出報告書。績效表與圖已放在「指標圖預覽」。
                 </p>
                 <div className="flex gap-2">
                   <button
@@ -945,57 +965,6 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                   </button>
                 </div>
               </div>
-              <PaidFrost locked={!member.paid}>
-                {reportDraft(d, result.metrics).map((block) => (
-                  <div key={block.chapter} className="mb-4">
-                    <p className="mb-1 text-[12px] font-bold">
-                      {block.chapter}
-                      <span className="ml-2 font-normal text-[#666]">{block.gri}</span>
-                    </p>
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                          <th className="border border-[#888] px-2 py-1">項目</th>
-                          <th className="border border-[#888] px-2 py-1">數值</th>
-                          <th className="border border-[#888] px-2 py-1">單位</th>
-                          <th className="border border-[#888] px-2 py-1">對應</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {block.rows.map((r) => (
-                          <tr key={r.name}>
-                            <td className="border border-[#c8c8c8] px-2 py-1">{r.name}</td>
-                            <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
-                            <td className="border border-[#c8c8c8] px-2 py-1">{r.unit}</td>
-                            <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ))}
-                <p className="mb-1 text-[12px] font-bold">附錄　GRI 內容索引（績效項）</p>
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#2c3b4e] text-left text-[12px] text-white">
-                      <th className="border border-[#888] px-2 py-1">揭露</th>
-                      <th className="border border-[#888] px-2 py-1">主題</th>
-                      <th className="border border-[#888] px-2 py-1">數值</th>
-                      <th className="border border-[#888] px-2 py-1">章節</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {griIndex(result.metrics).map((r) => (
-                      <tr key={r.topic}>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{r.gri}</td>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{r.topic}</td>
-                        <td className="wb-calc border border-[#c8c8c8] px-2 py-1">{r.value}</td>
-                        <td className="border border-[#c8c8c8] px-2 py-1">{r.chapter}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </PaidFrost>
             </div>
           )}
         </div>

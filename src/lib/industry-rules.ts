@@ -146,16 +146,21 @@ export function industryOptionHint(id: IndustryId): string {
   return "SASB資本額≥20億";
 }
 
-export function industryMeta(id: IndustryId) {
+export function industryMeta(id: IndustryId | "") {
+  if (!id) return { id: "other" as IndustryId, name: "尚未選擇", annex: "—", gate: "none" as const };
   return INDUSTRIES.find((x) => x.id === id) ?? INDUSTRIES[INDUSTRIES.length - 1];
 }
 
-export function effectiveIndustry(industry: IndustryId, diningRevenuePct: number): IndustryId {
+export function effectiveIndustry(industry: IndustryId | "", diningRevenuePct: number): IndustryId {
   if (diningRevenuePct >= 50) return "food";
-  return industry;
+  return industry || "other";
 }
 
-export function annexApplies(industry: IndustryId, capitalBillion: number, diningRevenuePct: number) {
+export function annexApplies(industry: IndustryId | "", capitalBillion: number, diningRevenuePct: number) {
+  if (!industry) {
+    const meta = industryMeta("");
+    return { applies: false, id: "other" as IndustryId, meta, reason: "尚未選擇產業。" };
+  }
   const id = effectiveIndustry(industry, diningRevenuePct);
   const meta = industryMeta(id);
   if (meta.gate === "always") return { applies: true, id, meta, reason: "作業辦法第4條第1項：食品、化學、金融保險業，及餐飲收入達百分之五十者，應依附表一加強揭露。" };
@@ -168,11 +173,12 @@ export function annexApplies(industry: IndustryId, capitalBillion: number, dinin
   return { applies: false, id, meta, reason: "非作業辦法第4條列名產業。第3條仍可參考 SASB 準則揭露行業指標。" };
 }
 
-export function annexItems(industry: IndustryId, diningRevenuePct: number): AnnexItem[] {
+export function annexItems(industry: IndustryId | "", diningRevenuePct: number): AnnexItem[] {
+  if (!industry) return [];
   return ANNEX[effectiveIndustry(industry, diningRevenuePct)] ?? [];
 }
 
-export function annexInputKeys(industry: IndustryId, diningRevenuePct: number): string[] {
+export function annexInputKeys(industry: IndustryId | "", diningRevenuePct: number): string[] {
   const keys: string[] = [];
   for (const item of annexItems(industry, diningRevenuePct)) {
     if (item.fill === "input" && item.key) keys.push(item.key);
@@ -182,7 +188,10 @@ export function annexInputKeys(industry: IndustryId, diningRevenuePct: number): 
 }
 
 /** 本產業模組要不要帶水、廢棄物、空氣污染物、附表一。GRI／TCFD 能源與排放全體都留。 */
-export function topicFlags(industry: IndustryId, capitalBillion: number, diningRevenuePct: number) {
+export function topicFlags(industry: IndustryId | "", capitalBillion: number, diningRevenuePct: number) {
+  if (!industry) {
+    return { water: false, waste: false, air: false, annex: false, annexCode: "—" };
+  }
   const annex = annexApplies(industry, capitalBillion, diningRevenuePct);
   const items = annex.applies ? annexItems(industry, diningRevenuePct) : [];
   const derived = new Set(items.filter((item) => item.fill === "derived").map((item) => item.key));
@@ -206,11 +215,11 @@ export function topicFlags(industry: IndustryId, capitalBillion: number, diningR
   };
 }
 
-export function caseReady(client: string, year: string, capitalBillion: number) {
-  return client.trim().length > 0 && year.trim().length > 0 && Number.isFinite(capitalBillion) && capitalBillion > 0;
+export function caseReady(client: string, year: string, capitalBillion: number, industry: IndustryId | "") {
+  return client.trim().length > 0 && year.trim().length > 0 && Number.isFinite(capitalBillion) && capitalBillion > 0 && industry !== "";
 }
 
-export function assuranceRequired(industry: IndustryId, diningRevenuePct: number) {
+export function assuranceRequired(industry: IndustryId | "", diningRevenuePct: number) {
   const id = effectiveIndustry(industry, diningRevenuePct);
   return id === "food" || id === "chemical" || id === "finance";
 }
@@ -230,11 +239,12 @@ export function ifrsStage(capitalBillion: number, moenvRegulated: boolean) {
 }
 
 export function frameworkCards(opts: {
-  industry: IndustryId;
+  industry: IndustryId | "";
   capitalBillion: number;
   diningRevenuePct: number;
   moenvRegulated: boolean;
 }): FrameworkCard[] {
+  if (!opts.industry) return [];
   const annex = annexApplies(opts.industry, opts.capitalBillion, opts.diningRevenuePct);
   const ifrs = ifrsStage(opts.capitalBillion, opts.moenvRegulated);
   const steelOrCement = opts.industry === "steel" || opts.industry === "cement";
