@@ -7,11 +7,13 @@ import {
   defaultInputs,
   derived,
   fieldCatalog,
+  fieldVisible,
   isLockedKey,
   labelOf,
   missingOnRow,
   preResults,
   regulationCatalog,
+  visibleCatalog,
   type Inputs,
   type Metric,
   type ReportFigure,
@@ -29,9 +31,11 @@ import {
   annexApplies,
   annexItems,
   assuranceRequired,
+  caseReady,
   frameworkCards,
   industryMeta,
   industryOptionHint,
+  topicFlags,
   type AnnexItem,
   type FrameworkCard,
   type IndustryId,
@@ -243,7 +247,17 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
   const fail = result.checks.filter((c) => c.level === "異常").length;
   const warn = result.checks.filter((c) => c.level === "注意").length;
-  const fields = fieldCatalog.filter((f) => f.sheet === sheet);
+  const flags = topicFlags(inputs.industry, inputs.capitalBillion, inputs.diningRevenuePct);
+  const ready = caseReady(inputs.client, inputs.year, inputs.capitalBillion);
+  const visibleFields = visibleCatalog(inputs);
+  const fields = visibleFields.filter((f) => f.sheet === sheet);
+  const moduleCount = visibleFields.length;
+  const visibleSheets = sheets.filter((s) => (s.id === "ind" ? flags.annex : true));
+
+  useEffect(() => {
+    if (!ready && sheet !== "pre") setSheet("pre");
+    if (sheet === "ind" && !flags.annex) setSheet("pre");
+  }, [ready, flags.annex, sheet]);
 
   const grouped = fields.reduce<Record<string, typeof fields>>((acc, f) => {
     (acc[f.section] ||= []).push(f);
@@ -266,8 +280,27 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
     indw: "gov",
     fuel: "ind",
   };
-  const sideMetrics = result.metrics.filter((m) => metricLink[m.id]?.sheet === (sheet === "chart" ? "env" : sheet));
-  const sideChecks = result.checks.filter((c) => checkSheet[c.id] === (sheet === "chart" ? "env" : sheet));
+  const sideMetrics = result.metrics.filter((m) => {
+    const link = metricLink[m.id];
+    if (link?.sheet !== (sheet === "chart" ? "env" : sheet)) return false;
+    return link.keys.every((key) => {
+      const def = fieldCatalog.find((f) => f.key === key);
+      return !def || fieldVisible(def, inputs);
+    });
+  });
+  const sideChecks = result.checks.filter((c) => {
+    if (checkSheet[c.id] !== (sheet === "chart" ? "env" : sheet)) return false;
+    if (c.id === "w1" && !flags.waste) return false;
+    if (c.id === "fuel" && !flags.annex) return false;
+    return true;
+  });
+  const chartFigures = result.figures.filter((fig) => {
+    if (fig.id === "water") return flags.water;
+    if (fig.id === "waste") return flags.waste;
+    if (fig.id === "air") return flags.air;
+    if (fig.id === "osh") return true;
+    return true;
+  });
 
   useEffect(() => {
     const key = highlightKeys[0];
@@ -363,18 +396,26 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
       </div>
 
       <div className="flex flex-wrap gap-0 border-b border-[#aaa] bg-[#dedede] px-2 pt-1">
-        {sheets.map((s) => (
+        {visibleSheets.map((s) => {
+          const locked = s.id !== "pre" && !ready;
+          return (
           <button
             key={s.id}
             type="button"
+            disabled={locked}
             onClick={() => setSheet(s.id)}
             className={`mr-1 border border-b-0 px-2 py-1 text-[12px] ${
-              sheet === s.id ? "border-[#888] bg-white font-semibold" : "border-transparent bg-[#cfd6dd] text-[#333]"
+              locked
+                ? "cursor-not-allowed border-transparent bg-[#cfd6dd] text-[#888]"
+                : sheet === s.id
+                  ? "border-[#888] bg-white font-semibold"
+                  : "border-transparent bg-[#cfd6dd] text-[#333]"
             }`}
           >
             {s.label}
           </button>
-        ))}
+          );
+        })}
       </div>
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -520,8 +561,19 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                先選產業別與實收資本額。上方色塊即本案件強制／分階段適用的國際準則；SASB 只對列名產業強制，TCFD 氣候專章全體都要，IFRS S1／S2 看資本額不看產業。
+                請先填案件名稱、年度、產業別與實收資本額。系統只展開該產業模組要揭露的欄位；其他產業的附表一項目會隱藏，避免一張萬用表。GRI 與 TCFD 氣候專章仍是全體上市櫃都要。
               </p>
+              <div className="mb-3 border border-[#2c3b4e] bg-[#2c3b4e] px-3 py-2 text-white">
+                <b className="text-[15px]">
+                  本產業模組：{industryMeta(inputs.industry).name}
+                  {flags.annex ? `　SASB ${flags.annexCode}` : "　無附表一強制"}
+                </b>
+                <p className="mt-1 text-[12px] leading-5">
+                  {ready
+                    ? `已展開 ${moduleCount} 個輸入／帶入欄位。切換產業後欄位會跟著改，不會把食品、金融、鋼鐵的專屬項混在同一張表。`
+                    : "公司名稱、年度、資本額填完後，才開啟其他底稿分頁。"}
+                </p>
+              </div>
               <div className="mb-3 grid gap-2 md:grid-cols-2">
                 {frameworkCards({
                   industry: inputs.industry,
@@ -725,7 +777,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
           {sheet === "chart" && (
             <PaidFrost locked={!member.paid}>
-              <ChartPreview figures={result.figures} />
+              <ChartPreview figures={chartFigures} />
             </PaidFrost>
           )}
 
@@ -741,7 +793,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {fieldCatalog.map((f) => (
+                  {visibleFields.map((f) => (
                     <tr key={String(f.key)}>
                       <td className="border border-[#ccc] px-2 py-1">{f.section}</td>
                       <td className="border border-[#ccc] px-2 py-1">{f.label}</td>

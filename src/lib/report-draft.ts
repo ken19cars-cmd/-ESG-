@@ -1,5 +1,5 @@
 import type { Inputs, Metric } from "@/lib/esg-engine";
-import { annexApplies, annexItems, industryMeta } from "@/lib/industry-rules";
+import { annexApplies, annexItems, industryMeta, topicFlags } from "@/lib/industry-rules";
 
 export type ReportBlock = {
   chapter: string;
@@ -21,7 +21,8 @@ export function reportDraft(inputs: Inputs, metrics: Metric[]): ReportBlock[] {
   const take = (...ids: string[]) => ids.map((id) => row(metrics, id)).filter(Boolean) as ReportBlock["rows"];
   const meta = industryMeta(inputs.industry);
   const annex = annexApplies(inputs.industry, inputs.capitalBillion, inputs.diningRevenuePct);
-  const annexRows = annexItems(inputs.industry, inputs.diningRevenuePct).map((item) => {
+  const flags = topicFlags(inputs.industry, inputs.capitalBillion, inputs.diningRevenuePct);
+  const annexRows = (annex.applies ? annexItems(inputs.industry, inputs.diningRevenuePct) : []).map((item) => {
     if (item.fill === "qual") {
       return { name: `${item.no} ${item.text}`, value: "質化敘述，本系統不計算", unit: "—", gri: `作業辦法${meta.annex}` };
     }
@@ -56,11 +57,18 @@ export function reportDraft(inputs: Inputs, metrics: Metric[]): ReportBlock[] {
       gri: "GRI 302、305；金管會排放量／密集度",
       rows: take("s1", "s2", "s3o", "s12", "s3", "int", "p12", "pint", "gyoy", "iyoy", "ghge", "ren", "en", "eni"),
     },
-    {
-      chapter: "5 環境—水與廢棄物",
-      gri: "GRI 303、306、305-7",
-      rows: take("wint", "wuse", "rec", "haz", "wastI"),
-    },
+    ...(flags.water || flags.waste
+      ? [
+          {
+            chapter: "5 環境—水與廢棄物",
+            gri: "GRI 303、306、305-7",
+            rows: take(
+              ...(flags.water ? (["wint", "wuse"] as const) : []),
+              ...(flags.waste ? (["rec", "haz", "wastI"] as const) : []),
+            ),
+          },
+        ]
+      : []),
     {
       chapter: "5 環境—綠色投資",
       gri: "資本支出揭露",

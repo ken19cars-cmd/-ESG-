@@ -1,5 +1,5 @@
 import { OFFICIAL_FACTOR_KEYS, officialValues } from "@/lib/official-factors";
-import type { IndustryId } from "@/lib/industry-rules";
+import { annexInputKeys, topicFlags, type IndustryId } from "@/lib/industry-rules";
 
 export type Inputs = {
   client: string;
@@ -446,6 +446,22 @@ export function labelOf(key: keyof Inputs) {
   return fieldCatalog.find((f) => f.key === key)?.label ?? String(key);
 }
 
+export function fieldVisible(f: FieldDef, i: Pick<Inputs, "industry" | "capitalBillion" | "diningRevenuePct">) {
+  const flags = topicFlags(i.industry, i.capitalBillion, i.diningRevenuePct);
+  if (f.sheet === "ind") {
+    if (!flags.annex) return false;
+    return annexInputKeys(i.industry, i.diningRevenuePct).includes(String(f.key));
+  }
+  if (f.key === "waterKt" || f.key === "wastewaterKt") return flags.water;
+  if (f.key === "wasteT" || f.key === "wasteRecycledT" || f.key === "wasteHazardT") return flags.waste;
+  if (f.key === "noxT" || f.key === "soxT") return flags.air;
+  return true;
+}
+
+export function visibleCatalog(i: Pick<Inputs, "industry" | "capitalBillion" | "diningRevenuePct">) {
+  return fieldCatalog.filter((f) => fieldVisible(f, i));
+}
+
 function preMissing(_i: Inputs, _rule: PreRule): string[] {
   return [];
 }
@@ -674,10 +690,11 @@ export function compute(raw: Inputs) {
     M("ac", "G 治理", "反貪腐訓練比率", anti, "%", "完成÷應訓", "GRI 205-2"),
   ];
 
+  const flags = topicFlags(i.industry, i.capitalBillion, i.diningRevenuePct);
   const checks: Check[] = [];
   if (n(i.revenueMillion) <= 0) checks.push({ id: "rev0", level: "異常", title: "合併營收未輸入", detail: "密集度與占比無法計算。", basis: "金管會" });
   if (n(i.greenCapex) > n(i.totalCapex) && n(i.totalCapex) >= 0) checks.push({ id: "capex", level: "異常", title: "氣候／環保資本支出大於購置總額", detail: `氣候／環保 ${fmt(n(i.greenCapex), 2)} 億，購置不動產廠房及設備 ${fmt(n(i.totalCapex), 2)} 億。前者是後者的一部分，不能更大。`, basis: "現金流量表勾稽" });
-  if (n(i.wasteRecycledT) > n(i.wasteT) && n(i.wasteT) > 0) checks.push({ id: "w1", level: "異常", title: "回收>產生", detail: "廢棄物勾稽失敗。", basis: "GRI 306" });
+  if (flags.waste && n(i.wasteRecycledT) > n(i.wasteT) && n(i.wasteT) > 0) checks.push({ id: "w1", level: "異常", title: "回收>產生", detail: "廢棄物勾稽失敗。", basis: "GRI 306" });
   if (n(i.doneReview) > n(i.dueReview)) checks.push({ id: "r1", level: "異常", title: "已考核>應考核", detail: "404-3 分母錯誤。", basis: "GRI 404-3" });
   if (n(i.headcountFemale) > n(i.headcountEnd)) checks.push({ id: "f1", level: "異常", title: "女性員工數大於結束日員工總數", detail: "人力結構勾稽失敗。", basis: "GRI 2-7" });
   if (n(i.independentSeats) > n(i.boardSeats)) checks.push({ id: "b1", level: "異常", title: "獨董>席次", detail: "治理結構錯誤。", basis: "年報" });
@@ -690,7 +707,7 @@ export function compute(raw: Inputs) {
   if (prevGhg12 === 0 && prevRev === 0) {
     checks.push({ id: "yoy", level: "注意", title: "未填上年排放／營收", detail: "金管會作業辦法要最近兩年排放量與密集度。沒有上年就只出當年圖。", basis: "金管會作業辦法" });
   }
-  if (i.industry === "steel" && n(i.coalFuelPct) + n(i.gasFuelPct) + n(i.renewableFuelPct) > 100.05) {
+  if (flags.annex && i.industry === "steel" && n(i.coalFuelPct) + n(i.gasFuelPct) + n(i.renewableFuelPct) > 100.05) {
     checks.push({ id: "fuel", level: "異常", title: "鋼鐵燃料占比合計超過100%", detail: "煤炭、天然氣、再生燃料百分比應為燃料結構，合計不可超過100%。", basis: "作業辦法附表一之六" });
   }
   if (checks.length === 0) checks.push({ id: "ok", level: "通過", title: "勾稽未發現異常", detail: "可進入覆核；係數仍應對當期公告。", basis: "底稿" });
@@ -731,20 +748,32 @@ export function compute(raw: Inputs) {
       { label: "再生能源", value: n(i.renewableKwh), color: FIG.olive },
       { label: "非再生電力", value: Math.max(0, n(i.electricityKwh) - n(i.renewableKwh)), color: FIG.ink },
     ]),
-    fig("water", "圖　取水／放流／耗水", "bar", "千噸", [
-      { label: "取水", value: n(i.waterKt), color: FIG.teal },
-      { label: "放流", value: n(i.wastewaterKt), color: FIG.ink },
-      { label: "耗水", value: waterUse, color: FIG.brown },
-    ]),
-    fig("waste", "圖　廢棄物", "bar", "噸", [
-      { label: "產生", value: n(i.wasteT), color: FIG.ink },
-      { label: "回收再利用", value: n(i.wasteRecycledT), color: FIG.olive },
-      { label: "有害", value: n(i.wasteHazardT), color: FIG.brown },
-    ]),
-    fig("air", "圖　空氣污染物", "bar", "噸", [
-      { label: "NOx", value: n(i.noxT), color: FIG.brown },
-      { label: "SOx", value: n(i.soxT), color: FIG.ink },
-    ]),
+    ...(flags.water
+      ? [
+          fig("water", "圖　取水／放流／耗水", "bar", "千噸", [
+            { label: "取水", value: n(i.waterKt), color: FIG.teal },
+            { label: "放流", value: n(i.wastewaterKt), color: FIG.ink },
+            { label: "耗水", value: waterUse, color: FIG.brown },
+          ]),
+        ]
+      : []),
+    ...(flags.waste
+      ? [
+          fig("waste", "圖　廢棄物", "bar", "噸", [
+            { label: "產生", value: n(i.wasteT), color: FIG.ink },
+            { label: "回收再利用", value: n(i.wasteRecycledT), color: FIG.olive },
+            { label: "有害", value: n(i.wasteHazardT), color: FIG.brown },
+          ]),
+        ]
+      : []),
+    ...(flags.air
+      ? [
+          fig("air", "圖　空氣污染物", "bar", "噸", [
+            { label: "NOx", value: n(i.noxT), color: FIG.brown },
+            { label: "SOx", value: n(i.soxT), color: FIG.ink },
+          ]),
+        ]
+      : []),
     fig("capex", "圖　資本支出", "pie", "億元", [
       { label: "氣候／環保", value: n(i.greenCapex), color: FIG.olive },
       { label: "其他購置", value: Math.max(0, n(i.totalCapex) - n(i.greenCapex)), color: FIG.ink },

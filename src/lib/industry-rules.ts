@@ -172,6 +172,44 @@ export function annexItems(industry: IndustryId, diningRevenuePct: number): Anne
   return ANNEX[effectiveIndustry(industry, diningRevenuePct)] ?? [];
 }
 
+export function annexInputKeys(industry: IndustryId, diningRevenuePct: number): string[] {
+  const keys: string[] = [];
+  for (const item of annexItems(industry, diningRevenuePct)) {
+    if (item.fill === "input" && item.key) keys.push(item.key);
+    if (item.extraKeys) keys.push(...item.extraKeys);
+  }
+  return [...new Set(keys)];
+}
+
+/** 本產業模組要不要帶水、廢棄物、空氣污染物、附表一。GRI／TCFD 能源與排放全體都留。 */
+export function topicFlags(industry: IndustryId, capitalBillion: number, diningRevenuePct: number) {
+  const annex = annexApplies(industry, capitalBillion, diningRevenuePct);
+  const items = annex.applies ? annexItems(industry, diningRevenuePct) : [];
+  const derived = new Set(items.filter((item) => item.fill === "derived").map((item) => item.key));
+  const id = annex.id;
+  const processAir = id === "chemical" || id === "cement" || id === "steel" || id === "energy" || id === "plastic";
+  if (annex.applies) {
+    return {
+      water: derived.has("wuse"),
+      waste: derived.has("haz"),
+      air: processAir,
+      annex: true,
+      annexCode: annex.meta.annex,
+    };
+  }
+  return {
+    water: true,
+    waste: true,
+    air: processAir || id === "other",
+    annex: false,
+    annexCode: "—",
+  };
+}
+
+export function caseReady(client: string, year: string, capitalBillion: number) {
+  return client.trim().length > 0 && year.trim().length > 0 && Number.isFinite(capitalBillion) && capitalBillion > 0;
+}
+
 export function assuranceRequired(industry: IndustryId, diningRevenuePct: number) {
   const id = effectiveIndustry(industry, diningRevenuePct);
   return id === "food" || id === "chemical" || id === "finance";
