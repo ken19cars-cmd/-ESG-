@@ -125,6 +125,8 @@ function num(e: React.ChangeEvent<HTMLInputElement>) {
 
 const UPGRADE_ALERT = "需升級為訂閱會員。";
 
+const CASE_LOCK_KEYS: (keyof Inputs)[] = ["client", "industry", "capitalBillion"];
+
 const INT_UNITS = new Set(["人", "次", "日", "件", "席", "家", "張", "kWh", "小時", "人次", "座", "處"]);
 
 function inputStep(unit: string) {
@@ -144,6 +146,7 @@ function annexDerivedIds(item: AnnexItem): string[] {
 export function WorkbenchApp({ member }: { member: MemberView }) {
   const [sheet, setSheet] = useState<Sheet>("pre");
   const [inputs, setInputs] = useState<Inputs>(defaultInputs);
+  const [caseLocked, setCaseLocked] = useState(false);
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
   const [factorAudit, setFactorAudit] = useState<FactorAudit | null>(null);
   const [factorBusy, setFactorBusy] = useState(false);
@@ -213,7 +216,17 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
   function set<K extends keyof Inputs>(key: K, value: Inputs[K]) {
     if (isLockedKey(key)) return;
+    if (caseLocked && CASE_LOCK_KEYS.includes(key)) return;
     setInputs((prev) => ({ ...prev, [key]: value }));
+  }
+
+  function confirmCase() {
+    if (!caseReady(inputs.client, inputs.year, inputs.capitalBillion, inputs.industry)) {
+      window.alert("請先填入公司名稱、選擇產業、輸入資本額（大於 0）。");
+      return;
+    }
+    setCaseLocked(true);
+    setSheet("reg");
   }
 
   async function exportWord() {
@@ -249,7 +262,8 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
   const fail = result.checks.filter((c) => c.level === "異常").length;
   const warn = result.checks.filter((c) => c.level === "注意").length;
   const flags = topicFlags(inputs.industry, inputs.capitalBillion, inputs.diningRevenuePct);
-  const ready = caseReady(inputs.client, inputs.year, inputs.capitalBillion, inputs.industry);
+  const canConfirm = caseReady(inputs.client, inputs.year, inputs.capitalBillion, inputs.industry);
+  const ready = caseLocked && canConfirm;
   const visibleFields = visibleCatalog(inputs);
   const fields = visibleFields.filter((f) => f.sheet === sheet);
   const moduleCount = visibleFields.length;
@@ -356,7 +370,12 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
         <div className="flex flex-wrap items-end gap-4">
           <label className="flex items-center gap-2 whitespace-nowrap">
             案件
-            <input className="w-[280px]" value={inputs.client} onChange={(e) => set("client", e.target.value)} />
+            <input
+              className="w-[280px] disabled:bg-[#e8e8e8] disabled:text-[#555]"
+              value={inputs.client}
+              disabled={caseLocked}
+              onChange={(e) => set("client", e.target.value)}
+            />
           </label>
           <label className="flex items-center gap-2 whitespace-nowrap">
             年度
@@ -365,8 +384,9 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           <label className="flex items-center gap-2 whitespace-nowrap">
             產業
             <select
-              className="h-[26px] min-w-[280px] border border-[#8aa0b4] bg-white px-1"
+              className="h-[26px] min-w-[280px] border border-[#8aa0b4] bg-white px-1 disabled:bg-[#e8e8e8] disabled:text-[#555]"
               value={inputs.industry}
+              disabled={caseLocked}
               onChange={(e) => set("industry", e.target.value as IndustryId | "")}
             >
               <option value="">請選擇產業</option>
@@ -382,12 +402,25 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             <input
               type="number"
               step={0.1}
-              className="w-[88px]"
+              className="w-[88px] disabled:bg-[#e8e8e8] disabled:text-[#555]"
               value={inputs.capitalBillion || ""}
+              disabled={caseLocked}
               onChange={(e) => set("capitalBillion", num(e))}
             />
             億元
           </label>
+          {caseLocked ? (
+            <span className="text-[12px] font-semibold text-[#1f4a3a]">已鎖定　公司／產業／資本額不可再改</span>
+          ) : (
+            <button
+              type="button"
+              disabled={!canConfirm}
+              onClick={confirmCase}
+              className="h-[26px] border border-[#1a2a3a] bg-[#2c3b4e] px-3 text-[12px] font-semibold text-white disabled:cursor-not-allowed disabled:border-[#888] disabled:bg-[#9aa4ad]"
+            >
+              確定
+            </button>
+          )}
         </div>
         {inputs.industry ? (
           <StandardChipBar
@@ -399,7 +432,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             })}
           />
         ) : (
-          <p className="mt-2 text-[12px] text-[#444]">選完產業別並填入公司名稱、資本額後，才會展開法規庫與各分類底稿。</p>
+          <p className="mt-2 text-[12px] text-[#444]">填入公司名稱、產業別、資本額後按「確定」，才會展開法規庫與各分類底稿。確定後這三項即鎖定。</p>
         )}
       </div>
 
@@ -561,7 +594,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                第一步只填公司名稱、產業別、實收資本額（及年度）。三項齊全後才顯示法規庫，再填財務、環境、社會、治理等分類，接著產業指標、指標圖預覽，最後輸出報告書。
+                第一步只填公司名稱、產業別、實收資本額（及年度），再按「確定」。確定後這三項鎖定，才顯示法規庫，再填財務、環境、社會、治理等分類，接著產業指標、指標圖預覽，最後輸出報告書。
               </p>
               <div className="mb-3 border border-[#2c3b4e] bg-[#2c3b4e] px-3 py-2 text-white">
                 <b className="text-[15px]">
@@ -572,7 +605,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                 <p className="mt-1 text-[12px] leading-5">
                   {ready
                     ? `已展開 ${moduleCount} 個欄位。請先看「2.法規庫」，再依分頁填入各分類項目。`
-                    : "請在上方填入公司名稱、選擇產業、輸入資本額（大於 0）。完成後才會出現後續分頁。"}
+                    : "請在上方填入公司名稱、選擇產業、輸入資本額（大於 0），再按「確定」。未按確定不會出現後續分頁。"}
                 </p>
               </div>
               {inputs.industry ? (
