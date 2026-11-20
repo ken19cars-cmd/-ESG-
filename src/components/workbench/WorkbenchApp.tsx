@@ -228,6 +228,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
       ...prev,
       client: hit.name,
       ...(hit.capitalBillion && hit.capitalBillion > 0 ? { capitalBillion: hit.capitalBillion } : {}),
+      ...(hit.industry ? { industry: hit.industry } : {}),
     }));
   }
 
@@ -451,7 +452,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           />
         ) : (
           <p className="mt-2 text-[12px] text-[#444]">
-            公司名稱輸入二字以上，將自經濟部商工登記帶出核准設立公司之下拉清單；選定後並帶入實收資本額。填妥產業別後按「確定」，才展開後續分頁，且公司名稱、產業、資本額即鎖定。
+            公司名稱輸入二字以上，將自上市櫃公開資訊及經濟部商工登記帶出公司清單；選定後帶入公司名稱、實收資本額及產業別（上市櫃依證交所／櫃買產業分類）。請核對後按「確定」。
           </p>
         )}
       </div>

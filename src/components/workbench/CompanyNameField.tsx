@@ -59,7 +59,7 @@ export function CompanyNameField({
         .finally(() => {
           if (!ac.signal.aborted) setBusy(false);
         });
-    }, 280);
+    }, 120);
     return () => {
       window.clearTimeout(timer);
       ac.abort();
@@ -116,7 +116,7 @@ export function CompanyNameField({
       />
       {open && value.trim().length >= 2 ? (
         <div className="wb-suggest">
-          {busy && items.length === 0 ? <p className="wb-suggest-note">查詢經濟部商工登記…</p> : null}
+          {busy && items.length === 0 ? <p className="wb-suggest-note">查詢公司資料…</p> : null}
           {!busy && items.length === 0 ? (
             <p className="wb-suggest-note">{error || "查無符合之核准設立公司。"}</p>
           ) : null}
@@ -130,6 +130,7 @@ export function CompanyNameField({
             >
               <span className="wb-suggest-name">{hit.name}</span>
               <span className="wb-suggest-meta">
+                {hit.industryLabel ? `${hit.industryLabel}　` : ""}
                 {hit.taxId ? `統編 ${hit.taxId}` : ""}
                 {hit.capitalBillion != null ? `　實收資本額 ${hit.capitalBillion} 億元` : ""}
               </span>
