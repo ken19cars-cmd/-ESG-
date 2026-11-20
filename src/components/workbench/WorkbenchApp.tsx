@@ -369,9 +369,11 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
       <div className="border-b border-[#b0b0b0] bg-[#d9e2ec] px-3 py-2 text-[13px]">
         <div className="flex flex-wrap items-end gap-4">
           <label className="flex items-center gap-2 whitespace-nowrap">
-            案件
+            公司名稱
             <input
-              className="w-[280px] disabled:bg-[#e8e8e8] disabled:text-[#555]"
+              type="text"
+              className="wb-case-input w-[280px]"
+              placeholder="請輸入公司名稱"
               value={inputs.client}
               disabled={caseLocked}
               onChange={(e) => set("client", e.target.value)}
@@ -379,12 +381,18 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           </label>
           <label className="flex items-center gap-2 whitespace-nowrap">
             年度
-            <input className="w-[80px]" value={inputs.year} onChange={(e) => set("year", e.target.value)} />
+            <input
+              type="text"
+              className="wb-case-input w-[80px]"
+              placeholder="年度"
+              value={inputs.year}
+              onChange={(e) => set("year", e.target.value)}
+            />
           </label>
           <label className="flex items-center gap-2 whitespace-nowrap">
             產業
             <select
-              className="h-[26px] min-w-[280px] border border-[#8aa0b4] bg-white px-1 disabled:bg-[#e8e8e8] disabled:text-[#555]"
+              className="wb-case-input min-w-[280px]"
               value={inputs.industry}
               disabled={caseLocked}
               onChange={(e) => set("industry", e.target.value as IndustryId | "")}
@@ -402,7 +410,8 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             <input
               type="number"
               step={0.1}
-              className="w-[88px] disabled:bg-[#e8e8e8] disabled:text-[#555]"
+              className="wb-case-input w-[88px]"
+              placeholder="請輸入"
               value={inputs.capitalBillion || ""}
               disabled={caseLocked}
               onChange={(e) => set("capitalBillion", num(e))}
