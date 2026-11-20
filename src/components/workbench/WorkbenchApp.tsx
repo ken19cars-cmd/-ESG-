@@ -47,6 +47,8 @@ import {
   officialValues,
   type FactorAudit,
 } from "@/lib/official-factors";
+import { CompanyNameField } from "@/components/workbench/CompanyNameField";
+import type { CompanyHit } from "@/lib/company-search";
 
 type Sheet = "pre" | "ind" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg" | "rep";
 
@@ -220,6 +222,15 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
     setInputs((prev) => ({ ...prev, [key]: value }));
   }
 
+  function applyCompany(hit: CompanyHit) {
+    if (caseLocked) return;
+    setInputs((prev) => ({
+      ...prev,
+      client: hit.name,
+      ...(hit.capitalBillion && hit.capitalBillion > 0 ? { capitalBillion: hit.capitalBillion } : {}),
+    }));
+  }
+
   function confirmCase() {
     if (!caseReady(inputs.client, inputs.year, inputs.capitalBillion, inputs.industry)) {
       window.alert("請先填入公司名稱、選擇產業、輸入資本額（大於 0）。");
@@ -370,13 +381,11 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
         <div className="flex flex-wrap items-end gap-4">
           <label className="flex items-center gap-2 whitespace-nowrap">
             公司名稱
-            <input
-              type="text"
-              className="wb-case-input w-[280px]"
-              placeholder="請輸入公司名稱"
+            <CompanyNameField
               value={inputs.client}
               disabled={caseLocked}
-              onChange={(e) => set("client", e.target.value)}
+              onNameChange={(name) => set("client", name)}
+              onPick={applyCompany}
             />
           </label>
           <label className="flex items-center gap-2 whitespace-nowrap">
@@ -441,7 +450,9 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             })}
           />
         ) : (
-          <p className="mt-2 text-[12px] text-[#444]">填入公司名稱、產業別、資本額後按「確定」，才會展開法規庫與各分類底稿。確定後這三項即鎖定。</p>
+          <p className="mt-2 text-[12px] text-[#444]">
+            公司名稱輸入二字以上，將自經濟部商工登記帶出核准設立公司之下拉清單；選定後並帶入實收資本額。填妥產業別後按「確定」，才展開後續分頁，且公司名稱、產業、資本額即鎖定。
+          </p>
         )}
       </div>
 

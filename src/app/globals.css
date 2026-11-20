@@ -230,6 +230,59 @@ body {
   pointer-events: none;
 }
 
+.wb-suggest {
+  position: absolute;
+  z-index: 40;
+  top: 30px;
+  left: 0;
+  width: min(520px, 86vw);
+  background: #fff;
+  border: 2px solid #2c3b4e;
+  box-shadow: 0 6px 16px rgba(20, 30, 40, 0.18);
+}
+
+.wb-suggest-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 1px solid #d8dee6;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+}
+
+.wb-suggest-item.active,
+.wb-suggest-item:hover {
+  background: #e8f0f8;
+}
+
+.wb-suggest-name {
+  display: block;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.wb-suggest-meta,
+.wb-suggest-note,
+.wb-suggest-source {
+  display: block;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.4;
+}
+
+.wb-suggest-note,
+.wb-suggest-source {
+  padding: 6px 10px;
+}
+
+.wb-suggest-source {
+  background: #f3f5f7;
+  border-top: 1px solid #d8dee6;
+}
+
 .wb-root input:focus {
   outline: 1px solid #003399;
   background: #f3f8ff;
