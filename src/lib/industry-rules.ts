@@ -124,7 +124,23 @@ const ANNEX: Record<IndustryId, AnnexItem[]> = {
   other: [],
 };
 
-export type StandardCode = "GRI" | "TCFD" | "SASB" | "IFRS";
+export type StandardCode = "GRI" | "TCFD" | "SASB" | "IFRS" | "ESRS";
+
+/** Official ESRS topical standards. Names only; no invented metrics. */
+export const ESRS_TOPICS: { code: string; name: string }[] = [
+  { code: "ESRS 1", name: "一般規定（雙重重大性）" },
+  { code: "ESRS 2", name: "一般揭露（治理、策略、影響／風險／機會）" },
+  { code: "ESRS E1", name: "氣候變遷" },
+  { code: "ESRS E2", name: "污染" },
+  { code: "ESRS E3", name: "水與海洋資源" },
+  { code: "ESRS E4", name: "生物多樣性與生態系統" },
+  { code: "ESRS E5", name: "資源使用與循環經濟" },
+  { code: "ESRS S1", name: "自身勞動力" },
+  { code: "ESRS S2", name: "價值鏈工作者" },
+  { code: "ESRS S3", name: "受影響社區" },
+  { code: "ESRS S4", name: "消費者與最終使用者" },
+  { code: "ESRS G1", name: "商業行為" },
+];
 
 export type FrameworkCard = {
   code: StandardCode;
@@ -264,12 +280,14 @@ export function frameworkCards(opts: {
   capitalBillion: number;
   diningRevenuePct: number;
   moenvRegulated: boolean;
+  esrsRequired?: boolean;
 }): FrameworkCard[] {
   if (!opts.industry) return [];
   const annex = annexApplies(opts.industry, opts.capitalBillion, opts.diningRevenuePct);
   const ifrs = ifrsStage(opts.capitalBillion, opts.moenvRegulated);
   const steelOrCement = opts.industry === "steel" || opts.industry === "cement";
   const sasbStatus: FrameworkCard["status"] = annex.applies ? "適用" : annex.meta.gate === "none" ? "自願" : "不適用";
+  const esrsOn = Boolean(opts.esrsRequired);
   return [
     {
       code: "GRI",
@@ -314,6 +332,17 @@ export function frameworkCards(opts: {
       chipNote: ifrs.stage.startsWith("第") ? `${ifrs.stage} · 不依產業` : "未達門檻 · 不依產業",
       industries: "不依產業；依實收資本額（100億／50億／20億）及環境部納管分三階段。揭露在股東會年報專章，不是永續報告書本文。",
       detail: `${ifrs.stage}。${ifrs.apply}。${ifrs.detail} 年報已揭露 SASB 行業指標者，永續報告書得不再適用附表一。`,
+    },
+    {
+      code: "ESRS",
+      short: "ESRS",
+      title: "歐洲永續報導準則",
+      status: esrsOn ? "適用" : "不適用",
+      chipNote: esrsOn ? "已勾選 · 歐盟強制" : "歐盟強制 · 若有需要請勾選",
+      industries: "歐盟《企業永續報導指令》（CSRD）適用企業，含符合條件之第三國企業。非我國上市櫃一律強制。",
+      detail: esrsOn
+        ? "本案件已勾選 ESRS。應依 ESRS 1、ESRS 2 及重大之環境（E1–E5）、社會（S1–S4）、治理（G1）主題準則揭露。量化項目與既有 GRI／氣候欄位對應者，仍由本系統計算；質化敘述不由本系統代寫。"
+        : "歐盟強制。受評公司如因在歐盟上市、屬歐盟大企業或 CSRD 第三國企業範圍而須編製 ESRS 報告，請於案件設定勾選。未勾選者不納入本案件法源。",
     },
   ];
 }

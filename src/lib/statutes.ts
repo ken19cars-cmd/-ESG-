@@ -118,6 +118,27 @@ const LAW: Record<string, LawBlock> = {
 
 第七條第一項各款之事項，應在召集事由中列舉，不得以臨時動議提出。`,
   },
+  esrs: {
+    kind: "text",
+    text: `Commission Delegated Regulation (EU) 2023/2772
+European Sustainability Reporting Standards (ESRS)
+歐洲永續報導準則（歐盟《企業永續報導指令》CSRD 強制）
+
+ESRS 1  General requirements
+ESRS 2  General disclosures
+ESRS E1 Climate change
+ESRS E2 Pollution
+ESRS E3 Water and marine resources
+ESRS E4 Biodiversity and ecosystems
+ESRS E5 Resource use and circular economy
+ESRS S1 Own workforce
+ESRS S2 Workers in the value chain
+ESRS S3 Affected communities
+ESRS S4 Consumers and end-users
+ESRS G1 Business conduct
+
+Official text: https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R2772`,
+  },
   "board-attend": {
     kind: "text",
     text: `公開發行公司董事會議事辦法第9條、第17條（民國113年1月11日修正）
@@ -149,6 +170,7 @@ export function statuteBlocks(gri: string): LawBlock[] {
   if (gri.includes("證交法")) add("sea-142");
   if (gri.includes("董事會議事")) add("board-3");
   if (gri.includes("董事會運作") || gri.includes("出席")) add("board-attend");
+  if (gri.includes("ESRS") || gri.includes("CSRD") || gri.includes("歐洲永續")) add("esrs");
   if (gri.includes("能源署") || gri.includes("環境部") || gri.includes("IPCC") || gri.includes("盤查")) add("annex");
   return take(ids);
 }

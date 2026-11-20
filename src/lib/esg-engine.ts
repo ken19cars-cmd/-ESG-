@@ -8,6 +8,7 @@ export type Inputs = {
   capitalBillion: number;
   diningRevenuePct: number;
   moenvRegulated: boolean;
+  esrsRequired: boolean;
   refrigerantCode: string;
   revenueMillion: number;
   rdExpense: number;
@@ -129,6 +130,7 @@ export const defaultInputs: Inputs = {
   capitalBillion: 0,
   diningRevenuePct: 0,
   moenvRegulated: false,
+  esrsRequired: false,
   refrigerantCode: "R-134a",
   revenueMillion: 12840,
   rdExpense: 4.8,
@@ -551,6 +553,7 @@ export const regulationCatalog = [
   { id: "fsc-report", name: "上市櫃公司編製與申報永續報告書作業辦法", version: "金管會／證交所／櫃買", asOf: "2026-05", point: "第3條全體依 GRI；第4條產業別附表一（參採 SASB）；第4條之1氣候專章附表二（參採 TCFD）。", url: "https://twse-regulation.twse.com.tw/TW/law/DAT0201.aspx?FLCODE=FL075209" },
   { id: "ifrs-s1s2", name: "公開發行公司年報應行記載事項準則（IFRS S1／S2）", version: "金管會", asOf: "2026-09", point: "自115會計年度起分三階段於年報「永續相關財務資訊」專章適用 IFRS S1、S2。", url: "https://law.moj.gov.tw/LawClass/LawAll.aspx?pcode=G0400033" },
   { id: "gri-2021", name: "GRI Standards 2021", version: "GRI 1／2／3 及主題準則", asOf: "2026-10", point: "2-7、2-21、2-27、205、302–306、401、403–405、308、414。", url: "https://www.globalreporting.org/how-to-use-the-gri-standards/gri-standards-traditional-chinese-translations/" },
+  { id: "esrs", name: "ESRS（歐洲永續報導準則）", version: "歐盟 CSRD／Delegated Regulation (EU) 2023/2772", asOf: "2026-07", point: "歐盟強制。案件設定勾選後納入本案件法源。ESRS 1、2 及 E1–E5、S1–S4、G1。", url: "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R2772" },
   { id: "ghg", name: "GHG Protocol／ISO 14064-1", version: "邊界對齊合併報表", asOf: "2026-10", point: "活動數據（用量）× 係數＝範疇一／二排放。下方有中文說明。", url: "https://ghgprotocol.org/corporate-standard" },
   { id: "ef", name: "排放係數／GWP", version: "可覆核參數表", asOf: "2026-10", point: "電力、油氣、冷媒係數以環境部／IPCC 當期為準。", url: "https://gazette2.nat.gov.tw/EG_FileManager/eguploadpub/eg030025/ch07/type3/gov60/num16/Eg.htm" },
   { id: "osh", name: "職安頻率", version: "每百萬工時", asOf: "2026-10", point: "FR／SR／TRIR＝件數×10^6÷總工時。", url: "https://law.moj.gov.tw/LawClass/LawSingle.aspx?flno=6&pcode=N0070004" },

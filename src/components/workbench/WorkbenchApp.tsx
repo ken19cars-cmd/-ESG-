@@ -40,6 +40,7 @@ import {
   assuranceRequired,
   caseReady,
   diningGateRelevant,
+  ESRS_TOPICS,
   frameworkCards,
   industryMeta,
   industryOptionHint,
@@ -162,7 +163,7 @@ function loadSavedInputs(username: string, client: string): Inputs | null {
   try {
     const raw = localStorage.getItem(inputsKey(username, client));
     if (!raw) return null;
-    return JSON.parse(raw) as Inputs;
+    return { ...defaultInputs, ...(JSON.parse(raw) as Partial<Inputs>) };
   } catch {
     return null;
   }
@@ -679,6 +680,7 @@ export function WorkbenchApp({
               capitalBillion: inputs.capitalBillion,
               diningRevenuePct: inputs.diningRevenuePct,
               moenvRegulated: inputs.moenvRegulated,
+              esrsRequired: inputs.esrsRequired,
             })}
           />
         ) : caseLocked ? null : (
@@ -950,6 +952,7 @@ export function WorkbenchApp({
                     capitalBillion: inputs.capitalBillion,
                     diningRevenuePct: inputs.diningRevenuePct,
                     moenvRegulated: inputs.moenvRegulated,
+                    esrsRequired: inputs.esrsRequired,
                   }).map((card) => (
                     <StandardDetailCard key={card.code} card={card} />
                   ))}
@@ -1022,6 +1025,56 @@ export function WorkbenchApp({
                   ) : null}
                 </div>
               ) : null}
+              <div className="mb-3 w-full border border-[#c8c8c8] bg-[#f7f7f4] px-3 py-2 text-[12px] leading-5 text-[#333]">
+                <label className="flex items-start gap-2 font-bold">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={inputs.esrsRequired}
+                    onChange={(e) => set("esrsRequired", e.target.checked)}
+                  />
+                  ESRS（歐洲永續報導準則）
+                </label>
+                <div className="mt-1 pl-6">
+                  <p>歐盟強制。若有需要請勾選。</p>
+                  <p className="mt-1 text-[11px] text-[#555]">
+                    適用於受《企業永續報導指令》（CSRD）拘束之企業，包括在歐盟上市、歐盟大企業，以及符合條件之第三國企業。非我國上市櫃一律強制；無歐盟報導義務者無須勾選。勾選後，本案件法源納入 ESRS 1、ESRS 2 及環境（E1–E5）、社會（S1–S4）、治理（G1）主題準則。量化項目與既有欄位對應者由系統計算，質化敘述不代寫。
+                  </p>
+                  {inputs.esrsRequired ? (
+                    <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+                      {ESRS_TOPICS.map((item) => (
+                        <li key={item.code}>
+                          <b>{item.code}</b>　{item.name}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <p className="mt-1 text-[11px] text-[#555]">
+                    來源：
+                    <a
+                      className="ml-1 underline"
+                      href="https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32023R2772"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Delegated Regulation (EU) 2023/2772
+                    </a>
+                    <button
+                      type="button"
+                      className="ml-2 text-[11px] text-[#335577] underline"
+                      onClick={(event) =>
+                        openSource(event, {
+                          label: "ESRS 歐洲永續報導準則",
+                          gri: "ESRS／CSRD",
+                          why: "歐洲永續報導準則主題清單",
+                        })
+                      }
+                    >
+                      查看法條
+                    </button>
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1929,6 +1982,7 @@ const STANDARD_TONE: Record<FrameworkCard["code"], { bg: string; border: string;
   TCFD: { bg: "#1b3a5c", border: "#1b3a5c", ink: "#12263d" },
   SASB: { bg: "#7a3b12", border: "#7a3b12", ink: "#5a2a0c" },
   IFRS: { bg: "#2d4a1f", border: "#2d4a1f", ink: "#1d3314" },
+  ESRS: { bg: "#1a365d", border: "#1a365d", ink: "#12243f" },
 };
 
 function standardOn(status: FrameworkCard["status"]) {
@@ -1937,7 +1991,7 @@ function standardOn(status: FrameworkCard["status"]) {
 
 function StandardChipBar({ cards }: { cards: FrameworkCard[] }) {
   return (
-    <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-4">
+    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
       {cards.map((card) => {
         const on = standardOn(card.status);
         const tone = STANDARD_TONE[card.code];
