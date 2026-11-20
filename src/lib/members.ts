@@ -9,13 +9,27 @@ export type Member = {
   role: "admin" | "member";
   plan: "free" | "paid";
   paidUntil: string;
+  displayName?: string;
+  companyQuota?: number;
   boundCase?: {
     client: string;
     industry: string;
     capitalBillion: number;
     at: number;
   } | null;
+  boundCases?: {
+    client: string;
+    industry: string;
+    capitalBillion: number;
+    at: number;
+  }[];
 };
+
+export function memberQuota(member: Pick<Member, "role" | "companyQuota">) {
+  if (member.role === "admin") return 99;
+  const n = Number(member.companyQuota);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 1;
+}
 
 const file = path.join(process.cwd(), "data", "members.json");
 
@@ -59,6 +73,8 @@ export function publicMember(member: Member) {
     plan: member.plan,
     paidUntil: member.paidUntil,
     paid: isPaid(member),
-    boundClient: member.boundCase?.client || "",
+    displayName: member.displayName || "",
+    companyQuota: memberQuota(member),
+    boundClient: member.boundCase?.client || member.boundCases?.[0]?.client || "",
   };
 }

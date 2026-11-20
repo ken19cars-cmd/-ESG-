@@ -1,7 +1,8 @@
 import { boundCaseCookie, currentSession } from "@/lib/auth";
-import { getBoundCase, isIndustryId, setBoundCase } from "@/lib/bound-case";
+import { getBoundCase, getBoundCases, isIndustryId, setBoundCase } from "@/lib/bound-case";
 import { caseReady } from "@/lib/industry-rules";
-import { findMember } from "@/lib/members";
+import { findMember, memberQuota } from "@/lib/members";
+import { upsertMemberToNotion } from "@/lib/notion-members";
 
 export async function POST(req: Request) {
   const session = await currentSession();
@@ -25,8 +26,10 @@ export async function POST(req: Request) {
       capitalBillion,
       at: Date.now(),
     });
+    await upsertMemberToNotion(findMember(member.username) ?? member).catch(() => null);
+    const cases = getBoundCases(member.username);
     return Response.json(
-      { bound },
+      { bound, cases, quota: memberQuota(member) },
       { headers: { "Set-Cookie": boundCaseCookie({ u: member.username, ...bound }) } },
     );
   } catch (error) {
@@ -40,5 +43,9 @@ export async function GET() {
   const session = await currentSession();
   const member = session ? findMember(session.username) : null;
   if (!member) return Response.json({ error: "請先登入。" }, { status: 401 });
-  return Response.json({ bound: getBoundCase(member.username) });
+  return Response.json({
+    bound: getBoundCase(member.username),
+    cases: getBoundCases(member.username),
+    quota: memberQuota(member),
+  });
 }

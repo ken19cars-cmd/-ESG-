@@ -6,7 +6,9 @@
     "taxId": "",
     "role": "admin",
     "plan": "paid",
-    "paidUntil": "2027-12-31"
+    "paidUntil": "2027-12-31",
+    "displayName": "管理者",
+    "companyQuota": 99
   },
   {
     "username": "firm-free",
@@ -15,7 +17,9 @@
     "taxId": "00000000",
     "role": "member",
     "plan": "free",
-    "paidUntil": ""
+    "paidUntil": "",
+    "displayName": "",
+    "companyQuota": 1
   },
   {
     "username": "firm-paid",
@@ -24,6 +28,8 @@
     "taxId": "12345678",
     "role": "member",
     "plan": "paid",
-    "paidUntil": "2027-12-31"
+    "paidUntil": "2027-12-31",
+    "displayName": "",
+    "companyQuota": 1
   }
 ]

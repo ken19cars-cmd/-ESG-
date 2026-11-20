@@ -3,8 +3,8 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { WorkbenchApp } from "@/components/workbench/WorkbenchApp";
 import { currentSession, readBoundCookie } from "@/lib/auth";
-import { resolveBoundCase } from "@/lib/bound-case";
-import { findMember, isPaid } from "@/lib/members";
+import { getBoundCases, resolveBoundCase } from "@/lib/bound-case";
+import { findMember, isPaid, memberQuota } from "@/lib/members";
 
 async function WorkbenchGate() {
   await connection();
@@ -19,8 +19,11 @@ async function WorkbenchGate() {
         company: member.company,
         paid: isPaid(member),
         role: member.role,
+        displayName: member.displayName || "",
+        companyQuota: memberQuota(member),
       }}
       boundCase={boundCase}
+      boundCases={getBoundCases(member.username)}
     />
   );
 }

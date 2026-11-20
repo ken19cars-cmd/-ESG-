@@ -22,7 +22,14 @@ type ArticleBlock =
   | { kind: "table"; rows: string[][] }
   | { kind: "image"; src: string };
 
-type MemberView = { username: string; company: string; paid: boolean; role: "admin" | "member" };
+type MemberView = {
+  username: string;
+  company: string;
+  paid: boolean;
+  role: "admin" | "member";
+  displayName?: string;
+  companyQuota?: number;
+};
 type BoundCaseView = { client: string; industry: IndustryId; capitalBillion: number };
 import { griIndex, reportDraft } from "@/lib/report-draft";
 import { regulationArticles } from "@/lib/regulation-library";
@@ -146,7 +153,39 @@ function annexDerivedIds(item: AnnexItem): string[] {
   return [];
 }
 
-export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundCase?: BoundCaseView | null }) {
+function inputsKey(username: string, client: string) {
+  return `hanxin-esg-inputs:${username}:${client}`;
+}
+
+function loadSavedInputs(username: string, client: string): Inputs | null {
+  if (!client) return null;
+  try {
+    const raw = localStorage.getItem(inputsKey(username, client));
+    if (!raw) return null;
+    return JSON.parse(raw) as Inputs;
+  } catch {
+    return null;
+  }
+}
+
+function saveInputs(username: string, client: string, value: Inputs) {
+  if (!client) return;
+  try {
+    localStorage.setItem(inputsKey(username, client), JSON.stringify(value));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function WorkbenchApp({
+  member,
+  boundCase,
+  boundCases: initialCases,
+}: {
+  member: MemberView;
+  boundCase?: BoundCaseView | null;
+  boundCases?: BoundCaseView[];
+}) {
   const [sheet, setSheet] = useState<Sheet>("pre");
   const [inputs, setInputs] = useState<Inputs>(() =>
     boundCase
@@ -161,6 +200,8 @@ export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundC
   const [caseLocked, setCaseLocked] = useState(Boolean(boundCase));
   const [bindBusy, setBindBusy] = useState(false);
   const [bindError, setBindError] = useState("");
+  const [boundList, setBoundList] = useState<BoundCaseView[]>(initialCases || (boundCase ? [boundCase] : []));
+  const quota = member.companyQuota ?? 1;
   const [regStamp, setRegStamp] = useState("尚未核對法規版本");
   const [factorAudit, setFactorAudit] = useState<FactorAudit | null>(null);
   const [factorBusy, setFactorBusy] = useState(false);
@@ -202,6 +243,12 @@ export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundC
     () => officialValues(inputs.year, inputs.refrigerantCode),
     [inputs.year, inputs.refrigerantCode],
   );
+
+  useEffect(() => {
+    if (!boundCase?.client) return;
+    const saved = loadSavedInputs(member.username, boundCase.client);
+    if (saved) setInputs(saved);
+  }, [member.username, boundCase?.client]);
 
   useEffect(() => {
     if (!member.paid) {
@@ -261,11 +308,23 @@ export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundC
           capitalBillion: inputs.capitalBillion,
         }),
       });
-      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      const data = (await res.json().catch(() => null)) as {
+        error?: string;
+        bound?: BoundCaseView;
+        cases?: BoundCaseView[];
+      } | null;
       if (!res.ok) {
         setBindError(data?.error || "無法綁定受評公司。");
         return;
       }
+      if (data?.cases) setBoundList(data.cases);
+      else if (data?.bound) {
+        setBoundList((prev) => {
+          const rest = prev.filter((item) => item.client !== data.bound?.client);
+          return [...rest, data.bound as BoundCaseView];
+        });
+      }
+      saveInputs(member.username, inputs.client, inputs);
       setCaseLocked(true);
       setSheet("reg");
     } catch {
@@ -387,7 +446,8 @@ export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundC
         </div>
         <div className="flex items-center gap-3">
           <span>
-            {member.company}　{member.paid ? "付費會員" : "免費會員"}
+            {member.displayName ? `${member.displayName}　` : ""}
+            {member.company}　{member.paid ? "付費會員" : "免費會員"}　開通 {boundList.length}/{quota}
             {member.paid ? `　指標 ${result.metrics.length}　異常 ${fail}　注意 ${warn}` : ""}
           </span>
           {member.role === "admin" && (
@@ -474,10 +534,59 @@ export function WorkbenchApp({ member, boundCase }: { member: MemberView; boundC
               {bindBusy ? "綁定中" : "確定"}
             </button>
           )}
+          {caseLocked && boundList.length > 1 ? (
+            <label className="flex items-center gap-2 whitespace-nowrap">
+              切換受評公司
+              <select
+                className="wb-case-input min-w-[220px]"
+                value={inputs.client}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  const hit = boundList.find((item) => item.client === name);
+                  if (!hit) return;
+                  saveInputs(member.username, inputs.client, inputs);
+                  const saved = loadSavedInputs(member.username, hit.client);
+                  setInputs(
+                    saved || {
+                      ...defaultInputs,
+                      client: hit.client,
+                      industry: hit.industry,
+                      capitalBillion: hit.capitalBillion,
+                    },
+                  );
+                  setCaseLocked(true);
+                  setSheet("pre");
+                }}
+              >
+                {boundList.map((item) => (
+                  <option key={item.client} value={item.client}>
+                    {item.client}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          {caseLocked && boundList.length < quota ? (
+            <button
+              type="button"
+              className="h-[26px] border border-[#1a2a3a] bg-white px-3 text-[12px] font-semibold text-[#1a2a3a]"
+              onClick={() => {
+                saveInputs(member.username, inputs.client, inputs);
+                setInputs(defaultInputs);
+                setCaseLocked(false);
+                setSheet("pre");
+                setBindError("");
+              }}
+            >
+              新增受評公司
+            </button>
+          ) : null}
         </div>
         {bindError ? <p className="mt-2 text-[12px] text-[#a40000]">{bindError}</p> : null}
         {caseLocked ? (
-          <p className="mt-2 text-[12px] text-[#1f4a3a]">本帳號已綁定受評公司，重新整理後仍維持鎖定；如需改綁請由管理者解除鎖定。</p>
+          <p className="mt-2 text-[12px] text-[#1f4a3a]">
+            本帳號已綁定此受評公司（開通 {boundList.length}/{quota}）。同一家公司不得改綁；尚有名額時可新增另一家。
+          </p>
         ) : null}
         {inputs.industry ? (
           <StandardChipBar

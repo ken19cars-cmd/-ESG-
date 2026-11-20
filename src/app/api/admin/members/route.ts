@@ -1,7 +1,8 @@
 import { hashPassword } from "@/lib/auth";
 import { currentSession } from "@/lib/auth";
-import { clearBoundCase, getBoundCase } from "@/lib/bound-case";
-import { findMember, listMembers, publicMember, saveMembers, type Member } from "@/lib/members";
+import { setIssuedPassword } from "@/lib/member-credentials";
+import { findMember, listMembers, memberQuota, publicMember, saveMembers, type Member } from "@/lib/members";
+import { importMembersFromNotion, upsertMemberToNotion } from "@/lib/notion-members";
 
 async function requireAdmin() {
   const session = await currentSession();
@@ -10,14 +11,28 @@ async function requireAdmin() {
   return member;
 }
 
+function memberRow(member: Member) {
+  const cases = member.boundCases?.length ? member.boundCases : member.boundCase ? [member.boundCase] : [];
+  return {
+    ...publicMember(member),
+    displayName: member.displayName || "",
+    companyQuota: memberQuota(member),
+    boundUsed: cases.length,
+    boundClient: cases.map((item) => item.client).join("、"),
+  };
+}
+
 export async function GET() {
   if (!(await requireAdmin())) return Response.json({ error: "需要管理者登入。" }, { status: 401 });
-  return Response.json({
-    members: listMembers().map((member) => ({
-      ...publicMember(member),
-      boundClient: getBoundCase(member.username)?.client || "",
-    })),
-  });
+  try {
+    await importMembersFromNotion().catch(() => null);
+    return Response.json({
+      members: listMembers().map(memberRow),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "無法讀取會員";
+    return Response.json({ error: message, members: [] }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -32,6 +47,7 @@ export async function POST(req: Request) {
   if (members.some((item) => item.username === username)) {
     return Response.json({ error: "這個帳號已經存在。" }, { status: 400 });
   }
+  const quota = Math.max(1, Math.floor(Number(body?.companyQuota) || 1));
   const next: Member = {
     username,
     passwordHash: hashPassword(password),
@@ -40,14 +56,18 @@ export async function POST(req: Request) {
     role: "member",
     plan: body?.plan === "paid" ? "paid" : "free",
     paidUntil: body?.plan === "paid" ? body?.paidUntil || "" : "",
+    displayName: body?.displayName?.trim() || "",
+    companyQuota: quota,
   };
   try {
     saveMembers([...members, next]);
+    setIssuedPassword(username, password);
   } catch (error) {
     const message = error instanceof Error ? error.message : "無法儲存會員。";
     return Response.json({ error: message }, { status: 501 });
   }
-  return Response.json({ member: publicMember(next) });
+  await upsertMemberToNotion(next).catch(() => null);
+  return Response.json({ member: memberRow(next) });
 }
 
 export async function PATCH(req: Request) {
@@ -56,6 +76,10 @@ export async function PATCH(req: Request) {
     username?: string;
     plan?: string;
     paidUntil?: string;
+    displayName?: string;
+    company?: string;
+    companyQuota?: number;
+    password?: string;
     clearBoundCase?: boolean;
   } | null;
   const username = body?.username?.trim() ?? "";
@@ -64,23 +88,33 @@ export async function PATCH(req: Request) {
   if (index < 0) return Response.json({ error: "找不到這個帳號。" }, { status: 404 });
   const current = members[index];
   if (body?.clearBoundCase) {
+    const { clearBoundCase } = await import("@/lib/bound-case");
     clearBoundCase(username);
-    return Response.json({
-      member: { ...publicMember(findMember(username) ?? current), boundClient: "" },
-    });
+    const unlocked = findMember(username) ?? { ...current, boundCase: null, boundCases: [] };
+    await upsertMemberToNotion(unlocked).catch(() => null);
+    return Response.json({ member: memberRow(unlocked) });
   }
   if (current.role === "admin") return Response.json({ error: "不能改管理者自己的方案。" }, { status: 400 });
-  const plan = body?.plan === "paid" ? "paid" : "free";
+  const plan = body?.plan === "paid" ? "paid" : body?.plan === "free" ? "free" : current.plan;
+  const quotaRaw = body?.companyQuota;
+  const quota = quotaRaw === undefined ? memberQuota(current) : Math.max(1, Math.floor(Number(quotaRaw) || 1));
+  const password = body?.password?.trim() || "";
   members[index] = {
     ...current,
     plan,
     paidUntil: plan === "paid" ? body?.paidUntil || current.paidUntil : "",
+    displayName: body?.displayName === undefined ? current.displayName : body.displayName.trim(),
+    company: body?.company === undefined ? current.company : body.company.trim() || current.company,
+    companyQuota: quota,
+    ...(password.length >= 8 ? { passwordHash: hashPassword(password) } : {}),
   };
   try {
     saveMembers(members);
+    if (password.length >= 8) setIssuedPassword(username, password);
   } catch (error) {
     const message = error instanceof Error ? error.message : "無法儲存會員。";
     return Response.json({ error: message }, { status: 501 });
   }
-  return Response.json({ member: publicMember(members[index]) });
+  await upsertMemberToNotion(members[index]).catch(() => null);
+  return Response.json({ member: memberRow(members[index]) });
 }

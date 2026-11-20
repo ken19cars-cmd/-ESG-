@@ -1,8 +1,15 @@
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
-import type { BoundCookie } from "@/lib/auth";
 import { INDUSTRIES, type IndustryId } from "@/lib/industry-rules";
-import { findMember, listMembers, saveMembers, type Member } from "@/lib/members";
+import { findMember, listMembers, memberQuota, saveMembers, type Member } from "@/lib/members";
+
+type BoundCookie = {
+  u: string;
+  client: string;
+  industry: string;
+  capitalBillion: number;
+  at: number;
+};
 
 export type BoundCase = {
   client: string;
@@ -11,7 +18,8 @@ export type BoundCase = {
   at: number;
 };
 
-type Overlay = Record<string, BoundCase | { cleared: true; at: number }>;
+type OverlayRow = { cases: BoundCase[] } | BoundCase | { cleared: true; at: number };
+type Overlay = Record<string, OverlayRow>;
 
 const file = path.join(process.cwd(), "data", "bound-cases.json");
 
@@ -46,23 +54,45 @@ export function parseBoundCase(raw: unknown): BoundCase | null {
   };
 }
 
+function casesFromRow(row: OverlayRow | undefined): BoundCase[] | "cleared" {
+  if (!row) return [];
+  if ("cleared" in row && row.cleared) return "cleared";
+  if ("cases" in row && Array.isArray(row.cases)) {
+    return row.cases.map(parseBoundCase).filter((item): item is BoundCase => Boolean(item));
+  }
+  const one = parseBoundCase(row);
+  return one ? [one] : [];
+}
+
 export function getBoundClearedAt(username: string) {
   const row = readOverlay()[username];
   if (row && "cleared" in row && row.cleared) return row.at;
   return 0;
 }
 
+export function getBoundCases(username: string): BoundCase[] {
+  const fromFile = casesFromRow(readOverlay()[username]);
+  if (fromFile === "cleared") return [];
+  if (fromFile.length) return fromFile;
+  const member = findMember(username);
+  const listed = (member?.boundCases || []).map(parseBoundCase).filter((item): item is BoundCase => Boolean(item));
+  if (listed.length) return listed;
+  const legacy = parseBoundCase(member?.boundCase);
+  return legacy ? [legacy] : [];
+}
+
 export function getBoundCase(username: string): BoundCase | null {
-  const row = readOverlay()[username];
-  if (row && "cleared" in row && row.cleared) return null;
-  const fromFile = parseBoundCase(row);
-  if (fromFile) return fromFile;
-  return parseBoundCase(findMember(username)?.boundCase);
+  const cases = getBoundCases(username);
+  return cases[cases.length - 1] ?? null;
 }
 
 export function resolveBoundCase(username: string, cookie: BoundCookie | null): BoundCase | null {
-  const fromStore = getBoundCase(username);
-  if (fromStore) return fromStore;
+  const cases = getBoundCases(username);
+  if (cookie?.u === username) {
+    const hit = cases.find((item) => item.client === cookie.client);
+    if (hit) return hit;
+  }
+  if (cases.length) return cases[cases.length - 1] ?? null;
   const clearedAt = getBoundClearedAt(username);
   if (!cookie || cookie.u !== username || cookie.at <= clearedAt) return null;
   return parseBoundCase(cookie);
@@ -71,12 +101,17 @@ export function resolveBoundCase(username: string, cookie: BoundCookie | null): 
 export function setBoundCase(username: string, bound: BoundCase) {
   const member = findMember(username);
   if (!member) throw Object.assign(new Error("請先登入。"), { status: 401 });
-  const current = getBoundCase(username);
-  if (member.role !== "admin" && current && current.client !== bound.client) {
-    throw Object.assign(new Error("本帳號已綁定受評公司，不得更改。"), { status: 409 });
+  const current = getBoundCases(username);
+  const index = current.findIndex((item) => item.client === bound.client);
+  if (index >= 0) {
+    current[index] = bound;
+  } else if (member.role !== "admin" && current.length >= memberQuota(member)) {
+    throw Object.assign(new Error("本帳號開通數量已滿，不得再新增受評公司。"), { status: 409 });
+  } else {
+    current.push(bound);
   }
   const overlay = readOverlay();
-  overlay[username] = bound;
+  overlay[username] = { cases: current };
   try {
     writeOverlay(overlay);
   } catch {
@@ -84,10 +119,14 @@ export function setBoundCase(username: string, bound: BoundCase) {
   }
   try {
     const members = listMembers();
-    const index = members.findIndex((item) => item.username === username);
-    if (index >= 0) {
-      const next: Member = { ...members[index], boundCase: bound };
-      members[index] = next;
+    const memberIndex = members.findIndex((item) => item.username === username);
+    if (memberIndex >= 0) {
+      const next: Member = {
+        ...members[memberIndex],
+        boundCase: bound,
+        boundCases: current,
+      };
+      members[memberIndex] = next;
       saveMembers(members);
     }
   } catch {
@@ -108,7 +147,7 @@ export function clearBoundCase(username: string) {
     const members = listMembers();
     const index = members.findIndex((item) => item.username === username);
     if (index >= 0) {
-      const { boundCase: _removed, ...rest } = members[index];
+      const { boundCase: _one, boundCases: _many, ...rest } = members[index];
       members[index] = rest;
       saveMembers(members);
     }
