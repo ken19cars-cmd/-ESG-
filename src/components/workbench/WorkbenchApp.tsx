@@ -606,17 +606,48 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                     </label>
                   ) : null}
                   {moenvGateRelevant(inputs.capitalBillion) ? (
-                    <label className="flex flex-wrap items-center gap-2">
-                      <input
-                        type="checkbox"
-                        checked={inputs.moenvRegulated}
-                        onChange={(e) => set("moenvRegulated", e.target.checked)}
-                      />
-                      環境部納管應盤查及查驗
-                      <span className="text-[11px] text-[#666]">
-                        金管會 IFRS S1／S2 第三階段（115年9月調整）：資本額未達二十億元時，環境部納管者仍納入年報永續揭露準則。非化學工業附表一項目。
-                      </span>
-                    </label>
+                    <div className="w-full border border-[#c8c8c8] bg-[#f7f7f4] px-3 py-2 text-[12px] leading-5 text-[#333]">
+                      <label className="flex items-start gap-2 font-bold">
+                        <input
+                          type="checkbox"
+                          className="mt-1"
+                          checked={inputs.moenvRegulated}
+                          onChange={(e) => set("moenvRegulated", e.target.checked)}
+                        />
+                        環境部公告應盤查登錄及查驗
+                      </label>
+                      <div className="mt-1 pl-6">
+                        <p>
+                          問公司環安或查上年報告書：<b>有沒有被環境部列管，每年要向環境部交盤查、並經查驗機構查驗</b>。有就勾；沒有就不要勾。不是問「公司有沒有自願盤碳」。
+                        </p>
+                        <ul className="mt-1 list-disc space-y-1 pl-5 text-[11px] text-[#555]">
+                          <li>
+                            <b>勾選</b>：已屬環境部公告「應盤查登錄及查驗」排放源。常見為發電、鋼鐵、石油煉製、水泥、半導體、面板等指定製程，或全廠年排放達 2.5 萬公噸 CO2e 且應辦理查驗。實務上每年 4 月 30 日前在「事業溫室氣體排放量資訊平台」登錄盤查，10 月 31 日前上傳查驗聲明書。
+                          </li>
+                          <li>
+                            <b>不要勾</b>：只有金管會路徑圖或永續報告書的盤查、自願盤查，或尚未被指定應查驗。食品工業多數不勾，除非廠區已被環境部列管。
+                          </li>
+                          <li>
+                            金管會 115 年 9 月：資本額未達 20 億但屬上開列管者（全國約 25 家上市櫃）仍納入年報 IFRS S1／S2 第三階段。不勾則年報只須揭露氣候基本資訊，不影響本業附表一欄位。
+                          </li>
+                        </ul>
+                        <p className="mt-1 text-[11px] text-[#555]">
+                          查證：
+                          <a className="ml-1 underline" href="https://ghgregistry.moenv.gov.tw" target="_blank" rel="noreferrer">
+                            事業溫室氣體排放量資訊平台
+                          </a>
+                          <span className="mx-1">·</span>
+                          <a
+                            className="underline"
+                            href="https://www.fsc.gov.tw/ch/home.jsp?dataserno=202609230001&dtable=News&id=96&mcustomize=news_view.jsp&parentpath=0"
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            金管會 115/9/23 新聞稿
+                          </a>
+                        </p>
+                      </div>
+                    </div>
                   ) : null}
                 </div>
               ) : null}
