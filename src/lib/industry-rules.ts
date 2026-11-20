@@ -124,11 +124,27 @@ const ANNEX: Record<IndustryId, AnnexItem[]> = {
   other: [],
 };
 
+export type StandardCode = "GRI" | "TCFD" | "SASB" | "IFRS";
+
 export type FrameworkCard = {
+  code: StandardCode;
+  short: string;
   title: string;
   status: "適用" | "分階段" | "依產業" | "不適用" | "自願";
+  chipNote: string;
+  industries: string;
   detail: string;
 };
+
+const SASB_INDUSTRIES =
+  "食品、化學、金融保險（一律＋會計師確信）；水泥、塑膠、鋼鐵、油電燃氣、半導體、電腦及週邊、光電、通信網路、電子零組件、電子通路、其他電子業（實收資本額≥20億）";
+
+export function industryOptionHint(id: IndustryId): string {
+  if (id === "food" || id === "chemical" || id === "finance") return "SASB強制＋確信";
+  if (id === "cement" || id === "steel") return "SASB≥20億／TCFD提前";
+  if (id === "other") return "GRI＋TCFD；SASB自願";
+  return "SASB資本額≥20億";
+}
 
 export function industryMeta(id: IndustryId) {
   return INDUSTRIES.find((x) => x.id === id) ?? INDUSTRIES[INDUSTRIES.length - 1];
@@ -184,30 +200,51 @@ export function frameworkCards(opts: {
   const annex = annexApplies(opts.industry, opts.capitalBillion, opts.diningRevenuePct);
   const ifrs = ifrsStage(opts.capitalBillion, opts.moenvRegulated);
   const steelOrCement = opts.industry === "steel" || opts.industry === "cement";
+  const sasbStatus: FrameworkCard["status"] = annex.applies ? "適用" : annex.meta.gate === "none" ? "自願" : "不適用";
   return [
     {
-      title: "1 永續報告書基本盤（GRI）",
+      code: "GRI",
+      short: "GRI",
+      title: "永續報告書基本盤",
       status: "適用",
-      detail: "作業辦法第3條：全體上市櫃公司每年依 GRI 通用準則、行業準則及重大主題準則編製前一年度永續報告書。SASB 於第3條為「並可參考」，非全體強制。",
+      chipNote: "全體上市櫃",
+      industries: "全體上市櫃（不限產業）",
+      detail: "作業辦法第3條：每年依 GRI 通用準則、行業準則及重大主題準則編製前一年度永續報告書。SASB 於第3條為「並可參考」，非全體強制。",
     },
     {
-      title: "2 氣候相關資訊專章（附表二／TCFD）",
+      code: "TCFD",
+      short: "TCFD",
+      title: "氣候相關資訊專章（附表二）",
       status: "分階段",
-      detail: steelOrCement
-        ? "作業辦法第4條之1：全體應以專章揭露附表二。鋼鐵、水泥之範疇一、二盤查與確信時程較其他產業提前。"
-        : "作業辦法第4條之1：全體應以專章揭露附表二（項目參採 TCFD 四大核心）。範疇一、二盤查、確信及減碳目標依資本額分階段。已於年報適用永續揭露準則者，得不再適用本條。",
+      chipNote: steelOrCement ? "全體專章 · 本業提前" : "全體專章 · 鋼鐵／水泥提前",
+      industries: steelOrCement
+        ? "全體上市櫃必設專章。本產業（鋼鐵／水泥）範疇一、二盤查與確信時程較其他產業提前。"
+        : "全體上市櫃必設專章（項目參採 TCFD 四大核心）。盤查、確信、減碳目標依資本額分階段，不限產業；鋼鐵、水泥提前。",
+      detail: "作業辦法第4條之1。已於年報適用永續揭露準則者，得不再適用本條。",
     },
     {
-      title: "3 產業別加強揭露（附表一，參採 SASB）",
-      status: annex.applies ? "適用" : annex.meta.gate === "none" ? "自願" : "不適用",
+      code: "SASB",
+      short: "SASB",
+      title: "產業別加強揭露（附表一）",
+      status: sasbStatus,
+      chipNote: annex.applies
+        ? `本業強制 · ${annex.meta.annex}`
+        : annex.meta.gate === "none"
+          ? "本業自願"
+          : "本業未達20億門檻",
+      industries: SASB_INDUSTRIES,
       detail: annex.applies
         ? `${annex.meta.annex}　${annex.reason}${assuranceRequired(opts.industry, opts.diningRevenuePct) ? " 食品、化學、金融保險業之附表一應取得會計師確信。" : ""}`
         : annex.reason,
     },
     {
-      title: "4 年報永續相關財務資訊（IFRS S1／S2）",
+      code: "IFRS",
+      short: "IFRS S1／S2",
+      title: "年報永續相關財務資訊",
       status: ifrs.stage.startsWith("第") ? "分階段" : "不適用",
-      detail: `${ifrs.stage}。${ifrs.apply}。${ifrs.detail} 揭露位置在股東會年報專章，不是永續報告書本文。年報已揭露 SASB 行業指標者，永續報告書得不再適用附表一。`,
+      chipNote: ifrs.stage.startsWith("第") ? `${ifrs.stage} · 不依產業` : "未達門檻 · 不依產業",
+      industries: "不依產業；依實收資本額（100億／50億／20億）及環境部納管分三階段。揭露在股東會年報專章，不是永續報告書本文。",
+      detail: `${ifrs.stage}。${ifrs.apply}。${ifrs.detail} 年報已揭露 SASB 行業指標者，永續報告書得不再適用附表一。`,
     },
   ];
 }

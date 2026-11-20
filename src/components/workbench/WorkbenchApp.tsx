@@ -31,7 +31,9 @@ import {
   assuranceRequired,
   frameworkCards,
   industryMeta,
+  industryOptionHint,
   type AnnexItem,
+  type FrameworkCard,
   type IndustryId,
 } from "@/lib/industry-rules";
 import {
@@ -316,29 +318,29 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
 
       <div className="border-b border-[#b0b0b0] bg-[#d9e2ec] px-3 py-2 text-[13px]">
         <div className="flex flex-wrap items-end gap-4">
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 whitespace-nowrap">
             案件
             <input className="w-[280px]" value={inputs.client} onChange={(e) => set("client", e.target.value)} />
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 whitespace-nowrap">
             年度
             <input className="w-[80px]" value={inputs.year} onChange={(e) => set("year", e.target.value)} />
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 whitespace-nowrap">
             產業
             <select
-              className="h-[26px] min-w-[180px] border border-[#8aa0b4] bg-white px-1"
+              className="h-[26px] min-w-[280px] border border-[#8aa0b4] bg-white px-1"
               value={inputs.industry}
               onChange={(e) => set("industry", e.target.value as IndustryId)}
             >
               {INDUSTRIES.map((ind) => (
                 <option key={ind.id} value={ind.id}>
-                  {ind.name}
+                  {ind.name}　{industryOptionHint(ind.id)}
                 </option>
               ))}
             </select>
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 whitespace-nowrap">
             實收資本額
             <input
               type="number"
@@ -350,6 +352,14 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             億元
           </label>
         </div>
+        <StandardChipBar
+          cards={frameworkCards({
+            industry: inputs.industry,
+            capitalBillion: inputs.capitalBillion,
+            diningRevenuePct: inputs.diningRevenuePct,
+            moenvRegulated: inputs.moenvRegulated,
+          })}
+        />
       </div>
 
       <div className="flex flex-wrap gap-0 border-b border-[#aaa] bg-[#dedede] px-2 pt-1">
@@ -510,7 +520,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
           {sheet === "pre" && (
             <div className="mb-3 text-[12px] text-[#333]">
               <p className="mb-2 leading-6">
-                先選產業別與實收資本額。系統依作業辦法第3條、第4條、第4條之1及年報準則，判斷 GRI、氣候專章、附表一產業指標、IFRS S1／S2 何者適用，並在「產業指標」頁帶出該產業欄位。
+                先選產業別與實收資本額。上方色塊即本案件強制／分階段適用的國際準則；SASB 只對列名產業強制，TCFD 氣候專章全體都要，IFRS S1／S2 看資本額不看產業。
               </p>
               <div className="mb-3 grid gap-2 md:grid-cols-2">
                 {frameworkCards({
@@ -519,13 +529,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
                   diningRevenuePct: inputs.diningRevenuePct,
                   moenvRegulated: inputs.moenvRegulated,
                 }).map((card) => (
-                  <div key={card.title} className="border border-[#c8c8c8] bg-[#f7f9fb] p-2 leading-5">
-                    <div className="flex items-center justify-between gap-2">
-                      <b>{card.title}</b>
-                      <span className="border border-[#2f6f86] px-1.5 text-[11px] text-[#2f6f86]">{card.status}</span>
-                    </div>
-                    <p className="mt-1 text-[#333]">{card.detail}</p>
-                  </div>
+                  <StandardDetailCard key={card.code} card={card} />
                 ))}
               </div>
               <div className="mb-3 flex flex-wrap items-end gap-4">
@@ -1326,6 +1330,67 @@ function PieFigure({ fig }: { fig: ReportFigure }) {
   );
 }
 
+const STANDARD_TONE: Record<FrameworkCard["code"], { bg: string; border: string; ink: string }> = {
+  GRI: { bg: "#1f4a3a", border: "#1f4a3a", ink: "#143328" },
+  TCFD: { bg: "#1b3a5c", border: "#1b3a5c", ink: "#12263d" },
+  SASB: { bg: "#7a3b12", border: "#7a3b12", ink: "#5a2a0c" },
+  IFRS: { bg: "#2d4a1f", border: "#2d4a1f", ink: "#1d3314" },
+};
+
+function standardOn(status: FrameworkCard["status"]) {
+  return status === "適用" || status === "分階段" || status === "依產業";
+}
+
+function StandardChipBar({ cards }: { cards: FrameworkCard[] }) {
+  return (
+    <div className="mt-2 grid grid-cols-2 gap-2 lg:grid-cols-4">
+      {cards.map((card) => {
+        const on = standardOn(card.status);
+        const tone = STANDARD_TONE[card.code];
+        return (
+          <div
+            key={card.code}
+            className="border px-2 py-1.5 text-white"
+            style={{
+              background: on ? tone.bg : "#6e6e6e",
+              borderColor: on ? tone.border : "#6e6e6e",
+            }}
+          >
+            <div className="flex items-baseline justify-between gap-2">
+              <b className="text-[16px] leading-none tracking-wide">{card.short}</b>
+              <span className="border border-white/70 px-1 text-[11px]">{card.status}</span>
+            </div>
+            <div className="mt-1 text-[12px] leading-4">{card.chipNote}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StandardDetailCard({ card }: { card: FrameworkCard }) {
+  const on = standardOn(card.status);
+  const tone = STANDARD_TONE[card.code];
+  return (
+    <div className="border bg-white" style={{ borderColor: on ? tone.border : "#b0b0b0", borderLeftWidth: 8 }}>
+      <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-white" style={{ background: on ? tone.bg : "#6e6e6e" }}>
+        <b className="text-[18px] tracking-wide">{card.short}</b>
+        <span className="border border-white px-1.5 text-[12px]">{card.status}</span>
+      </div>
+      <div className="p-2 leading-5">
+        <div className="font-bold">{card.title}</div>
+        <div className="mt-1 border px-2 py-1" style={{ background: "#fff6d8", borderColor: "#c9b56a" }}>
+          <div className="text-[11px] font-bold" style={{ color: tone.ink }}>
+            適用產業
+          </div>
+          <div>{card.industries}</div>
+        </div>
+        <p className="mt-1 text-[#333]">{card.detail}</p>
+      </div>
+    </div>
+  );
+}
+
 function annexInputKeys(item: AnnexItem): (keyof Inputs)[] {
   const keys: string[] = [];
   if (item.fill === "input" && item.key) keys.push(item.key);
@@ -1352,12 +1417,24 @@ function IndustryAnnexSheet({
   const diningNote = inputs.diningRevenuePct >= 50 && inputs.industry !== "food";
   return (
     <div className="mb-4 text-[12px] text-[#333]">
-      <p className="mb-2 leading-6">
-        {diningNote ? "餐飲收入達百分之五十，改依食品工業附表一之一。" : ""}
-        {annex.applies
-          ? `本案件適用作業辦法${meta.annex}。${assuranceRequired(inputs.industry, inputs.diningRevenuePct) ? " 附表一應取得會計師確信。" : " 本產業附表一未強制會計師確信。"}`
-          : annex.reason}
-      </p>
+      <div
+        className="mb-3 border px-3 py-2 text-white"
+        style={{ background: annex.applies ? STANDARD_TONE.SASB.bg : "#6e6e6e", borderColor: annex.applies ? STANDARD_TONE.SASB.border : "#6e6e6e" }}
+      >
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <b className="text-[20px] tracking-wide">SASB　{meta.annex === "—" ? "非列名產業" : meta.annex}</b>
+          <span className="border border-white px-1.5 text-[12px]">{annex.applies ? "本產業強制" : meta.gate === "none" ? "自願參考" : "未達資本額門檻"}</span>
+        </div>
+        <p className="mt-1 leading-5">
+          {diningNote ? "餐飲收入達百分之五十，改依食品工業附表一之一。" : ""}
+          {annex.applies
+            ? `本案件適用作業辦法${meta.annex}（參採 SASB 行業指標）。${assuranceRequired(inputs.industry, inputs.diningRevenuePct) ? " 附表一應取得會計師確信。" : " 本產業附表一未強制會計師確信。"}`
+            : annex.reason}
+        </p>
+        <p className="mt-1 text-[11px] leading-4 opacity-95">
+          強制產業：食品、化學、金融保險（一律＋確信）；水泥、塑膠、鋼鐵、油電燃氣及電子七業（實收資本額≥20億）。其餘產業 GRI＋TCFD 仍適用。
+        </p>
+      </div>
       {items.length === 0 ? (
         <p className="leading-6">非第4條列名產業，無附表一強制欄位。仍須依第3條 GRI 及第4條之1 氣候專章編製。</p>
       ) : (
