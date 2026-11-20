@@ -429,7 +429,7 @@ export function WorkbenchApp({ member }: { member: MemberView }) {
             億元
           </label>
           {caseLocked ? (
-            <span className="text-[12px] font-semibold text-[#1f4a3a]">已鎖定　公司／產業／資本額不可再改</span>
+            <span className="text-[12px] font-semibold text-[#1f4a3a]">已鎖定</span>
           ) : (
             <button
               type="button"
