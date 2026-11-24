@@ -134,57 +134,42 @@ export const yearData: Record<Year, YearSlice> = {
   },
 };
 
-export const mapping = [
-  { source: "合併財務報告 · 綜合損益表", indicator: "營收、淨利、研發費用", dim: "overview" },
-  { source: "合併財務報告 · 資產負債表與附註", indicator: "E · 綠色資本支出、環保設備", dim: "E" },
-  { source: "財務報告附註 · 能源／水電費、員工福利", indicator: "E／S · 密集度分母與人力資本", dim: "E" },
-  { source: "營所稅結算與租稅優惠明細", indicator: "G · 有效稅率與資訊透明度", dim: "G" },
-  { source: "公司年報 · 營運概況與風險", indicator: "綜合 · 產業與重大事件脈絡", dim: "overview" },
-  { source: "公司年報 · 公司治理專章", indicator: "G · 董事會、委員會、關係人", dim: "G" },
-  { source: "內部控制聲明書／內控專審", indicator: "G · 內控有效性、缺失追蹤", dim: "G" },
-  { source: "董事會與永續委員會議事錄", indicator: "G · 出席率、永續治理", dim: "G" },
-  { source: "永續報告書 · 重大主題與績效表", indicator: "E／S · 目標、實績、政策", dim: "E" },
-  { source: "溫室氣體盤查清冊（ISO 14064）", indicator: "E · 排放量與再生能源", dim: "E" },
-  { source: "職安衛年報與訓練時數", indicator: "S · 職安事件、人均訓練", dim: "S" },
-  { source: "供應商評鑑與行為準則簽署", indicator: "S · 供應鏈覆蓋率", dim: "S" },
-];
-
 export const sourceVisuals = [
   {
     title: "合併財務報告",
     src: "/samples/fin-report-cover.jpg",
     tab: "dossier" as const,
-    blurb: "簽證後的合併財務報告，營收、淨利、研發由此入板。",
+    blurb: "簽證後的合併報告。營收、淨利、研發從這裡來。",
   },
   {
     title: "綜合損益表",
     src: "/samples/income-statement.jpg",
-    tab: "map" as const,
-    blurb: "損益表與附註提供研發、員工福利與能源相關費用。",
+    tab: "overview" as const,
+    blurb: "附註裡的研發、員工福利、水電能源。",
   },
   {
     title: "公司年報",
     src: "/samples/annual-report-spread.jpg",
     tab: "dossier" as const,
-    blurb: "年報治理專章對到董事會、委員會與關係人揭露。",
+    blurb: "治理專章：董事會、委員會、關係人。",
   },
   {
     title: "內部控制聲明書",
     src: "/samples/internal-control.jpg",
     tab: "G" as const,
-    blurb: "內控聲明與專審結果對到治理面有效性。",
+    blurb: "聲明書和專審，看內控過沒過。",
   },
   {
     title: "永續報告書",
     src: "/samples/esg-report-cover.jpg",
     tab: "report" as const,
-    blurb: "報告書績效表對到環境與社會指標、目標。",
+    blurb: "績效表上的環境、社會指標和目標。",
   },
   {
     title: "溫室氣體盤查清冊",
     src: "/samples/ghg-inventory.jpg",
     tab: "E" as const,
-    blurb: "盤查排放量除以合併營收，得出排放強度。",
+    blurb: "排放量除以合併營收，就是強度。",
   },
 ];
 
@@ -256,7 +241,7 @@ export const indicatorSources: Record<string, string> = {
 export const reportService = {
   title: "永續報告書製作與確信",
   pitch:
-    "事務所不只出財報，也可以幫客戶把同一套年度資料編成永續報告書，再同步更新這張儀表板。數字先跟財報對得上，再對外揭露。",
+    "簽證做完的底稿接著編報告書，板上的數字一起改。對外講的要跟財報一樣。",
   packages: [
     {
       name: "基準建置",

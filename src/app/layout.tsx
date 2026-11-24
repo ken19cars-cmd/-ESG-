@@ -14,9 +14,8 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "企業ESG永續應用系統",
-  description:
-    "把財務報告、公司年報、內控、永續報告書與盤查資料，轉成客戶可看的 ESG 儀表板。",
+  title: "翰欣科技　衡澄｜企業ESG永續應用系統",
+  description: "規範、計算、檢索、稽核。事務所拿財報、年報、內控和盤查，做成客戶看的 ESG 板。",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

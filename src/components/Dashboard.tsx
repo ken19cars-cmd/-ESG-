@@ -6,7 +6,6 @@ import {
   annualDossiers,
   clientMeta,
   indicatorSources,
-  mapping,
   reportSample,
   reportService,
   sourceVisuals,
@@ -16,7 +15,7 @@ import {
   type Year,
 } from "@/lib/sample-client";
 
-type Tab = "overview" | "E" | "S" | "G" | "map" | "dossier" | "report";
+type Tab = "overview" | "E" | "S" | "G" | "dossier" | "report";
 type Step = "collect" | "map" | "present" | "report";
 
 const steps: { id: Step; n: string; title: string; body: string; tab: Tab }[] = [
@@ -24,28 +23,28 @@ const steps: { id: Step; n: string; title: string; body: string; tab: Tab }[] = 
     id: "collect",
     n: "01",
     title: "蒐集年度資料",
-    body: "財報、年報、內控、盤查與永續報告書同一套底稿。",
+    body: "財報、年報、內控、盤查，簽證季本來就在收的。",
     tab: "dossier",
   },
   {
     id: "map",
     n: "02",
     title: "對應指標",
-    body: "科目、治理與永續績效對到 E / S / G。",
-    tab: "map",
+    body: "科目跟治理項目，分別掛進環境、社會、治理。",
+    tab: "overview",
   },
   {
     id: "present",
     n: "03",
     title: "呈現成果",
-    body: "一頁給客戶看財務狀況與永續分數。",
+    body: "客戶來開會，看營收、淨利，還有三個分數。",
     tab: "overview",
   },
   {
     id: "report",
     n: "04",
     title: "編製報告書",
-    body: "同一數字產出永續報告書與確信軌跡。",
+    body: "報告書沿用板上的數字，不再另外做一套。",
     tab: "report",
   },
 ];
@@ -84,7 +83,7 @@ function ScoreRing({
 }) {
   const animated = useCount(score);
   const shown = Math.round(animated);
-  const radius = 42;
+  const radius = 26;
   const circ = 2 * Math.PI * radius;
   const offset = circ - (animated / 100) * circ;
 
@@ -92,28 +91,28 @@ function ScoreRing({
     <button
       type="button"
       onClick={onClick}
-      className={`panel flex flex-col items-center gap-2 rounded-2xl p-4 ${active ? "active" : ""}`}
+      className={`panel flex flex-col items-center gap-1 rounded-xl px-2 py-2 ${active ? "active" : ""}`}
     >
-      <svg width="108" height="108" viewBox="0 0 108 108">
-        <circle cx="54" cy="54" r={radius} fill="none" stroke="#e6eef2" strokeWidth="8" />
+      <svg width="72" height="72" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r={radius} fill="none" stroke="#e6eef2" strokeWidth="6" />
         <circle
-          cx="54"
-          cy="54"
+          cx="36"
+          cy="36"
           r={radius}
           fill="none"
           stroke={tone}
-          strokeWidth="8"
+          strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circ}
           strokeDashoffset={offset}
-          transform="rotate(-90 54 54)"
+          transform="rotate(-90 36 36)"
           style={{ transition: "stroke-dashoffset 0.2s linear" }}
         />
-        <text x="54" y="60" textAnchor="middle" fill="#243044" fontSize="22" className="num">
+        <text x="36" y="41" textAnchor="middle" fill="#243044" fontSize="16" className="num">
           {shown}
         </text>
       </svg>
-      <span className="text-xs tracking-[0.18em] text-mute">{label}</span>
+      <span className="text-[11px] tracking-[0.12em] text-mute">{label}</span>
     </button>
   );
 }
@@ -127,8 +126,8 @@ function TrendChart({
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const width = 560;
-  const height = 190;
-  const pad = 32;
+  const height = 132;
+  const pad = 26;
   const keys = ["e", "s", "g"] as const;
   const colors = { e: "#4d7584", s: "#5d7394", g: "#8a6672" };
   const x = (i: number) => pad + (i * (width - pad * 2)) / (trend.length - 1);
@@ -175,18 +174,30 @@ function TrendChart({
       {active >= 0 && (
         <g>
           <rect
-            x={x(active) - 46}
-            y={14}
-            width="92"
-            height="44"
-            rx="8"
+            x={Math.min(Math.max(8, x(active) - 52), width - 112)}
+            y={6}
+            width="104"
+            height="36"
+            rx="6"
             fill="#ffffff"
             stroke="#d5e4ec"
           />
-          <text x={x(active)} y={32} textAnchor="middle" fontSize="10" fill="#7b8b98">
+          <text
+            x={Math.min(Math.max(60, x(active)), width - 60)}
+            y={20}
+            textAnchor="middle"
+            fontSize="10"
+            fill="#7b8b98"
+          >
             {trend[active].year}
           </text>
-          <text x={x(active)} y={48} textAnchor="middle" fontSize="11" fill="#243044">
+          <text
+            x={Math.min(Math.max(60, x(active)), width - 60)}
+            y={34}
+            textAnchor="middle"
+            fontSize="11"
+            fill="#243044"
+          >
             E {trend[active].e}  S {trend[active].s}  G {trend[active].g}
           </text>
         </g>
@@ -207,7 +218,6 @@ export function Dashboard() {
     { id: "S", label: "社會" },
     { id: "G", label: "治理" },
     { id: "dossier", label: "年度資料" },
-    { id: "map", label: "來源對照" },
     { id: "report", label: "報告書" },
   ];
 
@@ -220,17 +230,17 @@ export function Dashboard() {
 
   return (
     <div className="app-shell flex min-h-screen">
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-[#d7e6ee] bg-white lg:flex">
-        <div className="border-b border-[#e6eef3] px-4 py-5">
-          <p className="text-sm font-semibold leading-6 text-[#243044]">OO公司ESG永續儀表板</p>
+      <aside className="hidden w-44 shrink-0 flex-col border-r border-[#d7e6ee] bg-white lg:flex">
+        <div className="border-b border-[#e6eef3] px-3 py-3">
+          <p className="text-sm font-semibold leading-5 text-[#243044]">OO公司ESG永續儀表板</p>
         </div>
-        <nav className="flex flex-1 flex-col gap-1 p-3">
+        <nav className="flex flex-col gap-0.5 p-2">
           {nav.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => setTab(item.id)}
-              className={`rounded-lg px-3 py-2 text-left text-sm ${
+              className={`rounded-md px-2.5 py-1.5 text-left text-sm ${
                 tab === item.id ? "bg-[#e5f6f8] font-medium text-[#243044]" : "text-[#4d6270] hover:bg-[#f4f8fb]"
               }`}
             >
@@ -256,10 +266,15 @@ export function Dashboard() {
       </aside>
 
       <div className="min-w-0 flex-1">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d7e6ee] bg-white px-5 py-4">
+      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d7e6ee] bg-white px-4 py-2">
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-[#243044] md:text-3xl">企業ESG永續應用系統</h1>
-          <p className="mt-1 text-sm text-[#3e4e5a] md:text-base">— 規範 · 計算 · 檢索 · 稽核 —</p>
+          <p className="text-[11px] text-[#7b8b98]">翰欣科技　衡澄</p>
+          <h1 className="text-xl font-semibold text-[#243044]">企業ESG永續應用系統</h1>
+          <p className="text-xs text-[#3e4e5a]">
+            <span className="font-medium text-[#243044]">規範　計算　檢索　稽核</span>
+            <span className="mx-2 text-[#b7c6d0]">·</span>
+            帳先對上，再拿去給客戶看。
+          </p>
         </div>
         <div className="flex gap-1 lg:hidden">
           {years.map((y) => (
@@ -275,40 +290,9 @@ export function Dashboard() {
         </div>
       </header>
 
-      <section className="px-5 pt-4">
-        <div className="mb-2 flex items-end justify-between gap-3">
-          <p className="text-sm text-[#4d6270]">資料來源</p>
-          <p className="text-xs text-[#7b8b98]">點選可切到對應頁面</p>
-        </div>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {sourceVisuals.map((item) => (
-            <button
-              key={item.title}
-              type="button"
-              onClick={() => setTab(item.tab as Tab)}
-              className="panel min-w-[180px] max-w-[200px] shrink-0 overflow-hidden rounded-2xl text-left"
-            >
-              <div className="relative h-28 w-full">
-                <Image
-                  src={item.src}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                  sizes="200px"
-                />
-              </div>
-              <div className="p-3">
-                <p className="text-sm">{item.title}</p>
-                <p className="mt-1 line-clamp-2 text-[11px] leading-5 text-mute">{item.blurb}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <main className="grid gap-4 px-5 py-4 xl:grid-cols-12">
-        <section className="grid gap-3 xl:col-span-3">
-          <p className="text-sm text-[#4d6270]">作業步驟</p>
+      <main className="grid gap-2 px-4 py-2 xl:grid-cols-12">
+        <section className="grid content-start gap-1.5 xl:col-span-3">
+          <p className="text-xs text-[#4d6270]">作業步驟</p>
           {steps.map((item, i) => (
             <button
               key={item.id}
@@ -317,18 +301,20 @@ export function Dashboard() {
                 setStep(item.id);
                 setTab(item.tab);
               }}
-              className={`panel fade-up rounded-2xl p-4 text-left ${step === item.id ? "active" : ""}`}
+              className={`panel fade-up rounded-lg px-3 py-2 text-left ${step === item.id ? "active" : ""}`}
               style={{ animationDelay: `${i * 80}ms` }}
             >
-              <p className="num text-[#243044]">{item.n}</p>
-              <h2 className="mt-1 text-lg">{item.title}</h2>
-              <p className="mt-1 text-sm leading-6 text-mute">{item.body}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="num text-xs text-[#243044]">{item.n}</p>
+                <h2 className="text-sm">{item.title}</h2>
+              </div>
+              <p className="mt-0.5 text-xs leading-5 text-mute">{item.body}</p>
             </button>
           ))}
         </section>
 
-        <section className="grid gap-4 xl:col-span-9">
-          <div className="grid gap-3 sm:grid-cols-4">
+        <section className="grid content-start gap-2 xl:col-span-9">
+          <div className="grid gap-2 sm:grid-cols-4">
             <ScoreRing
               label="綜合"
               score={data.scores.overall}
@@ -359,20 +345,20 @@ export function Dashboard() {
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-4">
+          <div className="grid gap-2 sm:grid-cols-4">
             {data.financial.map((item) => (
               <button
                 key={item.label}
                 type="button"
-                onClick={() => setTab(item.key === "map" ? "map" : "overview")}
-                className={`panel rounded-2xl p-4 text-left ${
+                onClick={() => setTab("overview")}
+                className={`panel rounded-lg px-3 py-2 text-left ${
                   highlight === item.key || highlight === "score" ? "active" : ""
                 }`}
               >
-                <p className="text-xs text-mute">{item.label}</p>
-                <p className="num mt-2 text-2xl text-[#243044]">{item.value}</p>
-                <p className="mt-1 text-xs text-[#4a5963]">{item.hint}</p>
-                <p className="mt-2 text-[11px] leading-5 text-mute">
+                <p className="text-[11px] text-mute">{item.label}</p>
+                <p className="num text-lg text-[#243044]">{item.value}</p>
+                <p className="text-[11px] text-[#4a5963]">{item.hint}</p>
+                <p className="line-clamp-1 text-[10px] leading-4 text-mute">
                   來源：{indicatorSources[item.label]}
                 </p>
               </button>
@@ -395,17 +381,56 @@ export function Dashboard() {
           </div>
 
           {tab === "overview" && (
-            <div className="panel fade-up rounded-2xl p-5">
-              <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-lg">四年 ESG 分數軌跡</h2>
-                <p className="num text-sm text-mute">INDEX {overall.toFixed(1)}</p>
+            <>
+              <div className="grid gap-2 lg:grid-cols-3">
+                <article className="panel rounded-lg px-3 py-2">
+                  <h2 className="text-xs text-[#4d6270]">環境</h2>
+                  <ul className="mt-1">
+                    {data.environment.map((item) => (
+                      <li key={item.name} className="flex items-baseline justify-between gap-3 border-t border-line py-1 first:border-0">
+                        <span className="text-xs">{item.name}</span>
+                        <span className="num shrink-0 text-xs text-[#243044]">
+                          {item.value} {item.unit}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                <article className="panel rounded-lg px-3 py-2">
+                  <h2 className="text-xs text-[#4d6270]">社會</h2>
+                  <ul className="mt-1">
+                    {data.social.map((item) => (
+                      <li key={item.name} className="flex items-baseline justify-between gap-3 border-t border-line py-1 first:border-0">
+                        <span className="text-xs">{item.name}</span>
+                        <span className="num shrink-0 text-xs text-[#243044]">{item.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                <article className="panel rounded-lg px-3 py-2">
+                  <h2 className="text-xs text-[#4d6270]">治理</h2>
+                  <ul className="mt-1">
+                    {data.governance.map((item) => (
+                      <li key={item.name} className="flex items-baseline justify-between gap-3 border-t border-line py-1 first:border-0">
+                        <span className="text-xs">{item.name}</span>
+                        <span className="num shrink-0 text-xs text-[#243044]">{item.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
               </div>
-              <TrendChart year={year} onPick={setYear} />
-            </div>
+              <div className="panel fade-up rounded-lg px-3 py-2">
+                <div className="mb-1 flex items-center justify-between">
+                  <h2 className="text-sm">四年 ESG 分數軌跡</h2>
+                  <p className="num text-sm text-mute">INDEX {overall.toFixed(1)}</p>
+                </div>
+                <TrendChart year={year} onPick={setYear} />
+              </div>
+            </>
           )}
 
           {tab === "E" && (
-            <div className="panel fade-up space-y-5 rounded-2xl p-5">
+            <div className="panel fade-up space-y-3 rounded-lg px-3 py-2">
               {data.environment.map((item) => (
                 <div key={item.name}>
                   <div className="flex justify-between text-sm">
@@ -433,7 +458,7 @@ export function Dashboard() {
               {data.social.map((item, i) => (
                 <article
                   key={item.name}
-                  className="panel fade-up rounded-2xl p-5"
+                  className="panel fade-up rounded-lg px-3 py-2"
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
                   <p className="text-sm text-mute">{item.name}</p>
@@ -450,7 +475,7 @@ export function Dashboard() {
               {data.governance.map((item, i) => (
                 <article
                   key={item.name}
-                  className="panel fade-up flex items-center justify-between rounded-2xl p-4"
+                  className="panel fade-up flex items-center justify-between rounded-lg px-3 py-2"
                   style={{ animationDelay: `${i * 60}ms` }}
                 >
                   <div>
@@ -466,37 +491,15 @@ export function Dashboard() {
             </div>
           )}
 
-          {tab === "map" && (
-            <div className="panel fade-up overflow-hidden rounded-2xl">
-              <div className="border-b border-line px-5 py-4">
-                <h2 className="text-lg">年度資料如何變成儀表板</h2>
-                <p className="mt-1 text-sm leading-6 text-mute">
-                  左欄是會計師已經在做的年度交付，右欄是板上對應的指標。點一列可跳到該構面。
-                </p>
-              </div>
-              {mapping.map((row) => (
-                <button
-                  key={row.source}
-                  type="button"
-                  onClick={() => setTab(row.dim as Tab)}
-                  className="flex w-full items-center justify-between gap-4 border-b border-line px-5 py-4 text-left last:border-0 hover:bg-[#f4f8fb]"
-                >
-                  <span className="text-sm">{row.source}</span>
-                  <span className="text-sm text-[#243044]">{row.indicator}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
           {tab === "dossier" && (
             <div className="grid gap-3 md:grid-cols-2">
               {annualDossiers.map((group, i) => (
                 <article
                   key={group.group}
-                  className="panel fade-up overflow-hidden rounded-2xl"
+                  className="panel fade-up overflow-hidden rounded-lg"
                   style={{ animationDelay: `${i * 70}ms` }}
                 >
-                  <div className="relative h-36 w-full">
+                  <div className="relative h-24 w-full">
                     <Image
                       src={group.image}
                       alt={group.group}
@@ -505,7 +508,7 @@ export function Dashboard() {
                       sizes="40vw"
                     />
                   </div>
-                  <div className="p-5">
+                  <div className="px-3 py-2">
                   <p className="text-[11px] tracking-[0.2em] text-[#243044]">{group.note}</p>
                   <h2 className="mt-1 text-lg">{group.group}</h2>
                   <ul className="mt-4 space-y-3">
@@ -523,14 +526,14 @@ export function Dashboard() {
           )}
 
           {tab === "report" && (
-            <div className="grid gap-4">
-              <article className="panel fade-up rounded-2xl p-5">
-                <p className="text-[11px] tracking-[0.2em] text-[#243044]">SERVICE</p>
+            <div className="grid gap-2">
+              <article className="panel fade-up rounded-lg px-3 py-2">
+                <p className="text-[11px] tracking-[0.2em] text-[#243044]">事務所服務</p>
                 <h2 className="mt-1 text-xl">{reportService.title}</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-mute">{reportService.pitch}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
                   {reportService.packages.map((item) => (
-                    <div key={item.name} className="rounded-xl border border-[#e3eef3] bg-[#f7fbfd] p-4">
+                    <div key={item.name} className="rounded-lg border border-[#e3eef3] bg-[#f7fbfd] px-3 py-2">
                       <p className="text-[#243044]">{item.name}</p>
                       <p className="mt-2 text-sm leading-6 text-mute">{item.body}</p>
                     </div>
@@ -547,9 +550,9 @@ export function Dashboard() {
                   ))}
                 </div>
               </article>
-              <article className="panel fade-up overflow-hidden rounded-2xl">
+              <article className="panel fade-up overflow-hidden rounded-lg">
                 <div className="grid md:grid-cols-2">
-                  <div className="relative min-h-[220px]">
+                  <div className="relative min-h-[140px]">
                     <Image
                       src={reportSample.cover}
                       alt="永續報告書封面示範"
@@ -558,7 +561,7 @@ export function Dashboard() {
                       sizes="50vw"
                     />
                   </div>
-                  <div className="relative min-h-[220px]">
+                  <div className="relative min-h-[140px]">
                     <Image
                       src={reportSample.spread}
                       alt="年報內頁示範"
@@ -568,8 +571,8 @@ export function Dashboard() {
                     />
                   </div>
                 </div>
-                <div className="p-5">
-                <p className="text-[11px] tracking-[0.2em] text-[#4a5963]">SAMPLE</p>
+                <div className="px-3 py-2">
+                <p className="text-[11px] tracking-[0.2em] text-[#4a5963]">摘錄</p>
                 <h2 className="mt-1 text-lg">{reportSample.client}</h2>
                 <p className="mt-2 text-sm italic leading-7 text-mute">{reportSample.quote}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -588,6 +591,36 @@ export function Dashboard() {
           )}
         </section>
       </main>
+      <section className="px-4 pb-4 pt-1">
+        <div className="mb-1 flex items-end justify-between gap-3">
+          <p className="text-xs text-[#4d6270]">資料來源</p>
+          <p className="text-[11px] text-[#7b8b98]">點一張，開對應的頁</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {sourceVisuals.map((item) => (
+            <button
+              key={item.title}
+              type="button"
+              onClick={() => setTab(item.tab as Tab)}
+              className="panel min-w-[148px] max-w-[168px] shrink-0 overflow-hidden rounded-lg text-left"
+            >
+              <div className="relative h-14 w-full">
+                <Image
+                  src={item.src}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+                  sizes="168px"
+                />
+              </div>
+              <div className="px-2 py-1.5">
+                <p className="text-xs">{item.title}</p>
+                <p className="line-clamp-1 text-[10px] leading-4 text-mute">{item.blurb}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
       </div>
     </div>
   );
