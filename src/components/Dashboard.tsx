@@ -24,28 +24,28 @@ const steps: { id: Step; n: string; title: string; body: string; tab: Tab }[] = 
     id: "collect",
     n: "01",
     title: "蒐集年度資料",
-    body: "財報、年報、內控、盤查與永續報告書同一套底稿。",
+    body: "財報、年報、內控、盤查，簽證季本來就在收的。",
     tab: "dossier",
   },
   {
     id: "map",
     n: "02",
     title: "對應指標",
-    body: "科目、治理與永續績效對到 E / S / G。",
+    body: "科目跟治理項目，分別掛進環境、社會、治理。",
     tab: "map",
   },
   {
     id: "present",
     n: "03",
     title: "呈現成果",
-    body: "一頁給客戶看財務狀況與永續分數。",
+    body: "客戶來開會，看營收、淨利，還有三個分數。",
     tab: "overview",
   },
   {
     id: "report",
     n: "04",
     title: "編製報告書",
-    body: "同一數字產出永續報告書與確信軌跡。",
+    body: "報告書沿用板上的數字，不再另外做一套。",
     tab: "report",
   },
 ];
@@ -258,8 +258,10 @@ export function Dashboard() {
       <div className="min-w-0 flex-1">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d7e6ee] bg-white px-5 py-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-wide text-[#243044] md:text-3xl">企業ESG永續應用系統</h1>
-          <p className="mt-1 text-sm text-[#3e4e5a] md:text-base">— 規範 · 計算 · 檢索 · 稽核 —</p>
+          <p className="text-xs text-[#7b8b98]">翰欣科技　衡澄</p>
+          <h1 className="mt-1 text-2xl font-semibold text-[#243044] md:text-3xl">企業ESG永續應用系統</h1>
+          <p className="mt-1 text-sm font-medium text-[#243044] md:text-base">規範　計算　檢索　稽核</p>
+          <p className="mt-1 text-sm text-[#3e4e5a]">帳先對上，再拿去給客戶看。</p>
         </div>
         <div className="flex gap-1 lg:hidden">
           {years.map((y) => (
@@ -278,7 +280,7 @@ export function Dashboard() {
       <section className="px-5 pt-4">
         <div className="mb-2 flex items-end justify-between gap-3">
           <p className="text-sm text-[#4d6270]">資料來源</p>
-          <p className="text-xs text-[#7b8b98]">點選可切到對應頁面</p>
+          <p className="text-xs text-[#7b8b98]">點一張，開對應的頁</p>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2">
           {sourceVisuals.map((item) => (
@@ -469,9 +471,9 @@ export function Dashboard() {
           {tab === "map" && (
             <div className="panel fade-up overflow-hidden rounded-2xl">
               <div className="border-b border-line px-5 py-4">
-                <h2 className="text-lg">年度資料如何變成儀表板</h2>
+                <h2 className="text-lg">年度資料怎麼上板</h2>
                 <p className="mt-1 text-sm leading-6 text-mute">
-                  左欄是會計師已經在做的年度交付，右欄是板上對應的指標。點一列可跳到該構面。
+                  左邊是事務所本來就交的，右邊是板上的指標。點一列跳到該頁。
                 </p>
               </div>
               {mapping.map((row) => (
@@ -525,7 +527,7 @@ export function Dashboard() {
           {tab === "report" && (
             <div className="grid gap-4">
               <article className="panel fade-up rounded-2xl p-5">
-                <p className="text-[11px] tracking-[0.2em] text-[#243044]">SERVICE</p>
+                <p className="text-[11px] tracking-[0.2em] text-[#243044]">事務所服務</p>
                 <h2 className="mt-1 text-xl">{reportService.title}</h2>
                 <p className="mt-3 max-w-3xl text-sm leading-7 text-mute">{reportService.pitch}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -569,7 +571,7 @@ export function Dashboard() {
                   </div>
                 </div>
                 <div className="p-5">
-                <p className="text-[11px] tracking-[0.2em] text-[#4a5963]">SAMPLE</p>
+                <p className="text-[11px] tracking-[0.2em] text-[#4a5963]">摘錄</p>
                 <h2 className="mt-1 text-lg">{reportSample.client}</h2>
                 <p className="mt-2 text-sm italic leading-7 text-mute">{reportSample.quote}</p>
                 <div className="mt-5 grid gap-3 md:grid-cols-2">
