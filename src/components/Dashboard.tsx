@@ -6,7 +6,6 @@ import {
   annualDossiers,
   clientMeta,
   indicatorSources,
-  mapping,
   reportSample,
   reportService,
   sourceVisuals,
@@ -16,7 +15,7 @@ import {
   type Year,
 } from "@/lib/sample-client";
 
-type Tab = "overview" | "E" | "S" | "G" | "map" | "dossier" | "report";
+type Tab = "overview" | "E" | "S" | "G" | "dossier" | "report";
 type Step = "collect" | "map" | "present" | "report";
 
 const steps: { id: Step; n: string; title: string; body: string; tab: Tab }[] = [
@@ -32,7 +31,7 @@ const steps: { id: Step; n: string; title: string; body: string; tab: Tab }[] = 
     n: "02",
     title: "對應指標",
     body: "科目跟治理項目，分別掛進環境、社會、治理。",
-    tab: "map",
+    tab: "overview",
   },
   {
     id: "present",
@@ -219,7 +218,6 @@ export function Dashboard() {
     { id: "S", label: "社會" },
     { id: "G", label: "治理" },
     { id: "dossier", label: "年度資料" },
-    { id: "map", label: "來源對照" },
     { id: "report", label: "報告書" },
   ];
 
@@ -352,7 +350,7 @@ export function Dashboard() {
               <button
                 key={item.label}
                 type="button"
-                onClick={() => setTab(item.key === "map" ? "map" : "overview")}
+                onClick={() => setTab("overview")}
                 className={`panel rounded-lg px-3 py-2 text-left ${
                   highlight === item.key || highlight === "score" ? "active" : ""
                 }`}
@@ -383,13 +381,52 @@ export function Dashboard() {
           </div>
 
           {tab === "overview" && (
-            <div className="panel fade-up rounded-lg px-3 py-2">
-              <div className="mb-1 flex items-center justify-between">
-                <h2 className="text-sm">四年 ESG 分數軌跡</h2>
-                <p className="num text-sm text-mute">INDEX {overall.toFixed(1)}</p>
+            <>
+              <div className="grid gap-2 lg:grid-cols-3">
+                <article className="panel rounded-lg px-3 py-2">
+                  <h2 className="text-xs text-[#4d6270]">環境</h2>
+                  <ul className="mt-1">
+                    {data.environment.map((item) => (
+                      <li key={item.name} className="flex items-baseline justify-between gap-3 border-t border-line py-1 first:border-0">
+                        <span className="text-xs">{item.name}</span>
+                        <span className="num shrink-0 text-xs text-[#243044]">
+                          {item.value} {item.unit}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                <article className="panel rounded-lg px-3 py-2">
+                  <h2 className="text-xs text-[#4d6270]">社會</h2>
+                  <ul className="mt-1">
+                    {data.social.map((item) => (
+                      <li key={item.name} className="flex items-baseline justify-between gap-3 border-t border-line py-1 first:border-0">
+                        <span className="text-xs">{item.name}</span>
+                        <span className="num shrink-0 text-xs text-[#243044]">{item.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+                <article className="panel rounded-lg px-3 py-2">
+                  <h2 className="text-xs text-[#4d6270]">治理</h2>
+                  <ul className="mt-1">
+                    {data.governance.map((item) => (
+                      <li key={item.name} className="flex items-baseline justify-between gap-3 border-t border-line py-1 first:border-0">
+                        <span className="text-xs">{item.name}</span>
+                        <span className="num shrink-0 text-xs text-[#243044]">{item.value}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </article>
               </div>
-              <TrendChart year={year} onPick={setYear} />
-            </div>
+              <div className="panel fade-up rounded-lg px-3 py-2">
+                <div className="mb-1 flex items-center justify-between">
+                  <h2 className="text-sm">四年 ESG 分數軌跡</h2>
+                  <p className="num text-sm text-mute">INDEX {overall.toFixed(1)}</p>
+                </div>
+                <TrendChart year={year} onPick={setYear} />
+              </div>
+            </>
           )}
 
           {tab === "E" && (
@@ -450,28 +487,6 @@ export function Dashboard() {
                     {item.status}
                   </span>
                 </article>
-              ))}
-            </div>
-          )}
-
-          {tab === "map" && (
-            <div className="panel fade-up overflow-hidden rounded-lg">
-              <div className="border-b border-line px-3 py-2">
-                <h2 className="text-lg">年度資料怎麼上板</h2>
-                <p className="mt-1 text-sm leading-6 text-mute">
-                  左邊是事務所本來就交的，右邊是板上的指標。點一列跳到該頁。
-                </p>
-              </div>
-              {mapping.map((row) => (
-                <button
-                  key={row.source}
-                  type="button"
-                  onClick={() => setTab(row.dim as Tab)}
-                  className="flex w-full items-center justify-between gap-4 border-b border-line px-3 py-2 text-left last:border-0 hover:bg-[#f4f8fb]"
-                >
-                  <span className="text-sm">{row.source}</span>
-                  <span className="text-sm text-[#243044]">{row.indicator}</span>
-                </button>
               ))}
             </div>
           )}
