@@ -58,6 +58,18 @@ import {
 } from "@/lib/official-factors";
 import { CompanyNameField } from "@/components/workbench/CompanyNameField";
 import type { CompanyHit } from "@/lib/company-search";
+import {
+  POLICY_ACCEPT,
+  POLICY_CATEGORIES,
+  formatFileSize,
+  loadInternalPolicies,
+  policyCategoryLabel,
+  policyChecks,
+  readPolicyFile,
+  saveInternalPolicies,
+  type InternalPolicyDoc,
+  type PolicyCategoryId,
+} from "@/lib/internal-policies";
 
 type Sheet = "pre" | "ind" | "fin" | "env" | "hr" | "gov" | "kpi" | "par" | "chart" | "why" | "reg" | "rep";
 
@@ -216,6 +228,10 @@ export function WorkbenchApp({
   const [stylePrompt, setStylePrompt] = useState("");
   const [styleImage, setStyleImage] = useState("");
   const [highlightKeys, setHighlightKeys] = useState<(keyof Inputs)[]>([]);
+  const [policyDocs, setPolicyDocs] = useState<InternalPolicyDoc[]>([]);
+  const [policyCategory, setPolicyCategory] = useState<PolicyCategoryId>("charter");
+  const [policyBusy, setPolicyBusy] = useState(false);
+  const [policyError, setPolicyError] = useState("");
   const [sourcePop, setSourcePop] = useState<{
     label: string;
     gri: string;
@@ -254,6 +270,41 @@ export function WorkbenchApp({
     const saved = loadSavedInputs(member.username, boundCase.client);
     if (saved) setInputs(saved);
   }, [member.username, boundCase?.client]);
+
+  useEffect(() => {
+    setPolicyDocs(loadInternalPolicies(member.username, inputs.client));
+    setPolicyError("");
+  }, [member.username, inputs.client]);
+
+  function persistPolicies(next: InternalPolicyDoc[]) {
+    setPolicyDocs(next);
+    saveInternalPolicies(member.username, inputs.client, next);
+  }
+
+  async function addPolicyFiles(fileList: FileList | null) {
+    if (!fileList?.length) return;
+    setPolicyBusy(true);
+    setPolicyError("");
+    try {
+      const added: InternalPolicyDoc[] = [];
+      for (const file of Array.from(fileList)) {
+        if (file.size > 12 * 1024 * 1024) {
+          setPolicyError(`「${file.name}」超過 12MB，請壓縮後再上傳。`);
+          continue;
+        }
+        added.push(await readPolicyFile(file, policyCategory));
+      }
+      if (added.length) persistPolicies([...policyDocs, ...added]);
+    } catch {
+      setPolicyError("讀取檔案失敗，請再試一次。");
+    } finally {
+      setPolicyBusy(false);
+    }
+  }
+
+  function removePolicyDoc(id: string) {
+    persistPolicies(policyDocs.filter((doc) => doc.id !== id));
+  }
 
   useEffect(() => {
     if (!member.paid) {
@@ -424,6 +475,8 @@ export function WorkbenchApp({
     if (c.id === "fuel" && !flags.annex) return false;
     return true;
   });
+  const policySideChecks = policyChecks(policyDocs, ready);
+  const showPolicyChecks = sheet === "pre" || sheet === "gov" || sheet === "fin";
   const chartFigures = result.figures.filter((fig) => {
     if (fig.id === "water") return flags.water;
     if (fig.id === "waste") return flags.waste;
@@ -1075,6 +1128,75 @@ export function WorkbenchApp({
                   </p>
                 </div>
               </div>
+              <div id="wb-internal-policies" className="mb-3 w-full border border-[#c8c8c8] bg-[#f7f7f4] px-3 py-2 text-[12px] leading-5 text-[#333]">
+                <p className="font-bold">公司內規／章程底稿（擴充勾稽）</p>
+                <p className="mt-1 text-[11px] text-[#555]">
+                  上傳公司章程、財務規範、內控制度、董事會議事規範等內部文件，供後續治理與財務欄位擴充勾稽、檢核對照。檔案僅存於本機瀏覽器，不上傳伺服器；超過約 1.2MB 的檔案只保留清單，仍可作為底稿追蹤。
+                </p>
+                <div className="mt-2 flex flex-wrap items-end gap-2">
+                  <label className="flex items-center gap-2">
+                    文件類型
+                    <select
+                      className="h-[28px] border border-[#8aa0b4] bg-white px-2"
+                      value={policyCategory}
+                      onChange={(e) => setPolicyCategory(e.target.value as PolicyCategoryId)}
+                    >
+                      {POLICY_CATEGORIES.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="border border-[#444] bg-[#eee] px-3 py-1">
+                    {policyBusy ? "讀取中…" : "上傳文件"}
+                    <input
+                      type="file"
+                      multiple
+                      accept={POLICY_ACCEPT}
+                      className="sr-only"
+                      disabled={policyBusy}
+                      onChange={(event) => {
+                        void addPolicyFiles(event.target.files);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                  <span className="text-[11px] text-[#666]">支援 PDF／Word／純文字／圖片</span>
+                </div>
+                {policyError ? <p className="mt-2 text-[12px] text-[#a40000]">{policyError}</p> : null}
+                {policyDocs.length === 0 ? (
+                  <p className="mt-2 text-[11px] text-[#666]">尚未上傳。補齊後，右側「自動勾稽」會顯示內規底稿檢核狀態。</p>
+                ) : (
+                  <ul className="mt-2 space-y-1">
+                    {policyDocs.map((doc) => (
+                      <li
+                        key={doc.id}
+                        className="flex flex-wrap items-center justify-between gap-2 border border-[#d0d0d0] bg-white px-2 py-1"
+                      >
+                        <div className="min-w-0">
+                          <span className="wb-tag">{policyCategoryLabel(doc.category)}</span>
+                          <span className="ml-1 break-all">{doc.name}</span>
+                          <span className="ml-2 text-[11px] text-[#666]">
+                            {formatFileSize(doc.size)}
+                            {doc.dataUrl ? "" : "　僅清單"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {doc.dataUrl ? (
+                            <a className="underline" href={doc.dataUrl} download={doc.name}>
+                              下載
+                            </a>
+                          ) : null}
+                          <button type="button" className="underline" onClick={() => removePolicyDoc(doc.id)}>
+                            移除
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
 
@@ -1530,6 +1652,55 @@ export function WorkbenchApp({
               ))}
             </ul>
           </PaidFrost>
+          <h2 className="mb-2 mt-4 text-[14px] font-bold">內規底稿</h2>
+          <p className="mb-2 text-[11px] leading-5 text-[#555]">
+            公司章程、財務規範等內部文件，用於擴充勾稽與檢核。目前先建立底稿清單；後續可再對欄位做條文對照。
+          </p>
+          <ul className="mb-2 space-y-1 text-[12px]">
+            {policyDocs.length === 0 ? (
+              <li className="border border-[#ccc] bg-white px-2 py-1 text-[#666]">尚未上傳內規文件</li>
+            ) : (
+              policyDocs.map((doc) => (
+                <li key={doc.id} className="border border-[#ccc] bg-white px-2 py-1">
+                  <span className="text-[11px] text-[#335577]">{policyCategoryLabel(doc.category)}</span>
+                  <div className="break-all">{doc.name}</div>
+                </li>
+              ))
+            )}
+          </ul>
+          {showPolicyChecks ? (
+            <ul className="space-y-1 text-[12px]">
+              {policySideChecks.map((c) => (
+                <li key={c.id}>
+                  <button
+                    type="button"
+                    className={`wb-check-hit w-full border px-2 py-1 text-left ${
+                      c.level === "異常"
+                        ? "border-red-800 bg-[#fde8e8]"
+                        : c.level === "注意"
+                          ? "border-[#8a6d00] bg-[#fff4cc]"
+                          : "border-[#2d6a2d] bg-[#e7f5e7]"
+                    }`}
+                    onClick={() => {
+                      setSheet("pre");
+                      window.setTimeout(() => {
+                        document.getElementById("wb-internal-policies")?.scrollIntoView({
+                          block: "center",
+                          behavior: "smooth",
+                        });
+                      }, 40);
+                    }}
+                  >
+                    <b>
+                      [{c.level}] {c.title}
+                    </b>
+                    <div>{c.detail}</div>
+                    <div className="mt-0.5 text-[11px] text-[#335577]">點此前往上傳區</div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </aside>
       </div>
       {sourcePop && (
