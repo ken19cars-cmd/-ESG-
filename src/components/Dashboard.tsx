@@ -292,37 +292,6 @@ export function Dashboard() {
         </div>
       </header>
 
-      <section className="px-4 pt-2">
-        <div className="mb-1 flex items-end justify-between gap-3">
-          <p className="text-xs text-[#4d6270]">資料來源</p>
-          <p className="text-[11px] text-[#7b8b98]">點一張，開對應的頁</p>
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {sourceVisuals.map((item) => (
-            <button
-              key={item.title}
-              type="button"
-              onClick={() => setTab(item.tab as Tab)}
-              className="panel min-w-[148px] max-w-[168px] shrink-0 overflow-hidden rounded-lg text-left"
-            >
-              <div className="relative h-14 w-full">
-                <Image
-                  src={item.src}
-                  alt={item.title}
-                  fill
-                  className="object-cover"
-                  sizes="168px"
-                />
-              </div>
-              <div className="px-2 py-1.5">
-                <p className="text-xs">{item.title}</p>
-                <p className="line-clamp-1 text-[10px] leading-4 text-mute">{item.blurb}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      </section>
-
       <main className="grid gap-2 px-4 py-2 xl:grid-cols-12">
         <section className="grid content-start gap-1.5 xl:col-span-3">
           <p className="text-xs text-[#4d6270]">作業步驟</p>
@@ -607,6 +576,36 @@ export function Dashboard() {
           )}
         </section>
       </main>
+      <section className="px-4 pb-4 pt-1">
+        <div className="mb-1 flex items-end justify-between gap-3">
+          <p className="text-xs text-[#4d6270]">資料來源</p>
+          <p className="text-[11px] text-[#7b8b98]">點一張，開對應的頁</p>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {sourceVisuals.map((item) => (
+            <button
+              key={item.title}
+              type="button"
+              onClick={() => setTab(item.tab as Tab)}
+              className="panel min-w-[148px] max-w-[168px] shrink-0 overflow-hidden rounded-lg text-left"
+            >
+              <div className="relative h-14 w-full">
+                <Image
+                  src={item.src}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+                  sizes="168px"
+                />
+              </div>
+              <div className="px-2 py-1.5">
+                <p className="text-xs">{item.title}</p>
+                <p className="line-clamp-1 text-[10px] leading-4 text-mute">{item.blurb}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
       </div>
     </div>
   );
